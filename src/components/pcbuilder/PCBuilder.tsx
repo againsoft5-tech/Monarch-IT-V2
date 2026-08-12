@@ -722,7 +722,10 @@ export default function PCBuilder() {
                     <div className="flex items-center gap-1.5">
                       <button
                         type="button"
-                        onClick={() => selectProduct(activeCategory, p)}
+                        onClick={() => {
+                          selectProduct(activeCategory, p)
+                          setMobileBuilderOpen(false)
+                        }}
                         className={`rounded-full px-5 py-1.5 text-[12.5px] font-bold border-2 whitespace-nowrap transition-colors cursor-pointer ${
                           isPicked
                             ? 'bg-[#c3272b] text-white border-[#c3272b]'
