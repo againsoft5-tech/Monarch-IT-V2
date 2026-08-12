@@ -89,8 +89,11 @@ export default function Header() {
             </Link>
           </div>
 
-          <div className="flex-1 flex items-center gap-0.5 min-w-0">
-            <div ref={searchRef} className="relative flex-1 min-w-0 pl-[15%]">
+          <div className="flex-1 flex items-center gap-0.5 min-w-0 min-[1400px]:justify-end">
+            <div
+              ref={searchRef}
+              className="relative flex-1 min-w-0 pl-[15%] min-[1400px]:absolute min-[1400px]:left-1/2 min-[1400px]:top-1/2 min-[1400px]:-translate-x-1/2 min-[1400px]:-translate-y-1/2 min-[1400px]:w-[340px] min-[1400px]:flex-none min-[1400px]:pl-0"
+            >
               <div className="flex items-center bg-[#f4f5f7] rounded-[30px] px-5 py-2.5">
                 <button
                   type="button"
