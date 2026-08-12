@@ -63,7 +63,7 @@ export default function ProductDetailPage({ product }: { product: ProductDetail 
 
       <ProductComboSection slug={product.slug} />
 
-      <div className="container mx-auto px-4 min-[992px]:px-14 py-6">
+      <div className="container mx-auto px-4 min-[992px]:px-14 pt-6 pb-2.5">
         <div className="flex flex-col lg:flex-row gap-5 items-stretch">
           <div className="flex-1 min-w-0 flex flex-col">
             <ProductTabs product={product} tab={tab} onTabChange={setTab} />
@@ -73,7 +73,7 @@ export default function ProductDetailPage({ product }: { product: ProductDetail 
       </div>
 
       <div className="flex flex-col">
-        <div className="order-2 md:order-1 container mx-auto px-4 min-[992px]:px-14 py-6">
+        <div className="order-2 md:order-1 container mx-auto px-4 min-[992px]:px-14 py-2.5">
           <div className="bg-white border-[1.5px] border-gray-100 rounded-[40px] p-5 md:p-6">
             <h2 className="text-[17px] font-bold text-gray-900 mb-2">
               What is the price of {product.name}?

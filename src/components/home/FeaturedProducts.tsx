@@ -79,11 +79,14 @@ export default function FeaturedProducts() {
               ref={trackRef}
               className="flex gap-3 md:gap-5 overflow-x-auto scroll-smooth py-2.5 px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
             >
+              {/* 6 cards across at >= 1400px. The breakpoint has to be written in rem: Tailwind v4
+                  emits px-based media queries before the rem-based defaults, so a min-[1400px]
+                  width would be overridden by lg:w-[calc(25%-15px)]. */}
               {products.map((p) => (
                 <Link
                   key={p.slug}
                   href="/sony-bravia-8-k-65xr80-65-inch-4k-hdr-oled-google-tv"
-                  className="flex-none w-[47%] sm:w-[31%] lg:w-[calc(25%-15px)] bg-white p-3 md:p-5 rounded-2xl md:rounded-[20px] flex flex-col no-underline"
+                  className="flex-none w-[47%] sm:w-[31%] lg:w-[calc(25%-15px)] min-[87.5rem]:w-[calc((100%-100px)/6)] bg-white p-3 md:p-5 rounded-2xl md:rounded-[20px] flex flex-col no-underline"
                 >
                   <div className="bg-white rounded-2xl flex items-center justify-center mb-3">
                     <Image

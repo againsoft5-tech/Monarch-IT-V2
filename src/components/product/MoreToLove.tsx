@@ -5,6 +5,8 @@ import Image from 'next/image'
 import Link from 'next/link'
 import type { RelatedProduct } from '@/data/productDetail'
 
+// Mirrors the home page "Most Wanted" carousel (see components/home/FeaturedProducts),
+// minus the category tabs — the product page shows a single fixed list.
 export default function MoreToLove({ products }: { products: RelatedProduct[] }) {
   const trackRef = useRef<HTMLDivElement>(null)
 
@@ -13,72 +15,86 @@ export default function MoreToLove({ products }: { products: RelatedProduct[] })
   }
 
   return (
-    <div className="bg-white mt-6 py-7">
-      <div className="text-center mb-5">
-        <h2 className="text-2xl font-bold text-gray-900 mb-1">More to love</h2>
-        <p className="text-[14px] text-gray-500">Chosen by customers like you</p>
-      </div>
-
-      <div className="container mx-auto px-4 min-[992px]:px-14">
-        <div className="relative">
-          <button
-            type="button"
-            onClick={() => scroll(-300)}
-            aria-label="Scroll left"
-            className="hidden md:flex absolute -left-2.5 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white border border-gray-200 items-center justify-center text-[#d92128] shadow-md hover:bg-gray-50 cursor-pointer"
-          >
-            <span className="mi text-xl">chevron_left</span>
-          </button>
-
-          <div ref={trackRef} className="flex gap-4 overflow-x-auto scroll-smooth py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            {products.map((p) => (
-              <Link
-                key={p.slug}
-                href={`/${p.slug}`}
-                className="flex-none w-[160px] md:w-[200px] bg-white rounded-[14px] overflow-hidden flex flex-col shadow-[0_2px_10px_rgba(0,0,0,0.07)] hover:shadow-[0_10px_32px_rgba(0,0,0,0.14)] hover:-translate-y-1 transition-all no-underline"
-              >
-                <div className="aspect-square flex items-center justify-center">
-                  <Image src={p.image} alt={p.name} width={200} height={200} className="w-[78%] h-[78%] object-contain" />
-                </div>
-                <div className="p-3">
-                  <div className="flex items-center gap-1 mb-1 flex-wrap">
-                    <span className="text-[#ffcb39] text-base leading-none">
-                      {'★'.repeat(Math.round(p.rating)) + '☆'.repeat(5 - Math.round(p.rating))}
-                    </span>
-                    <span className="text-[11px] text-gray-600">{p.rating.toFixed(1)}</span>
-                    <span className="inline-flex items-center gap-0.5 text-[11px] text-gray-600">
-                      ({p.reviews}
-                      <Image
-                        src="/images/catalog/view/theme/default/image/verified.svg"
-                        alt="Verified"
-                        width={12}
-                        height={12}
-                        className="w-3 h-3"
-                      />
-                      )
-                    </span>
-                  </div>
-                  <div className="text-[13px] font-bold text-[#4d4d4d] mb-2 line-clamp-2">{p.name}</div>
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="text-[15px] font-bold text-[#c3272b]">৳{p.priceNew.toLocaleString()}</span>
-                    <span className="text-[10px] text-gray-400 line-through">৳{p.priceOld.toLocaleString()}</span>
-                    <span className="text-[10px] font-bold text-[#00c68b]">{p.discountPct}% OFF</span>
-                  </div>
-                </div>
-              </Link>
-            ))}
+    <section className="mt-2.5">
+      <div className="bg-white pt-10 pb-2.5">
+        <div className="container mx-auto px-4 min-[992px]:px-14">
+          <div className="text-center">
+            <h2 className="text-[#333] font-bold text-2xl md:text-[28px] mb-1">More to love</h2>
+            <p className="text-[#777] text-[15px] mt-0">Chosen by customers like you</p>
           </div>
-
-          <button
-            type="button"
-            onClick={() => scroll(300)}
-            aria-label="Scroll right"
-            className="hidden md:flex absolute -right-2.5 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white border border-gray-200 items-center justify-center text-[#d92128] shadow-md hover:bg-gray-50 cursor-pointer"
-          >
-            <span className="mi text-xl">chevron_right</span>
-          </button>
         </div>
       </div>
-    </div>
+
+      <div className="bg-[#f6f7f9] pb-8">
+        <div className="container mx-auto px-4 min-[992px]:px-14">
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => scroll(-300)}
+              aria-label="Scroll products left"
+              className="hidden md:flex absolute left-1 top-1/2 -translate-y-1/2 z-10 w-[38px] h-[38px] rounded-full bg-[#f5f5f7] items-center justify-center cursor-pointer"
+            >
+              <Image src="/images/promo-banner/left-arrow.svg" alt="" width={9} height={16} className="w-[9px] h-4" />
+            </button>
+
+            <div
+              ref={trackRef}
+              className="flex gap-3 md:gap-5 overflow-x-auto scroll-smooth pt-5 pb-2.5 px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            >
+              {/* 6 cards across at >= 1400px. The breakpoint has to be written in rem: Tailwind v4
+                  emits px-based media queries before the rem-based defaults, so a min-[1400px]
+                  width would be overridden by lg:w-[calc(25%-15px)]. */}
+              {products.map((p) => (
+                <Link
+                  key={p.slug}
+                  href={`/${p.slug}`}
+                  className="flex-none w-[47%] sm:w-[31%] lg:w-[calc(25%-15px)] min-[87.5rem]:w-[calc((100%-100px)/6)] bg-white p-3 md:p-5 rounded-2xl md:rounded-[20px] flex flex-col no-underline"
+                >
+                  <div className="bg-white rounded-2xl flex items-center justify-center mb-3">
+                    <Image
+                      src={p.image}
+                      alt={p.name}
+                      width={228}
+                      height={228}
+                      className="max-w-full h-auto object-contain"
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-0.5 text-[13px] text-[#FFC107] mb-1">
+                    <span>★★★★★</span>
+                    <span className="text-[#777] text-xs ml-1">
+                      {p.rating.toFixed(2)} ({p.reviews})
+                    </span>
+                  </div>
+
+                  <h4 className="text-[15px] font-medium text-[#333] mb-2.5 line-clamp-2 min-h-[2.6em] leading-[1.3em]">
+                    {p.name}
+                  </h4>
+
+                  <div className="mt-auto flex items-center gap-2 flex-wrap">
+                    <span className="font-semibold text-[#BE1E2D] text-base">৳{p.priceNew.toLocaleString()}</span>
+                    {p.priceOld > p.priceNew && (
+                      <span className="line-through text-[#b5b5b5] text-[13px]">৳{p.priceOld.toLocaleString()}</span>
+                    )}
+                    {p.discountPct > 0 && (
+                      <span className="text-[#00CC96] text-[13px] font-semibold">{p.discountPct}% OFF</span>
+                    )}
+                  </div>
+                </Link>
+              ))}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => scroll(300)}
+              aria-label="Scroll products right"
+              className="hidden md:flex absolute right-1 top-1/2 -translate-y-1/2 z-10 w-[38px] h-[38px] rounded-full bg-[#f5f5f7] items-center justify-center cursor-pointer"
+            >
+              <Image src="/images/promo-banner/right-arrow.svg" alt="" width={9} height={16} className="w-[9px] h-4" />
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
   )
 }
