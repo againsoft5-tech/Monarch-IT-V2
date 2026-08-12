@@ -21,8 +21,11 @@ type Props = {
   priceMaxDefault: number
 }
 
-const INITIAL_COUNT = 8
-const LOAD_MORE_COUNT = 8
+// 4 columns and below -> 8 per page, 5 columns (>= 1400px) -> 10 per page.
+// Keep FIVE_COL_QUERY in sync with the min-[1400px]:grid-cols-5 class on the grid.
+const FIVE_COL_QUERY = '(min-width: 1400px)'
+const PAGE_SIZE = 8
+const PAGE_SIZE_5_COL = 10
 
 export default function CategoryPage({ categoryName, products, priceMinDefault, priceMaxDefault }: Props) {
   const router = useRouter()
@@ -38,10 +41,21 @@ export default function CategoryPage({ categoryName, products, priceMinDefault, 
   const [sort, setSort] = useState<'default' | 'best-seller' | 'price-asc' | 'price-desc'>('default')
   const [sortOpen, setSortOpen] = useState(false)
   const sortRef = useRef<HTMLDivElement>(null)
-  const [visibleCount, setVisibleCount] = useState(INITIAL_COUNT)
+  const [pagesShown, setPagesShown] = useState(1)
+  const [fiveCol, setFiveCol] = useState(false)
   const [descOpen, setDescOpen] = useState(false)
   const [chatOpen, setChatOpen] = useState(false)
   const { toast, showToast } = useToast()
+
+  useEffect(() => {
+    const mq = window.matchMedia(FIVE_COL_QUERY)
+    const sync = () => setFiveCol(mq.matches)
+    sync()
+    mq.addEventListener('change', sync)
+    return () => mq.removeEventListener('change', sync)
+  }, [])
+
+  const pageSize = fiveCol ? PAGE_SIZE_5_COL : PAGE_SIZE
 
   useEffect(() => {
     if (!sortOpen) return
@@ -116,12 +130,12 @@ export default function CategoryPage({ categoryName, products, priceMinDefault, 
 
   const toggleBrand = (brand: string) => {
     setSelectedBrands((prev) => (prev.includes(brand) ? prev.filter((b) => b !== brand) : [...prev, brand]))
-    setVisibleCount(INITIAL_COUNT)
+    setPagesShown(1)
   }
 
   const toggleAvailability = (status: string) => {
     setSelectedAvailability((prev) => (prev.includes(status) ? prev.filter((s) => s !== status) : [...prev, status]))
-    setVisibleCount(INITIAL_COUNT)
+    setPagesShown(1)
   }
 
   const filtered = useMemo(() => {
@@ -138,6 +152,7 @@ export default function CategoryPage({ categoryName, products, priceMinDefault, 
     return list
   }, [products, priceMin, priceMax, selectedBrands, selectedAvailability, sort])
 
+  const visibleCount = pagesShown * pageSize
   const paged = filtered.slice(0, visibleCount)
   const hasMore = visibleCount < filtered.length
 
@@ -199,7 +214,7 @@ export default function CategoryPage({ categoryName, products, priceMinDefault, 
                   setPriceMax(priceMaxDefault)
                   setSelectedBrands([])
                   setSelectedAvailability([])
-                  setVisibleCount(INITIAL_COUNT)
+                  setPagesShown(1)
                 }}
                 className="w-9 h-9 rounded-full bg-gray-400 hover:bg-gray-500 flex items-center justify-center transition-colors cursor-pointer"
                 aria-label="Clear all filters"
@@ -248,7 +263,7 @@ export default function CategoryPage({ categoryName, products, priceMinDefault, 
                   value={priceMin}
                   onChange={(e) => {
                     setPriceMin(Math.min(Number(e.target.value), priceMax))
-                    setVisibleCount(INITIAL_COUNT)
+                    setPagesShown(1)
                   }}
                   className="absolute inset-0 w-full h-1.5 appearance-none bg-transparent pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-[#c3272b] [&::-webkit-slider-thumb]:shadow [&::-webkit-slider-thumb]:cursor-pointer [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-[#c3272b] [&::-moz-range-thumb]:cursor-pointer"
                 />
@@ -259,7 +274,7 @@ export default function CategoryPage({ categoryName, products, priceMinDefault, 
                   value={priceMax}
                   onChange={(e) => {
                     setPriceMax(Math.max(Number(e.target.value), priceMin))
-                    setVisibleCount(INITIAL_COUNT)
+                    setPagesShown(1)
                   }}
                   className="absolute inset-0 w-full h-1.5 appearance-none bg-transparent pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-[#c3272b] [&::-webkit-slider-thumb]:shadow [&::-webkit-slider-thumb]:cursor-pointer [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-[#c3272b] [&::-moz-range-thumb]:cursor-pointer"
                 />
@@ -272,7 +287,7 @@ export default function CategoryPage({ categoryName, products, priceMinDefault, 
                     value={priceMin}
                     onChange={(e) => {
                       setPriceMin(Math.min(Number(e.target.value) || 0, priceMax))
-                      setVisibleCount(INITIAL_COUNT)
+                      setPagesShown(1)
                     }}
                     className="w-full min-w-0 text-center text-[13px] font-semibold text-gray-700 outline-none bg-transparent"
                   />
@@ -285,7 +300,7 @@ export default function CategoryPage({ categoryName, products, priceMinDefault, 
                     value={priceMax}
                     onChange={(e) => {
                       setPriceMax(Math.max(Number(e.target.value) || 0, priceMin))
-                      setVisibleCount(INITIAL_COUNT)
+                      setPagesShown(1)
                     }}
                     className="w-full min-w-0 text-center text-[13px] font-semibold text-gray-700 outline-none bg-transparent"
                   />
@@ -408,7 +423,7 @@ export default function CategoryPage({ categoryName, products, priceMinDefault, 
                           checked={sort === value}
                           onChange={() => {
                             setSort(sort === value ? 'default' : value)
-                            setVisibleCount(INITIAL_COUNT)
+                            setPagesShown(1)
                             setSortOpen(false)
                           }}
                           className="w-[18px] h-[18px] accent-[#c3272b] cursor-pointer"
@@ -421,7 +436,7 @@ export default function CategoryPage({ categoryName, products, priceMinDefault, 
               </div>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 md:gap-[50px]">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 min-[1400px]:grid-cols-5 gap-8 md:gap-[50px]">
               {paged.map((p) => (
                 <ProductCard
                   key={p.id}
@@ -444,7 +459,7 @@ export default function CategoryPage({ categoryName, products, priceMinDefault, 
               <div className="flex justify-center mt-10">
                 <button
                   type="button"
-                  onClick={() => setVisibleCount((c) => c + LOAD_MORE_COUNT)}
+                  onClick={() => setPagesShown((p) => p + 1)}
                   className="inline-flex items-center gap-2 bg-white text-[#c3272b] border-2 border-[#c3272b] font-bold text-[13px] px-6 py-2.5 rounded-full hover:bg-[#c3272b] hover:text-white transition-colors cursor-pointer"
                 >
                   <i className="fa fa-chevron-down text-base" /> More
