@@ -102,7 +102,7 @@ export default function ProductTabs({
         ))}
       </div>
 
-      <div className="flex-1 bg-white border-[1.5px] border-gray-100 rounded-[40px] p-5 md:p-6">
+      <div className="flex-1 bg-white border-[1.5px] border-gray-100 rounded-[35px] p-5 md:p-6">
         {tab === 'spec' && (
           <div>
             <h3 className="text-[16px] font-normal text-gray-900 mb-2.5">

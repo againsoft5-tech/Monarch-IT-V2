@@ -48,7 +48,7 @@ export default function MoreToLove({ products }: { products: RelatedProduct[] })
                 <Link
                   key={p.slug}
                   href={`/${p.slug}`}
-                  className="flex-none w-[47%] sm:w-[31%] lg:w-[calc(25%-15px)] min-[87.5rem]:w-[calc((100%-100px)/6)] bg-white p-3 md:p-5 rounded-2xl md:rounded-[20px] flex flex-col no-underline"
+                  className="flex-none w-[47%] sm:w-[31%] lg:w-[calc(25%-15px)] min-[87.5rem]:w-[calc((100%-100px)/6)] bg-white p-3 md:p-5 rounded-2xl md:rounded-[35px] flex flex-col no-underline"
                 >
                   <div className="bg-white rounded-2xl flex items-center justify-center mb-3">
                     <Image

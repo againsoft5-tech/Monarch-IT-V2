@@ -15,7 +15,10 @@ export default function ProductCard({
 }) {
   return (
     <div className="flex flex-col">
-      <Link href={`/${p.slug}`} className="aspect-square bg-[#f5f6fa] rounded-2xl flex items-center justify-center">
+      <Link
+        href={`/${p.slug}`}
+        className="aspect-square bg-[#f5f6fa] rounded-2xl md:rounded-[35px] flex items-center justify-center"
+      >
         <Image src={p.image} alt={p.name} width={228} height={228} className="w-[78%] h-[78%] object-contain" />
       </Link>
       <div className="pt-3 flex flex-col flex-1">

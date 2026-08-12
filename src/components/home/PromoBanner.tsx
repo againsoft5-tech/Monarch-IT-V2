@@ -57,7 +57,7 @@ function PromoColumn({ slides, trackRef }: { slides: PromoSlide[]; trackRef: Rea
   const loop = useMemo(() => (slides.length > 0 ? Array.from({ length: REPEATS }, () => slides).flat() : []), [slides])
 
   return (
-    <div className="flex-1 w-1/2 relative overflow-hidden rounded-[24px] bg-[#f4f5f7] h-[380px] min-[1200px]:h-[420px]">
+    <div className="flex-1 w-1/2 relative overflow-hidden rounded-[35px] bg-[#f4f5f7] h-[380px] min-[1200px]:h-[420px]">
       {slides.length === 0 ? (
         <div className="absolute inset-0 flex items-center justify-center text-[13px] text-gray-400">No product set</div>
       ) : (

@@ -72,7 +72,7 @@ export default function ProductSidebar({ products }: { products: RelatedProduct[
 
   return (
     <aside className="lg:w-[280px] shrink-0 flex flex-col h-full">
-      <div className="bg-white rounded-[40px] p-5 text-center flex-1 flex flex-col lg:mt-[55px]">
+      <div className="bg-white rounded-[35px] p-5 text-center flex-1 flex flex-col lg:mt-[55px]">
         <div className="text-[15px] font-normal text-gray-900 mb-2.5">
           Frequently <strong className="font-bold">Paired</strong>
         </div>
