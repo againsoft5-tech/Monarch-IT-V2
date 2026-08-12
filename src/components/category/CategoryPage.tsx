@@ -374,9 +374,14 @@ export default function CategoryPage({ categoryName, products, priceMinDefault, 
         {/* Main content */}
         <div>
             <div className="text-center mb-6">
-              <h1 className="text-3xl md:text-4xl font-bold text-[#4d4d4d]">{categoryName}</h1>
-              <p className="mt-1.5 text-[15px] md:text-base text-gray-500">
-                Explore our best {categoryName} collection at unbeatable prices.
+              <h1 className="text-3xl md:text-4xl font-bold text-[#4d4d4d]">
+                {categoryName} Price in Bangladesh {today.getFullYear()}
+              </h1>
+              <p className="mt-2.5 w-full text-[14px] md:text-[15px] text-gray-500 leading-[1.8]">
+                Monarch IT, the premier {categoryName} shop in Bangladesh, has updated its price list as of{' '}
+                {updatedDate}. With a range spanning from ৳{priceLow.toLocaleString()} to ৳
+                {priceHigh.toLocaleString()}, they offer {products.length} different products. Among these,{' '}
+                {inStockCount} items are currently in stock, {bestPriceCount} of them with the best discount price.
               </p>
             </div>
 
@@ -468,18 +473,6 @@ export default function CategoryPage({ categoryName, products, priceMinDefault, 
                 </button>
               </div>
             )}
-
-            <div className="bg-[#f5f6fa] rounded-[25px] px-5 py-4 mt-10">
-              <div className="font-bold text-[15px] text-gray-900 mb-2">
-                {categoryName} Price in Bangladesh {today.getFullYear()}
-              </div>
-              <p className="text-[13px] text-gray-600 leading-[1.8] m-0">
-                Monarch IT, the premier {categoryName} shop in Bangladesh, has updated its price list as of{' '}
-                {updatedDate}. With a range spanning from ৳{priceLow.toLocaleString()} to ৳
-                {priceHigh.toLocaleString()}, they offer {products.length} different products. Among these,{' '}
-                {inStockCount} items are currently in stock, {bestPriceCount} of them with the best discount price.
-              </p>
-            </div>
 
             <div className="bg-white border-[1.5px] border-[#f1f5f9] rounded-[25px] mt-10">
               <div
