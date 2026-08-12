@@ -45,7 +45,7 @@ export default function CategoryCarousel() {
               <Link
                 key={cat.name}
                 href={cat.href}
-                className="flex-none w-[157px] md:w-[290px] flex flex-col items-center p-3 md:p-5 rounded-2xl border border-[#f0f0f0] bg-white no-underline"
+                className="flex-none w-[157px] min-[768px]:max-[1399px]:w-[calc((100%-45px)/4)] min-[1400px]:w-[calc((100%-75px)/6)] flex flex-col items-center p-3 md:p-5 rounded-2xl border border-[#f0f0f0] bg-white no-underline"
               >
                 <Image src={cat.img} alt={cat.name} width={200} height={160} className="object-contain w-full h-auto" />
                 <span className="text-xs md:text-xl font-semibold text-[#4d4d4d] mt-2 text-center">{cat.name}</span>
