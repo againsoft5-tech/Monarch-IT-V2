@@ -22,7 +22,9 @@ type Props = {
 }
 
 // 4 columns and below -> 8 per page, 5 columns (>= 1400px) -> 10 per page.
-// Keep FIVE_COL_QUERY in sync with the min-[1400px]:grid-cols-5 class on the grid.
+// Keep FIVE_COL_QUERY in sync with the min-[87.5rem] (= 1400px) grid-cols-5 class on the grid.
+// The breakpoint must be written in rem: Tailwind v4 emits px-based media queries before the
+// rem-based default ones, so a min-[1400px] rule would be overridden by lg:grid-cols-4.
 const FIVE_COL_QUERY = '(min-width: 1400px)'
 const PAGE_SIZE = 8
 const PAGE_SIZE_5_COL = 10
@@ -436,7 +438,7 @@ export default function CategoryPage({ categoryName, products, priceMinDefault, 
               </div>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 min-[1400px]:grid-cols-5 gap-8 md:gap-[50px]">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 min-[87.5rem]:grid-cols-5 gap-8 md:gap-[50px]">
               {paged.map((p) => (
                 <ProductCard
                   key={p.id}
