@@ -32,9 +32,9 @@ export default function FeaturedProducts() {
             type="button"
             onClick={() => changeTab(-1)}
             aria-label="Previous tab"
-            className="w-9 h-9 rounded-full border border-gray-200 flex items-center justify-center text-[#BE1E2D] text-sm hover:bg-gray-50 hover:border-gray-300 transition-colors cursor-pointer"
+            className="w-[38px] h-[38px] rounded-full bg-[#f5f5f7] flex items-center justify-center cursor-pointer"
           >
-            <i className="fa fa-chevron-left" />
+            <Image src="/images/promo-banner/left-arrow.svg" alt="" width={9} height={16} className="w-[9px] h-4" />
           </button>
 
           <div className="inline-flex items-center">
@@ -56,9 +56,9 @@ export default function FeaturedProducts() {
             type="button"
             onClick={() => changeTab(1)}
             aria-label="Next tab"
-            className="w-9 h-9 rounded-full border border-gray-200 flex items-center justify-center text-[#BE1E2D] text-sm hover:bg-gray-50 hover:border-gray-300 transition-colors cursor-pointer"
+            className="w-[38px] h-[38px] rounded-full bg-[#f5f5f7] flex items-center justify-center cursor-pointer"
           >
-            <i className="fa fa-chevron-right" />
+            <Image src="/images/promo-banner/right-arrow.svg" alt="" width={9} height={16} className="w-[9px] h-4" />
           </button>
         </div>
       </div>
@@ -70,9 +70,9 @@ export default function FeaturedProducts() {
               type="button"
               onClick={() => scroll(-300)}
               aria-label="Scroll products left"
-              className="hidden md:flex absolute -left-2.5 top-1/2 -translate-y-1/2 z-10 w-11 h-11 rounded-full bg-white border border-gray-200 items-center justify-center text-[#BE1E2D] shadow-[0_4px_12px_rgba(0,0,0,0.08)] hover:bg-gray-50 cursor-pointer"
+              className="hidden md:flex absolute left-1 top-1/2 -translate-y-1/2 z-10 w-[38px] h-[38px] rounded-full bg-[#f5f5f7] items-center justify-center cursor-pointer"
             >
-              <i className="fa fa-chevron-left" />
+              <Image src="/images/promo-banner/left-arrow.svg" alt="" width={9} height={16} className="w-[9px] h-4" />
             </button>
 
             <div
@@ -123,9 +123,9 @@ export default function FeaturedProducts() {
               type="button"
               onClick={() => scroll(300)}
               aria-label="Scroll products right"
-              className="hidden md:flex absolute -right-2.5 top-1/2 -translate-y-1/2 z-10 w-11 h-11 rounded-full bg-white border border-gray-200 items-center justify-center text-[#BE1E2D] shadow-[0_4px_12px_rgba(0,0,0,0.08)] hover:bg-gray-50 cursor-pointer"
+              className="hidden md:flex absolute right-1 top-1/2 -translate-y-1/2 z-10 w-[38px] h-[38px] rounded-full bg-[#f5f5f7] items-center justify-center cursor-pointer"
             >
-              <i className="fa fa-chevron-right" />
+              <Image src="/images/promo-banner/right-arrow.svg" alt="" width={9} height={16} className="w-[9px] h-4" />
             </button>
           </div>
         </div>

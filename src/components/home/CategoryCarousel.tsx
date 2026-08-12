@@ -29,11 +29,11 @@ export default function CategoryCarousel() {
             type="button"
             onClick={() => scroll(-300)}
             aria-label="Scroll left"
-            className={`absolute -left-2.5 z-10 bg-white border border-gray-200 rounded-full w-9 h-9 flex items-center justify-center shadow-sm transition-opacity cursor-pointer ${
+            className={`absolute left-0 z-10 w-[38px] h-[38px] bg-[#f5f5f7] rounded-full flex items-center justify-center transition-opacity cursor-pointer ${
               atStart ? 'opacity-0 pointer-events-none' : 'opacity-100'
             }`}
           >
-            <span className="mi text-[#d32f2e] text-[20px]">chevron_left</span>
+            <Image src="/images/promo-banner/left-arrow.svg" alt="" width={9} height={16} className="w-[9px] h-4" />
           </button>
 
           <div
@@ -57,11 +57,11 @@ export default function CategoryCarousel() {
             type="button"
             onClick={() => scroll(300)}
             aria-label="Scroll right"
-            className={`absolute -right-2.5 z-10 bg-white border border-gray-200 rounded-full w-9 h-9 flex items-center justify-center shadow-sm transition-opacity cursor-pointer ${
+            className={`absolute right-0 z-10 w-[38px] h-[38px] bg-[#f5f5f7] rounded-full flex items-center justify-center transition-opacity cursor-pointer ${
               atEnd ? 'opacity-0 pointer-events-none' : 'opacity-100'
             }`}
           >
-            <span className="mi text-[#d32f2e] text-[20px]">chevron_right</span>
+            <Image src="/images/promo-banner/right-arrow.svg" alt="" width={9} height={16} className="w-[9px] h-4" />
           </button>
         </div>
       </div>
