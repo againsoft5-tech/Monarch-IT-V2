@@ -4,47 +4,75 @@ import { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import type { ProductImage } from '@/data/productDetail'
 
+const ZOOM_SCALE = 2
+
 export default function ProductGallery({ images, name }: { images: ProductImage[]; name: string }) {
   const [active, setActive] = useState(0)
-  const [lightboxOpen, setLightboxOpen] = useState(false)
-  const [lightboxIndex, setLightboxIndex] = useState(0)
+  const [zoomed, setZoomed] = useState(false)
+  const [origin, setOrigin] = useState('50% 50%')
   const trackRef = useRef<HTMLDivElement>(null)
+  const boxRef = useRef<HTMLDivElement>(null)
 
   const scrollThumbs = (dir: number) => {
     trackRef.current?.scrollBy({ left: dir * 100, behavior: 'smooth' })
   }
 
-  const openLightbox = (i: number) => {
-    setLightboxIndex(i)
-    setLightboxOpen(true)
+  // Switching thumbnails always starts the new image un-zoomed.
+  useEffect(() => {
+    setZoomed(false)
+    setOrigin('50% 50%')
+  }, [active])
+
+  // Point the zoom at wherever the pointer/finger is, so the whole image stays reachable.
+  const setOriginFromPoint = (clientX: number, clientY: number) => {
+    const rect = boxRef.current?.getBoundingClientRect()
+    if (!rect) return
+    const clamp = (v: number) => Math.min(100, Math.max(0, v))
+    setOrigin(`${clamp(((clientX - rect.left) / rect.width) * 100)}% ${clamp(((clientY - rect.top) / rect.height) * 100)}%`)
   }
 
-  const showPrev = () => setLightboxIndex((i) => (i - 1 + images.length) % images.length)
-  const showNext = () => setLightboxIndex((i) => (i + 1) % images.length)
-
+  // React registers touchmove passively, so panning has to be bound natively to be able to
+  // preventDefault — otherwise dragging inside a zoomed image scrolls the page instead.
   useEffect(() => {
-    if (!lightboxOpen) return
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setLightboxOpen(false)
-      if (e.key === 'ArrowLeft') showPrev()
-      if (e.key === 'ArrowRight') showNext()
+    const el = boxRef.current
+    if (!el || !zoomed) return
+    const onTouchMove = (e: TouchEvent) => {
+      const touch = e.touches[0]
+      if (!touch) return
+      e.preventDefault()
+      setOriginFromPoint(touch.clientX, touch.clientY)
     }
-    document.addEventListener('keydown', onKeyDown)
-    return () => document.removeEventListener('keydown', onKeyDown)
-  }, [lightboxOpen, images.length])
+    el.addEventListener('touchmove', onTouchMove, { passive: false })
+    return () => el.removeEventListener('touchmove', onTouchMove)
+  }, [zoomed])
 
   return (
     <div className="p-4">
       <div
-        onClick={() => openLightbox(active)}
-        className="relative rounded-[35px] h-[320px] md:h-[400px] flex items-center justify-center bg-[#f5f5f7] border border-gray-100 overflow-hidden cursor-zoom-in"
+        ref={boxRef}
+        onClick={() => setZoomed((v) => !v)}
+        onMouseMove={(e) => {
+          if (zoomed) setOriginFromPoint(e.clientX, e.clientY)
+        }}
+        onMouseLeave={() => {
+          setZoomed(false)
+          setOrigin('50% 50%')
+        }}
+        onTouchStart={(e) => {
+          const touch = e.touches[0]
+          if (touch) setOriginFromPoint(touch.clientX, touch.clientY)
+        }}
+        className={`relative rounded-[35px] h-[320px] md:h-[400px] flex items-center justify-center bg-[#f5f5f7] border border-gray-100 overflow-hidden select-none ${
+          zoomed ? 'cursor-zoom-out touch-none' : 'cursor-zoom-in'
+        }`}
       >
         <Image
           src={images[active].large}
           alt={name}
           width={500}
           height={500}
-          className="max-w-full max-h-full object-contain p-2.5"
+          className="max-w-full max-h-full object-contain p-2.5 transition-transform duration-300 ease-out"
+          style={{ transform: `scale(${zoomed ? ZOOM_SCALE : 1})`, transformOrigin: origin }}
           priority
         />
       </div>
@@ -64,10 +92,7 @@ export default function ProductGallery({ images, name }: { images: ProductImage[
             <button
               key={i}
               type="button"
-              onClick={() => {
-                setActive(i)
-                openLightbox(i)
-              }}
+              onClick={() => setActive(i)}
               className={`w-16 h-16 shrink-0 rounded-lg border bg-[#fafbfe] flex items-center justify-center overflow-hidden transition-colors cursor-pointer ${
                 i === active ? 'border-[#d92128]' : 'border-gray-200 hover:border-[#d92128]'
               }`}
@@ -86,65 +111,6 @@ export default function ProductGallery({ images, name }: { images: ProductImage[
           <Image src="/images/promo-banner/right-arrow.svg" alt="" width={9} height={16} className="w-[9px] h-4" />
         </button>
       </div>
-
-      {lightboxOpen && (
-        <div
-          onClick={() => setLightboxOpen(false)}
-          className="fixed inset-0 z-[9999] bg-[#0d1828]/80 flex items-center justify-center p-4"
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className="relative w-full max-w-xl bg-white rounded-lg shadow-2xl overflow-hidden"
-          >
-            <button
-              type="button"
-              onClick={() => setLightboxOpen(false)}
-              aria-label="Close"
-              className="absolute top-3 right-3 z-10 w-9 h-9 rounded-full bg-[#f3f4f6] flex items-center justify-center text-[#d32f2f] hover:bg-[#d32f2f] hover:text-white transition-colors cursor-pointer"
-            >
-              <span className="mi text-xl">close</span>
-            </button>
-
-            <div className="relative aspect-square flex items-center justify-center bg-white">
-              <Image
-                src={images[lightboxIndex].large}
-                alt={name}
-                width={700}
-                height={700}
-                className="max-w-full max-h-full object-contain p-4"
-              />
-
-              {images.length > 1 && (
-                <>
-                  <button
-                    type="button"
-                    onClick={showPrev}
-                    aria-label="Previous image"
-                    className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-[#d32f2f] text-white flex items-center justify-center hover:bg-[#0d1828] transition-colors cursor-pointer"
-                  >
-                    <span className="mi text-2xl">chevron_left</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={showNext}
-                    aria-label="Next image"
-                    className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-[#d32f2f] text-white flex items-center justify-center hover:bg-[#0d1828] transition-colors cursor-pointer"
-                  >
-                    <span className="mi text-2xl">chevron_right</span>
-                  </button>
-                </>
-              )}
-            </div>
-
-            <div className="bg-[#0d1828] text-white text-[13px] px-4 py-3 flex items-center justify-between gap-3">
-              <span className="truncate">{name}</span>
-              <span className="shrink-0 text-[#f3f4f6]">
-                {lightboxIndex + 1} of {images.length}
-              </span>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }
