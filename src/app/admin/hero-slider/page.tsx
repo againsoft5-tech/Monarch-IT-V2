@@ -221,8 +221,9 @@ function LayerSettingsModal({
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-      <div className="relative w-full max-w-3xl max-h-[88vh] overflow-y-auto thin-scroll-gray bg-white rounded-2xl shadow-xl">
-        <div className="sticky top-0 bg-white flex items-center justify-between gap-3 px-5 py-4 border-b border-gray-100 rounded-t-2xl">
+      {/* Header, tabs and preview stay put; only the control column scrolls. */}
+      <div className="relative w-full max-w-3xl max-h-[88vh] flex flex-col overflow-hidden bg-white rounded-2xl shadow-xl">
+        <div className="shrink-0 flex items-center justify-between gap-3 px-5 py-4 border-b border-gray-100">
           <div>
             <h3 className="text-[15px] font-bold text-gray-900 m-0">{PART_LABEL[part]} settings</h3>
             <p className="text-[12px] text-gray-500 m-0 mt-0.5">
@@ -239,7 +240,7 @@ function LayerSettingsModal({
           </button>
         </div>
 
-        <div className="px-5 pt-4">
+        <div className="shrink-0 px-5 pt-4">
           <div className="inline-flex p-1 rounded-full bg-[#f4f5f7]">
             {(['desktop', 'mobile'] as const).map((d) => (
               <button
@@ -255,8 +256,10 @@ function LayerSettingsModal({
           </div>
         </div>
 
-        <div className="p-5 grid gap-5 md:grid-cols-2">
-          <div>
+        {/* Below md the whole body scrolls; from md up the grid is pinned and
+            the right column scrolls on its own. */}
+        <div className="flex-1 min-h-0 p-5 grid gap-5 md:grid-cols-2 overflow-y-auto md:overflow-hidden thin-scroll-gray">
+          <div className="md:self-start">
             <p className="text-[11px] font-semibold text-gray-400 mb-1.5 m-0">Live preview</p>
             <SlidePreview slide={slide} device={device} />
             <button
@@ -268,7 +271,7 @@ function LayerSettingsModal({
             </button>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-4 md:min-h-0 md:overflow-y-auto md:pr-1.5 thin-scroll-gray">
             <div className="rounded-xl border border-gray-100 p-3.5 space-y-3.5">
               <p className="text-[12px] font-bold text-gray-900 m-0">Layer order</p>
               <NumControl
