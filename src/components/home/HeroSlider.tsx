@@ -31,9 +31,17 @@ function SlideLayer({
 }
 
 export default function HeroSlider() {
-  const { db } = useHeroSliderStore()
-  // Slides switched off in the admin panel stay out of the rotation entirely.
-  const slides = db.slides.filter((s) => s.enabled !== false)
+  const { db, ready } = useHeroSliderStore()
+  /**
+   * The saved slider lives in localStorage, which the server cannot see, so the
+   * first paint has nothing but the built-in seed. Painting that seed flashed
+   * the wrong banner until hydration replaced it, so hold off until the real
+   * data is read — the sized boxes below still reserve the space, so the page
+   * does not jump.
+   *
+   * Slides switched off in the admin panel stay out of the rotation entirely.
+   */
+  const slides = ready ? db.slides.filter((s) => s.enabled !== false) : []
   const [current, setCurrent] = useState(0)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const touchStartX = useRef(0)
@@ -83,10 +91,12 @@ export default function HeroSlider() {
   }
 
   const active = Math.min(current, Math.max(slides.length - 1, 0))
-  const bgMobile = db.bgMobile || db.bgDesktop
+  // Held back with the slides so a customised background does not flash either.
+  const bgDesktop = ready ? db.bgDesktop : ''
+  const bgMobile = ready ? db.bgMobile || db.bgDesktop : ''
 
   // Turned off in the admin panel — the homepage simply starts at the next section.
-  if (!db.enabled) return null
+  if (ready && !db.enabled) return null
 
   return (
     <div
@@ -102,9 +112,9 @@ export default function HeroSlider() {
         className="relative hidden md:block w-full overflow-hidden bg-white"
         style={{ containerType: 'inline-size', aspectRatio: DESKTOP_ASPECT }}
       >
-        {db.bgDesktop && (
+        {bgDesktop && (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={db.bgDesktop} alt="" className="absolute inset-0 w-full h-full object-cover object-center z-0" />
+          <img src={bgDesktop} alt="" className="absolute inset-0 w-full h-full object-cover object-center z-0" />
         )}
 
         {slides.map((slide, i) => (
