@@ -66,7 +66,7 @@ const LOCAL_EVENT = 'monarch-hero-slider-local-change'
 
 // Bump when seedDB() gains new default slides so already-seeded browsers pick
 // them up instead of being stuck on whatever was saved on their first visit.
-const SEED_VERSION = 3
+const SEED_VERSION = 4
 
 const DEFAULT_BG = '/images/hero-slider/slider-bg.jpg'
 
@@ -124,6 +124,27 @@ export function seedDB(): HeroSliderDB {
     bgMobile: DEFAULT_BG,
     slides: [
       {
+        id: 'hero-seed-hyperx-cloud-ii',
+        brandLogo: '/images/hero-slider/brand-hyperx.png',
+        productImage: '/images/hero-slider/hyperx-cloud-ii.png',
+        title: 'CLOUD II',
+        subtitle: '',
+        href: '/offers',
+        // The HyperX wordmark is wider than the FANTECH mark and the CLOUD II
+        // cut-out sits lower in its frame, so this slide carries its own boxes
+        // rather than the shared defaults.
+        desktop: {
+          product: { x: 66.5, y: 55, w: 40, h: 0, z: 1 },
+          logo: { x: 26, y: 35, w: 17, h: 0, z: 2 },
+          text: { x: 40, y: 49, w: 45, z: 3, size: 8, subSize: 1.55, align: 'left' },
+        },
+        mobile: {
+          product: { x: 50, y: 68, w: 58, h: 0, z: 1 },
+          logo: { x: 50, y: 15, w: 34, h: 0, z: 2 },
+          text: { x: 50, y: 32, w: 88, z: 3, size: 13, subSize: 2.9, align: 'center' },
+        },
+      },
+      {
         id: 'hero-seed-fantech-curl-71',
         brandLogo: '/images/hero-slider/brand-fantech.png',
         productImage: '/images/hero-slider/fantech-curl-7-1.png',
@@ -135,6 +156,21 @@ export function seedDB(): HeroSliderDB {
       },
     ],
   }
+}
+
+/**
+ * Adds seed slides the saved DB has never seen, each at the index it holds in
+ * the seed — so a new slide added to the front of seedDB() shows up first for
+ * existing visitors too, not tacked on the end.
+ */
+function mergeSeedSlides(existing: HeroSlide[], seed: HeroSlide[]): HeroSlide[] {
+  const have = new Set(existing.map((s) => s.productImage))
+  const merged = [...existing]
+  seed.forEach((s, i) => {
+    if (have.has(s.productImage)) return
+    merged.splice(Math.min(i, merged.length), 0, s)
+  })
+  return merged
 }
 
 /** Re-tunes untouched 16:9-era desktop layouts for the 1350x600 box. */
@@ -175,13 +211,10 @@ function readDB(): HeroSliderDB {
     const storedVersion = Number(localStorage.getItem(VERSION_KEY) ?? '0')
     if (storedVersion < SEED_VERSION) {
       const seed = seedDB()
-      const existing = new Set(parsed.slides.map((s) => s.productImage))
       const migrated: HeroSliderDB = {
         bgDesktop: parsed.bgDesktop || seed.bgDesktop,
         bgMobile: parsed.bgMobile || seed.bgMobile,
-        slides: [...parsed.slides, ...seed.slides.filter((s) => !existing.has(s.productImage))]
-          .map(normalizeSlide)
-          .map(retuneLegacyDesktop),
+        slides: mergeSeedSlides(parsed.slides, seed.slides).map(normalizeSlide).map(retuneLegacyDesktop),
       }
       localStorage.setItem(DB_KEY, JSON.stringify(migrated))
       localStorage.setItem(VERSION_KEY, String(SEED_VERSION))
