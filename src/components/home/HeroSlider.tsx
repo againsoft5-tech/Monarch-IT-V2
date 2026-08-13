@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import HeroSlideContent from './HeroSlideContent'
+import HeroSlideContent, { DESKTOP_ASPECT, MOBILE_ASPECT } from './HeroSlideContent'
 import { useHeroSliderStore, type Device, type HeroSlide } from '@/lib/heroSliderStore'
 
 const AUTOPLAY_MS = 5000
@@ -93,10 +93,10 @@ export default function HeroSlider() {
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
-      {/* Desktop — 16:9 landscape */}
+      {/* Desktop — original 1350x600 banner ratio */}
       <div
-        className="relative hidden md:block w-full overflow-hidden bg-white aspect-[16/9]"
-        style={{ containerType: 'inline-size' }}
+        className="relative hidden md:block w-full overflow-hidden bg-white"
+        style={{ containerType: 'inline-size', aspectRatio: DESKTOP_ASPECT }}
       >
         {db.bgDesktop && (
           // eslint-disable-next-line @next/next/no-img-element
@@ -133,8 +133,8 @@ export default function HeroSlider() {
 
       {/* Mobile — 1:1 square, its own layout numbers */}
       <div
-        className="relative md:hidden w-full overflow-hidden bg-white aspect-square"
-        style={{ containerType: 'inline-size' }}
+        className="relative md:hidden w-full overflow-hidden bg-white"
+        style={{ containerType: 'inline-size', aspectRatio: MOBILE_ASPECT }}
       >
         {bgMobile && (
           // eslint-disable-next-line @next/next/no-img-element

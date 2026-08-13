@@ -66,7 +66,7 @@ const LOCAL_EVENT = 'monarch-hero-slider-local-change'
 
 // Bump when seedDB() gains new default slides so already-seeded browsers pick
 // them up instead of being stuck on whatever was saved on their first visit.
-const SEED_VERSION = 2
+const SEED_VERSION = 3
 
 const DEFAULT_BG = '/images/hero-slider/slider-bg.jpg'
 
@@ -75,16 +75,29 @@ const DEFAULT_BG = '/images/hero-slider/slider-bg.jpg'
  * Admins can override any of these per slide, per device.
  */
 export const DEFAULT_LAYOUT: Record<Device, SlideLayout> = {
+  // Tuned for the 1350x600 desktop box. The product is sized and nudged down so
+  // its top clears the site's fixed 72px transparent header.
   desktop: {
-    product: { x: 73, y: 50, w: 52, h: 0, z: 1 },
-    logo: { x: 14.5, y: 40, w: 11, h: 0, z: 2 },
-    text: { x: 27.5, y: 59, w: 37, z: 3, size: 7.6, subSize: 1.55, align: 'left' },
+    product: { x: 72, y: 53, w: 36, h: 0, z: 1 },
+    logo: { x: 14.5, y: 30, w: 11, h: 0, z: 2 },
+    text: { x: 27.5, y: 60, w: 37, z: 3, size: 7.6, subSize: 1.55, align: 'left' },
   },
   mobile: {
     product: { x: 50, y: 67, w: 52, h: 0, z: 1 },
     logo: { x: 50, y: 14.5, w: 15, h: 0, z: 2 },
     text: { x: 50, y: 32, w: 88, z: 3, size: 13, subSize: 2.9, align: 'center' },
   },
+}
+
+/**
+ * Desktop defaults from the short-lived 16:9 build. Slides still carrying these
+ * exact numbers were never touched by an admin, so the v3 migration re-tunes
+ * them for the 1350x600 box; anything customised is left alone.
+ */
+const LEGACY_16_9_DESKTOP: SlideLayout = {
+  product: { x: 73, y: 50, w: 52, h: 0, z: 1 },
+  logo: { x: 14.5, y: 40, w: 11, h: 0, z: 2 },
+  text: { x: 27.5, y: 59, w: 37, z: 3, size: 7.6, subSize: 1.55, align: 'left' },
 }
 
 export function defaultLayout(device: Device): SlideLayout {
@@ -124,6 +137,13 @@ export function seedDB(): HeroSliderDB {
   }
 }
 
+/** Re-tunes untouched 16:9-era desktop layouts for the 1350x600 box. */
+function retuneLegacyDesktop(slide: HeroSlide): HeroSlide {
+  if (!slide.desktop) return slide
+  if (JSON.stringify(slide.desktop) !== JSON.stringify(LEGACY_16_9_DESKTOP)) return slide
+  return { ...slide, desktop: defaultLayout('desktop') }
+}
+
 /** Fills in any layout a slide is missing so older saved DBs keep working. */
 function normalizeSlide(slide: HeroSlide): HeroSlide {
   const fill = (device: Device): SlideLayout => {
@@ -159,7 +179,9 @@ function readDB(): HeroSliderDB {
       const migrated: HeroSliderDB = {
         bgDesktop: parsed.bgDesktop || seed.bgDesktop,
         bgMobile: parsed.bgMobile || seed.bgMobile,
-        slides: [...parsed.slides, ...seed.slides.filter((s) => !existing.has(s.productImage))].map(normalizeSlide),
+        slides: [...parsed.slides, ...seed.slides.filter((s) => !existing.has(s.productImage))]
+          .map(normalizeSlide)
+          .map(retuneLegacyDesktop),
       }
       localStorage.setItem(DB_KEY, JSON.stringify(migrated))
       localStorage.setItem(VERSION_KEY, String(SEED_VERSION))

@@ -16,6 +16,19 @@ import type { Device, HeroSlide, ImageBox, TextBox } from '@/lib/heroSliderStore
  * one set of numbers holds up at every viewport width for that device.
  */
 
+/**
+ * Slide box shapes. Desktop keeps the original 1350×600 banner ratio — a true
+ * 16:9 hero is so tall on wide screens that everything below it falls off the
+ * fold. Mobile gets its own 1:1 square. Both the storefront and the admin
+ * previews read these, so the preview can never drift from the real thing.
+ */
+export const DESKTOP_ASPECT = '1350 / 600'
+export const MOBILE_ASPECT = '1 / 1'
+
+export function slideAspect(device: Device) {
+  return device === 'desktop' ? DESKTOP_ASPECT : MOBILE_ASPECT
+}
+
 function imageStyle(box: ImageBox): CSSProperties {
   return {
     position: 'absolute',

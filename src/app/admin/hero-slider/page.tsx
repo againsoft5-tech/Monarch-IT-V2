@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAdminAuth } from '@/context/AdminAuthContext'
-import HeroSlideContent from '@/components/home/HeroSlideContent'
+import HeroSlideContent, { slideAspect } from '@/components/home/HeroSlideContent'
 import {
   useHeroSliderStore,
   addSlide,
@@ -183,7 +183,7 @@ function LayerSettingsModal({
                 className="h-8 px-4 rounded-full text-[12.5px] font-semibold capitalize cursor-pointer transition-colors"
                 style={device === d ? { backgroundColor: RED, color: '#fff' } : { color: '#6b7280' }}
               >
-                {d === 'desktop' ? 'Desktop 16:9' : 'Mobile 1:1'}
+                {d === 'desktop' ? 'Desktop' : 'Mobile 1:1'}
               </button>
             ))}
           </div>
@@ -325,10 +325,8 @@ function SlidePreview({ slide, device }: { slide: HeroSlide; device: Device }) {
 
   return (
     <div
-      className={`relative w-full overflow-hidden rounded-xl border border-gray-100 bg-white ${
-        device === 'desktop' ? 'aspect-[16/9]' : 'aspect-square'
-      }`}
-      style={{ containerType: 'inline-size' }}
+      className="relative w-full overflow-hidden rounded-xl border border-gray-100 bg-white"
+      style={{ containerType: 'inline-size', aspectRatio: slideAspect(device) }}
     >
       {bg && (
         // eslint-disable-next-line @next/next/no-img-element
@@ -501,7 +499,7 @@ function SlideCard({ slide, index, count }: { slide: HeroSlide; index: number; c
 
       <div className="grid gap-3 sm:grid-cols-[2fr_1fr] pt-1">
         <div>
-          <p className="text-[11px] font-semibold text-gray-400 mb-1.5 m-0">Desktop preview — 16:9</p>
+          <p className="text-[11px] font-semibold text-gray-400 mb-1.5 m-0">Desktop preview — 1350×600</p>
           <SlidePreview slide={slide} device="desktop" />
         </div>
         <div>
@@ -543,7 +541,7 @@ export default function AdminHeroSliderPage() {
           <p className="text-[13px] text-gray-500 mt-1 mb-0">
             One shared background sits behind every slide. Each slide stacks three independent layers on top — product
             image, brand logo and text. Use the gear icon beside any item to set its layer order, size and position,
-            separately for desktop 16:9 and mobile 1:1.
+            separately for the wide desktop banner and the mobile 1:1 square.
           </p>
         </div>
 
@@ -551,8 +549,8 @@ export default function AdminHeroSliderPage() {
           <h2 className="text-[15px] font-bold text-gray-900 m-0 mb-4">Shared background</h2>
           <div className="grid gap-4 sm:grid-cols-2">
             <ImagePicker
-              label="Desktop background (16:9)"
-              hint="Used on tablets and up. Recommended 1920 × 1080."
+              label="Desktop background (wide)"
+              hint="Used on tablets and up. Recommended 1350 × 600 (or any 2.25:1 art)."
               value={db.bgDesktop}
               onChange={(url) => updateBackground({ bgDesktop: url })}
               boxClass="w-40 h-[90px]"
