@@ -6,7 +6,10 @@ import Link from 'next/link'
 import { useAdminAuth } from '@/context/AdminAuthContext'
 import HeroSlideContent, { slideAspect } from '@/components/home/HeroSlideContent'
 import {
-  useHeroSliderStore,
+  useHeroSliderDraft,
+  publishDraft,
+  discardDraft,
+  setSliderEnabled,
   addSlide,
   updateSlide,
   updateLayout,
@@ -203,6 +206,7 @@ function LayerSettingsModal({
   onClose: () => void
 }) {
   const [device, setDevice] = useState<Device>('desktop')
+  const { dirty } = useHeroSliderDraft()
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -402,6 +406,30 @@ function LayerSettingsModal({
             </div>
           </div>
         </div>
+
+        <div className="shrink-0 flex items-center justify-between gap-3 px-5 py-3.5 border-t border-gray-100 bg-white">
+          <p className="text-[11.5px] text-gray-400 m-0">
+            {dirty ? 'These changes are not live yet.' : 'Everything here is live.'}
+          </p>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="h-9 px-4 rounded-full border border-gray-200 text-[12.5px] font-semibold text-gray-600 hover:bg-gray-50 cursor-pointer"
+            >
+              Close
+            </button>
+            <button
+              type="button"
+              disabled={!dirty}
+              onClick={publishDraft}
+              className="h-9 px-5 rounded-full text-white text-[12.5px] font-semibold cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+              style={{ backgroundColor: RED }}
+            >
+              Save changes
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   )
@@ -410,7 +438,7 @@ function LayerSettingsModal({
 /* ---------------------------------------------------------------- previews */
 
 function SlidePreview({ slide, device }: { slide: HeroSlide; device: Device }) {
-  const { db } = useHeroSliderStore()
+  const { db } = useHeroSliderDraft()
   const bg = device === 'desktop' ? db.bgDesktop : db.bgMobile || db.bgDesktop
 
   return (
@@ -610,7 +638,7 @@ function SlideCard({ slide, index, count }: { slide: HeroSlide; index: number; c
 export default function AdminHeroSliderPage() {
   const { isAdminLoggedIn, adminChecked } = useAdminAuth()
   const router = useRouter()
-  const { db, ready } = useHeroSliderStore()
+  const { db, ready, dirty } = useHeroSliderDraft()
 
   useEffect(() => {
     if (adminChecked && !isAdminLoggedIn) router.replace('/admin/login')
@@ -633,6 +661,70 @@ export default function AdminHeroSliderPage() {
             image, brand logo and text. Use the gear icon beside any item to set its layer order, size and position,
             separately for the wide desktop banner and the mobile 1:1 square.
           </p>
+          <p className="text-[13px] text-gray-500 mt-2 mb-0">
+            Edits here only change the previews below. Nothing reaches the homepage until you press{' '}
+            <span className="font-semibold text-gray-700">Save changes</span>.
+          </p>
+        </div>
+
+        {/* Draft controls follow the page so Save is always one click away. */}
+        <div className="sticky top-0 z-40 mb-5">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 px-5 py-3.5 flex flex-wrap items-center gap-x-5 gap-y-3">
+            <button
+              type="button"
+              role="switch"
+              aria-checked={db.enabled}
+              onClick={() => setSliderEnabled(!db.enabled)}
+              className="flex items-center gap-2.5 cursor-pointer"
+            >
+              <span
+                className={`w-10 h-6 rounded-full p-0.5 flex transition-colors ${
+                  db.enabled ? 'justify-end' : 'justify-start bg-gray-300'
+                }`}
+                style={db.enabled ? { backgroundColor: RED } : undefined}
+              >
+                <span className="w-5 h-5 rounded-full bg-white shadow-sm" />
+              </span>
+              <span className="text-[13px] font-semibold text-gray-800">
+                Slider {db.enabled ? 'enabled' : 'disabled'}
+              </span>
+            </button>
+
+            <span className="text-[12px] text-gray-400 hidden sm:block">
+              {db.enabled ? 'Shown at the top of the homepage.' : 'Hidden from the homepage once saved.'}
+            </span>
+
+            <div className="flex items-center gap-2.5 ml-auto">
+              {dirty ? (
+                <span className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-[#b45309]">
+                  <span className="w-2 h-2 rounded-full bg-[#f59e0b]" />
+                  Unsaved changes
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-[#047857]">
+                  <span className="mi text-[16px]">check_circle</span>
+                  All changes saved
+                </span>
+              )}
+              <button
+                type="button"
+                disabled={!dirty}
+                onClick={() => window.confirm('Discard all unsaved changes?') && discardDraft()}
+                className="h-9 px-4 rounded-full border border-gray-200 text-[12.5px] font-semibold text-gray-600 hover:bg-gray-50 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                Discard
+              </button>
+              <button
+                type="button"
+                disabled={!dirty}
+                onClick={publishDraft}
+                className="h-9 px-5 rounded-full text-white text-[12.5px] font-semibold cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                style={{ backgroundColor: RED }}
+              >
+                Save changes
+              </button>
+            </div>
+          </div>
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 mb-5">

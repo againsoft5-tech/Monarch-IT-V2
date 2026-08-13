@@ -55,17 +55,28 @@ export type HeroSlide = {
 }
 
 export type HeroSliderDB = {
-  /** Shared background behind every slide — 16:9 desktop artwork. */
+  /** When false the storefront renders no hero at all. */
+  enabled: boolean
+  /** Shared background behind every slide — wide desktop artwork. */
   bgDesktop: string
   /** Shared background for the 1:1 mobile layout. Falls back to bgDesktop when empty. */
   bgMobile: string
   slides: HeroSlide[]
 }
 
+/**
+ * Two copies of the DB.
+ *
+ * The admin panel edits the DRAFT, so its live previews react instantly while
+ * the storefront keeps showing the last PUBLISHED copy. Nothing reaches
+ * visitors until someone hits Save.
+ */
 const DB_KEY = 'monarch_hero_slider'
+const DRAFT_KEY = 'monarch_hero_slider_draft'
 const VERSION_KEY = 'monarch_hero_slider_seed_version'
 const CHANNEL_NAME = 'monarch-hero-slider-sync'
-const LOCAL_EVENT = 'monarch-hero-slider-local-change'
+const PUBLISHED_EVENT = 'monarch-hero-slider-published-change'
+const DRAFT_EVENT = 'monarch-hero-slider-draft-change'
 
 // Bump when seedDB() gains new default slides so already-seeded browsers pick
 // them up instead of being stuck on whatever was saved on their first visit.
@@ -135,6 +146,7 @@ function makeId() {
 // render agree — HeroSlider paints these defaults before localStorage is read.
 export function seedDB(): HeroSliderDB {
   return {
+    enabled: true,
     bgDesktop: DEFAULT_BG,
     bgMobile: DEFAULT_BG,
     slides: [
@@ -228,7 +240,36 @@ function normalizeSlide(slide: HeroSlide): HeroSlide {
   }
 }
 
-function readDB(): HeroSliderDB {
+/** Parses a stored blob into a complete DB, running any pending seed migration. */
+function parseDB(raw: string | null, key: string): HeroSliderDB {
+  if (!raw) return seedDB()
+  const parsed = JSON.parse(raw) as Partial<HeroSliderDB>
+  if (!Array.isArray(parsed.slides)) return seedDB()
+
+  const storedVersion = Number(localStorage.getItem(VERSION_KEY) ?? '0')
+  if (storedVersion < SEED_VERSION) {
+    const seed = seedDB()
+    const migrated: HeroSliderDB = {
+      enabled: parsed.enabled ?? true,
+      bgDesktop: parsed.bgDesktop || seed.bgDesktop,
+      bgMobile: parsed.bgMobile || seed.bgMobile,
+      slides: mergeSeedSlides(parsed.slides, seed.slides).map(normalizeSlide).map(retuneStaleDesktop),
+    }
+    localStorage.setItem(key, JSON.stringify(migrated))
+    localStorage.setItem(VERSION_KEY, String(SEED_VERSION))
+    return migrated
+  }
+
+  return {
+    enabled: parsed.enabled ?? true,
+    bgDesktop: parsed.bgDesktop ?? '',
+    bgMobile: parsed.bgMobile ?? '',
+    slides: parsed.slides.map(normalizeSlide),
+  }
+}
+
+/** What the storefront shows. */
+function readPublished(): HeroSliderDB {
   if (typeof window === 'undefined') return seedDB()
   try {
     const raw = localStorage.getItem(DB_KEY)
@@ -238,72 +279,111 @@ function readDB(): HeroSliderDB {
       localStorage.setItem(VERSION_KEY, String(SEED_VERSION))
       return seeded
     }
-    const parsed = JSON.parse(raw) as Partial<HeroSliderDB>
-    if (!Array.isArray(parsed.slides)) return seedDB()
-
-    const storedVersion = Number(localStorage.getItem(VERSION_KEY) ?? '0')
-    if (storedVersion < SEED_VERSION) {
-      const seed = seedDB()
-      const migrated: HeroSliderDB = {
-        bgDesktop: parsed.bgDesktop || seed.bgDesktop,
-        bgMobile: parsed.bgMobile || seed.bgMobile,
-        slides: mergeSeedSlides(parsed.slides, seed.slides).map(normalizeSlide).map(retuneStaleDesktop),
-      }
-      localStorage.setItem(DB_KEY, JSON.stringify(migrated))
-      localStorage.setItem(VERSION_KEY, String(SEED_VERSION))
-      return migrated
-    }
-
-    return {
-      bgDesktop: parsed.bgDesktop ?? '',
-      bgMobile: parsed.bgMobile ?? '',
-      slides: parsed.slides.map(normalizeSlide),
-    }
+    return parseDB(raw, DB_KEY)
   } catch {
     return seedDB()
   }
 }
 
-function writeDB(db: HeroSliderDB) {
-  localStorage.setItem(DB_KEY, JSON.stringify(db))
-  getChannel()?.postMessage({ kind: 'db' })
-  window.dispatchEvent(new Event(LOCAL_EVENT))
+/** What the admin panel edits. Starts as a copy of the published DB. */
+function readDraft(): HeroSliderDB {
+  if (typeof window === 'undefined') return seedDB()
+  try {
+    const raw = localStorage.getItem(DRAFT_KEY)
+    if (!raw) {
+      const published = readPublished()
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(published))
+      return published
+    }
+    return parseDB(raw, DRAFT_KEY)
+  } catch {
+    return readPublished()
+  }
 }
 
-export function useHeroSliderStore(): { db: HeroSliderDB; ready: boolean } {
+function writeDraft(db: HeroSliderDB) {
+  localStorage.setItem(DRAFT_KEY, JSON.stringify(db))
+  getChannel()?.postMessage({ kind: 'draft' })
+  window.dispatchEvent(new Event(DRAFT_EVENT))
+}
+
+function writePublished(db: HeroSliderDB) {
+  localStorage.setItem(DB_KEY, JSON.stringify(db))
+  getChannel()?.postMessage({ kind: 'published' })
+  window.dispatchEvent(new Event(PUBLISHED_EVENT))
+}
+
+/** Pushes the draft live. */
+export function publishDraft() {
+  const draft = readDraft()
+  writePublished(draft)
+  // Re-write the draft so both blobs are byte-identical and `dirty` clears.
+  writeDraft(draft)
+}
+
+/** Throws the draft away and starts again from what is live. */
+export function discardDraft() {
+  writeDraft(readPublished())
+}
+
+function sameDB(a: HeroSliderDB, b: HeroSliderDB) {
+  return JSON.stringify(a) === JSON.stringify(b)
+}
+
+/** Subscribes to one of the two blobs. */
+function useStore(scope: 'published' | 'draft'): { db: HeroSliderDB; ready: boolean } {
   const [db, setDb] = useState<HeroSliderDB>(seedDB)
   const [ready, setReady] = useState(false)
+  const read = scope === 'published' ? readPublished : readDraft
+  const key = scope === 'published' ? DB_KEY : DRAFT_KEY
+  const localEvent = scope === 'published' ? PUBLISHED_EVENT : DRAFT_EVENT
 
   useEffect(() => {
-    setDb(readDB())
+    setDb(read())
     setReady(true)
-    const refresh = () => setDb(readDB())
+    const refresh = () => setDb(read())
     const ch = getChannel()
     const onMessage = (e: MessageEvent<{ kind: string }>) => {
-      if (e.data?.kind === 'db') refresh()
+      if (e.data?.kind === scope) refresh()
     }
     const onStorage = (e: StorageEvent) => {
-      if (e.key === DB_KEY) refresh()
+      if (e.key === key) refresh()
     }
     ch?.addEventListener('message', onMessage)
-    window.addEventListener(LOCAL_EVENT, refresh)
+    window.addEventListener(localEvent, refresh)
     window.addEventListener('storage', onStorage)
     return () => {
       ch?.removeEventListener('message', onMessage)
-      window.removeEventListener(LOCAL_EVENT, refresh)
+      window.removeEventListener(localEvent, refresh)
       window.removeEventListener('storage', onStorage)
     }
-  }, [])
+  }, [read, key, localEvent, scope])
 
   return { db, ready }
 }
 
+/** Storefront: the last published state. */
+export function useHeroSliderStore(): { db: HeroSliderDB; ready: boolean } {
+  return useStore('published')
+}
+
+/** Admin: the draft, plus whether it has changes waiting to be saved. */
+export function useHeroSliderDraft(): { db: HeroSliderDB; ready: boolean; dirty: boolean } {
+  const { db, ready } = useStore('draft')
+  const { db: live } = useStore('published')
+  return { db, ready, dirty: ready && !sameDB(db, live) }
+}
+
+export function setSliderEnabled(enabled: boolean) {
+  writeDraft({ ...readDraft(), enabled })
+}
+
 export function updateBackground(patch: Partial<Pick<HeroSliderDB, 'bgDesktop' | 'bgMobile'>>) {
-  writeDB({ ...readDB(), ...patch })
+  writeDraft({ ...readDraft(), ...patch })
 }
 
 export function addSlide() {
-  const db = readDB()
+  const db = readDraft()
   const slide: HeroSlide = {
     id: makeId(),
     brandLogo: '',
@@ -317,14 +397,14 @@ export function addSlide() {
     mobile: defaultLayout('mobile'),
   }
   db.slides = [...db.slides, slide]
-  writeDB(db)
+  writeDraft(db)
   return slide
 }
 
 export function updateSlide(slideId: string, patch: Partial<Omit<HeroSlide, 'id'>>) {
-  const db = readDB()
+  const db = readDraft()
   db.slides = db.slides.map((s) => (s.id === slideId ? { ...s, ...patch } : s))
-  writeDB(db)
+  writeDraft(db)
 }
 
 /** Patch one layer's geometry for one device, leaving the other device untouched. */
@@ -334,7 +414,7 @@ export function updateLayout(
   part: SlidePart,
   patch: Partial<ImageBox> | Partial<TextBox>
 ) {
-  const db = readDB()
+  const db = readDraft()
   db.slides = db.slides.map((s) => {
     if (s.id !== slideId) return s
     const layout = s[device]
@@ -343,30 +423,30 @@ export function updateLayout(
       [device]: { ...layout, [part]: { ...layout[part], ...patch } },
     }
   })
-  writeDB(db)
+  writeDraft(db)
 }
 
 export function resetLayout(slideId: string, device: Device, part: SlidePart) {
-  const db = readDB()
+  const db = readDraft()
   db.slides = db.slides.map((s) =>
     s.id === slideId ? { ...s, [device]: { ...s[device], [part]: defaultLayout(device)[part] } } : s
   )
-  writeDB(db)
+  writeDraft(db)
 }
 
 export function removeSlide(slideId: string) {
-  const db = readDB()
+  const db = readDraft()
   db.slides = db.slides.filter((s) => s.id !== slideId)
-  writeDB(db)
+  writeDraft(db)
 }
 
 export function reorderSlide(slideId: string, direction: -1 | 1) {
-  const db = readDB()
+  const db = readDraft()
   const list = [...db.slides]
   const index = list.findIndex((s) => s.id === slideId)
   const target = index + direction
   if (index === -1 || target < 0 || target >= list.length) return
   ;[list[index], list[target]] = [list[target], list[index]]
   db.slides = list
-  writeDB(db)
+  writeDraft(db)
 }

@@ -84,6 +84,9 @@ export default function HeroSlider() {
   const active = Math.min(current, Math.max(slides.length - 1, 0))
   const bgMobile = db.bgMobile || db.bgDesktop
 
+  // Turned off in the admin panel — the homepage simply starts at the next section.
+  if (!db.enabled) return null
+
   return (
     <div
       className="w-full"
