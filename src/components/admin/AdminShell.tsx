@@ -14,6 +14,7 @@ const NAV_ITEMS = [
   { key: 'dashboard', label: 'Dashboard', href: '/admin', icon: 'dashboard' },
   { key: 'live-chat', label: 'Live Chat', href: '/admin/live-chat', icon: 'forum' },
   { key: 'combo', label: 'Combo Campaign', href: '/admin/combo', icon: 'inventory_2' },
+  { key: 'hero-slider', label: 'Hero Slider', href: '/admin/hero-slider', icon: 'slideshow' },
   { key: 'promo-banner', label: 'Promo Banner', href: '/admin/promo-banner', icon: 'view_carousel' },
 ] as const
 

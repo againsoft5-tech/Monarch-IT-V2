@@ -1,0 +1,594 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { useAdminAuth } from '@/context/AdminAuthContext'
+import HeroSlideContent from '@/components/home/HeroSlideContent'
+import {
+  useHeroSliderStore,
+  addSlide,
+  updateSlide,
+  updateLayout,
+  resetLayout,
+  removeSlide,
+  reorderSlide,
+  updateBackground,
+  type Device,
+  type HeroSlide,
+  type ImageBox,
+  type SlidePart,
+  type TextBox,
+} from '@/lib/heroSliderStore'
+
+const RED = '#bd2026'
+
+const inputCls =
+  'w-full h-10 px-3.5 rounded-xl border border-gray-200 outline-none text-[13px] text-gray-800 focus:border-gray-400 transition-colors'
+
+const ACCEPT = 'image/png,image/jpeg,image/webp,image/avif,image/svg+xml'
+
+const PART_LABEL: Record<SlidePart, string> = {
+  product: 'Product image',
+  logo: 'Brand logo',
+  text: 'Text content',
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <label className="block text-[12px] font-semibold text-gray-700 mb-1.5">{label}</label>
+      {children}
+    </div>
+  )
+}
+
+async function uploadImage(file: File): Promise<string | null> {
+  const fd = new FormData()
+  fd.append('file', file)
+  fd.append('folder', 'hero-slider')
+  try {
+    const res = await fetch('/api/upload', { method: 'POST', body: fd })
+    if (!res.ok) return null
+    const data = (await res.json()) as { url?: string }
+    return data.url ?? null
+  } catch {
+    return null
+  }
+}
+
+/* ---------------------------------------------------------------- controls */
+
+function GearButton({ onClick, title }: { onClick: () => void; title: string }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      title={title}
+      aria-label={title}
+      className="w-7 h-7 shrink-0 rounded-full border border-gray-200 bg-white flex items-center justify-center text-gray-500 hover:text-[#bd2026] hover:border-[#bd2026] transition-colors cursor-pointer"
+    >
+      <span className="mi text-[16px]">settings</span>
+    </button>
+  )
+}
+
+function NumControl({
+  label,
+  hint,
+  value,
+  min,
+  max,
+  step = 0.5,
+  onChange,
+}: {
+  label: string
+  hint?: string
+  value: number
+  min: number
+  max: number
+  step?: number
+  onChange: (v: number) => void
+}) {
+  const commit = (raw: string) => {
+    const n = Number(raw)
+    if (!Number.isFinite(n)) return
+    onChange(Math.min(max, Math.max(min, n)))
+  }
+
+  return (
+    <div>
+      <div className="flex items-center justify-between gap-2 mb-1">
+        <label className="text-[12px] font-semibold text-gray-700">
+          {label}
+          {hint && <span className="font-normal text-gray-400"> {hint}</span>}
+        </label>
+        <input
+          type="number"
+          value={value}
+          min={min}
+          max={max}
+          step={step}
+          onChange={(e) => commit(e.target.value)}
+          className="w-[62px] h-7 px-2 rounded-lg border border-gray-200 text-[12px] text-gray-800 outline-none focus:border-gray-400"
+        />
+      </div>
+      <input
+        type="range"
+        value={value}
+        min={min}
+        max={max}
+        step={step}
+        onChange={(e) => commit(e.target.value)}
+        className="w-full accent-[#bd2026] cursor-pointer"
+      />
+    </div>
+  )
+}
+
+/** Popup for one layer's z-index / size / position, with Desktop & Mobile tabs. */
+function LayerSettingsModal({
+  slide,
+  part,
+  onClose,
+}: {
+  slide: HeroSlide
+  part: SlidePart
+  onClose: () => void
+}) {
+  const [device, setDevice] = useState<Device>('desktop')
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [onClose])
+
+  const box = slide[device][part]
+  const set = (patch: Partial<ImageBox> | Partial<TextBox>) => updateLayout(slide.id, device, part, patch)
+  const isText = part === 'text'
+  const textBox = box as TextBox
+  const imageBox = box as ImageBox
+
+  return (
+    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+      <div className="relative w-full max-w-3xl max-h-[88vh] overflow-y-auto thin-scroll-gray bg-white rounded-2xl shadow-xl">
+        <div className="sticky top-0 bg-white flex items-center justify-between gap-3 px-5 py-4 border-b border-gray-100 rounded-t-2xl">
+          <div>
+            <h3 className="text-[15px] font-bold text-gray-900 m-0">{PART_LABEL[part]} settings</h3>
+            <p className="text-[12px] text-gray-500 m-0 mt-0.5">
+              Desktop and mobile are stored separately — changing one never moves the other.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            className="w-8 h-8 shrink-0 rounded-full bg-[#f5f5f7] hover:bg-gray-200 flex items-center justify-center text-gray-600 cursor-pointer"
+          >
+            <span className="mi text-[18px]">close</span>
+          </button>
+        </div>
+
+        <div className="px-5 pt-4">
+          <div className="inline-flex p-1 rounded-full bg-[#f4f5f7]">
+            {(['desktop', 'mobile'] as const).map((d) => (
+              <button
+                key={d}
+                type="button"
+                onClick={() => setDevice(d)}
+                className="h-8 px-4 rounded-full text-[12.5px] font-semibold capitalize cursor-pointer transition-colors"
+                style={device === d ? { backgroundColor: RED, color: '#fff' } : { color: '#6b7280' }}
+              >
+                {d === 'desktop' ? 'Desktop 16:9' : 'Mobile 1:1'}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="p-5 grid gap-5 md:grid-cols-2">
+          <div>
+            <p className="text-[11px] font-semibold text-gray-400 mb-1.5 m-0">Live preview</p>
+            <SlidePreview slide={slide} device={device} />
+            <button
+              type="button"
+              onClick={() => resetLayout(slide.id, device, part)}
+              className="mt-3 h-8 px-4 rounded-full border border-gray-200 text-[12px] font-semibold text-gray-600 hover:bg-gray-50 cursor-pointer"
+            >
+              Reset {device} to default
+            </button>
+          </div>
+
+          <div className="space-y-4">
+            <div className="rounded-xl border border-gray-100 p-3.5 space-y-3.5">
+              <p className="text-[12px] font-bold text-gray-900 m-0">Layer order</p>
+              <NumControl
+                label="Z-index"
+                hint="(higher = on top)"
+                value={box.z}
+                min={0}
+                max={50}
+                step={1}
+                onChange={(z) => set({ z })}
+              />
+              <p className="text-[11px] text-gray-400 m-0 leading-snug">
+                Defaults: product 1, brand logo 2, text 3 — text sits on top.
+              </p>
+            </div>
+
+            <div className="rounded-xl border border-gray-100 p-3.5 space-y-3.5">
+              <p className="text-[12px] font-bold text-gray-900 m-0">Size</p>
+              {isText ? (
+                <>
+                  <NumControl
+                    label="Headline font size"
+                    hint="(% of slide width)"
+                    value={textBox.size}
+                    min={1}
+                    max={30}
+                    step={0.1}
+                    onChange={(size) => set({ size })}
+                  />
+                  <NumControl
+                    label="Subtitle font size"
+                    hint="(% of slide width)"
+                    value={textBox.subSize}
+                    min={0.5}
+                    max={12}
+                    step={0.05}
+                    onChange={(subSize) => set({ subSize })}
+                  />
+                  <NumControl
+                    label="Text block width"
+                    hint="(% of slide)"
+                    value={textBox.w}
+                    min={10}
+                    max={100}
+                    onChange={(w) => set({ w })}
+                  />
+                  <div>
+                    <label className="block text-[12px] font-semibold text-gray-700 mb-1.5">Alignment</label>
+                    <div className="inline-flex p-1 rounded-full bg-[#f4f5f7]">
+                      {(['left', 'center', 'right'] as const).map((a) => (
+                        <button
+                          key={a}
+                          type="button"
+                          onClick={() => set({ align: a })}
+                          className="h-7 px-3.5 rounded-full text-[12px] font-semibold capitalize cursor-pointer"
+                          style={textBox.align === a ? { backgroundColor: RED, color: '#fff' } : { color: '#6b7280' }}
+                        >
+                          {a}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <NumControl
+                    label="Width"
+                    hint="(% of slide)"
+                    value={imageBox.w}
+                    min={1}
+                    max={140}
+                    onChange={(w) => set({ w })}
+                  />
+                  <NumControl
+                    label="Height"
+                    hint="(% of slide, 0 = auto)"
+                    value={imageBox.h}
+                    min={0}
+                    max={140}
+                    onChange={(h) => set({ h })}
+                  />
+                  <p className="text-[11px] text-gray-400 m-0 leading-snug">
+                    Leave height at 0 to keep the image&apos;s natural proportions.
+                  </p>
+                </>
+              )}
+            </div>
+
+            <div className="rounded-xl border border-gray-100 p-3.5 space-y-3.5">
+              <p className="text-[12px] font-bold text-gray-900 m-0">Position</p>
+              <NumControl
+                label="X"
+                hint="(% from left, centre point)"
+                value={box.x}
+                min={-30}
+                max={130}
+                onChange={(x) => set({ x })}
+              />
+              <NumControl
+                label="Y"
+                hint="(% from top, centre point)"
+                value={box.y}
+                min={-30}
+                max={130}
+                onChange={(y) => set({ y })}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/* ---------------------------------------------------------------- previews */
+
+function SlidePreview({ slide, device }: { slide: HeroSlide; device: Device }) {
+  const { db } = useHeroSliderStore()
+  const bg = device === 'desktop' ? db.bgDesktop : db.bgMobile || db.bgDesktop
+
+  return (
+    <div
+      className={`relative w-full overflow-hidden rounded-xl border border-gray-100 bg-white ${
+        device === 'desktop' ? 'aspect-[16/9]' : 'aspect-square'
+      }`}
+      style={{ containerType: 'inline-size' }}
+    >
+      {bg && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={bg} alt="" className="absolute inset-0 w-full h-full object-cover object-center" />
+      )}
+      <HeroSlideContent slide={slide} device={device} />
+    </div>
+  )
+}
+
+/* ------------------------------------------------------------ image picker */
+
+function ImagePicker({
+  label,
+  hint,
+  value,
+  onChange,
+  onGear,
+  boxClass = 'w-24 h-24',
+}: {
+  label: string
+  hint?: string
+  value: string
+  onChange: (url: string) => void
+  onGear?: () => void
+  boxClass?: string
+}) {
+  const [uploading, setUploading] = useState(false)
+
+  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    setUploading(true)
+    const url = await uploadImage(file)
+    setUploading(false)
+    if (url) onChange(url)
+    else window.alert('Image upload failed. Please try a PNG, JPG, WEBP or SVG under 5MB.')
+  }
+
+  return (
+    <div>
+      <div className="flex items-center justify-between gap-2 mb-1.5">
+        <label className="text-[12px] font-semibold text-gray-700">{label}</label>
+        {onGear && <GearButton onClick={onGear} title={`${label} size, position & layer`} />}
+      </div>
+      <div className="flex gap-3">
+        <div
+          className={`${boxClass} shrink-0 rounded-xl border border-gray-100 bg-[#f4f5f7] overflow-hidden flex items-center justify-center relative`}
+        >
+          {value ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={value} alt="" className="w-full h-full object-contain" />
+          ) : (
+            <span className="mi text-[22px] text-gray-300">image</span>
+          )}
+          {uploading && (
+            <div className="absolute inset-0 bg-white/70 flex items-center justify-center text-[10px] text-gray-500">
+              Uploading...
+            </div>
+          )}
+        </div>
+        <div className="flex-1 min-w-0 space-y-2">
+          <label className="flex items-center justify-center h-9 rounded-xl border border-dashed border-gray-300 text-[12px] font-semibold text-gray-600 hover:bg-gray-50 cursor-pointer">
+            Upload image
+            <input type="file" accept={ACCEPT} className="hidden" onChange={handleFile} />
+          </label>
+          <input
+            type="text"
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            placeholder="or paste image URL"
+            className={`${inputCls} h-9`}
+          />
+          {hint && <p className="text-[11px] text-gray-400 m-0 leading-snug">{hint}</p>}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/* ------------------------------------------------------------- slide card */
+
+function SlideCard({ slide, index, count }: { slide: HeroSlide; index: number; count: number }) {
+  const [settingsFor, setSettingsFor] = useState<SlidePart | null>(null)
+
+  return (
+    <div className="border border-gray-100 rounded-2xl p-4 space-y-4">
+      <div className="flex items-center justify-between">
+        <p className="text-[12px] font-semibold text-gray-400 m-0">Slide {index + 1}</p>
+        <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            disabled={index === 0}
+            onClick={() => reorderSlide(slide.id, -1)}
+            className="w-7 h-7 rounded-full border border-gray-200 flex items-center justify-center text-gray-500 disabled:opacity-30 cursor-pointer disabled:cursor-not-allowed"
+            aria-label="Move up"
+          >
+            <span className="mi text-[16px]">arrow_upward</span>
+          </button>
+          <button
+            type="button"
+            disabled={index === count - 1}
+            onClick={() => reorderSlide(slide.id, 1)}
+            className="w-7 h-7 rounded-full border border-gray-200 flex items-center justify-center text-gray-500 disabled:opacity-30 cursor-pointer disabled:cursor-not-allowed"
+            aria-label="Move down"
+          >
+            <span className="mi text-[16px]">arrow_downward</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => window.confirm('Remove this slide?') && removeSlide(slide.id)}
+            className="w-7 h-7 rounded-full border border-gray-200 flex items-center justify-center text-[#bd2026] cursor-pointer"
+            aria-label="Remove"
+          >
+            <span className="mi text-[16px]">delete</span>
+          </button>
+        </div>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <ImagePicker
+          label="Brand logo"
+          hint="Transparent PNG or SVG works best."
+          value={slide.brandLogo}
+          onChange={(url) => updateSlide(slide.id, { brandLogo: url })}
+          onGear={() => setSettingsFor('logo')}
+        />
+        <ImagePicker
+          label="Product image"
+          hint="Cut-out PNG with a transparent background."
+          value={slide.productImage}
+          onChange={(url) => updateSlide(slide.id, { productImage: url })}
+          onGear={() => setSettingsFor('product')}
+        />
+      </div>
+
+      <div>
+        <div className="flex items-center justify-between gap-2 mb-1.5">
+          <label className="text-[12px] font-semibold text-gray-700">Text content</label>
+          <GearButton onClick={() => setSettingsFor('text')} title="Text size, position & layer" />
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <input
+            type="text"
+            value={slide.title}
+            onChange={(e) => updateSlide(slide.id, { title: e.target.value })}
+            placeholder="Headline — e.g. CURL 7.1"
+            className={inputCls}
+          />
+          <input
+            type="text"
+            value={slide.subtitle}
+            onChange={(e) => updateSlide(slide.id, { subtitle: e.target.value })}
+            placeholder="Subtitle — e.g. RGB Gaming Headset"
+            className={inputCls}
+          />
+        </div>
+      </div>
+
+      <Field label="Slide link">
+        <input
+          type="text"
+          value={slide.href}
+          onChange={(e) => updateSlide(slide.id, { href: e.target.value })}
+          placeholder="/offers"
+          className={inputCls}
+        />
+      </Field>
+
+      <div className="grid gap-3 sm:grid-cols-[2fr_1fr] pt-1">
+        <div>
+          <p className="text-[11px] font-semibold text-gray-400 mb-1.5 m-0">Desktop preview — 16:9</p>
+          <SlidePreview slide={slide} device="desktop" />
+        </div>
+        <div>
+          <p className="text-[11px] font-semibold text-gray-400 mb-1.5 m-0">Mobile preview — 1:1</p>
+          <SlidePreview slide={slide} device="mobile" />
+        </div>
+      </div>
+
+      {settingsFor && (
+        <LayerSettingsModal slide={slide} part={settingsFor} onClose={() => setSettingsFor(null)} />
+      )}
+    </div>
+  )
+}
+
+/* ------------------------------------------------------------------- page */
+
+export default function AdminHeroSliderPage() {
+  const { isAdminLoggedIn, adminChecked } = useAdminAuth()
+  const router = useRouter()
+  const { db, ready } = useHeroSliderStore()
+
+  useEffect(() => {
+    if (adminChecked && !isAdminLoggedIn) router.replace('/admin/login')
+  }, [adminChecked, isAdminLoggedIn, router])
+
+  if (!adminChecked || !isAdminLoggedIn || !ready) {
+    return <div className="min-h-full flex items-center justify-center bg-[#eef0f3] text-gray-400 text-[14px]">Loading...</div>
+  }
+
+  return (
+    <div className="min-h-full bg-[#eef0f3] px-4 py-8 lg:px-10">
+      <div className="max-w-5xl mx-auto">
+        <div className="mb-6">
+          <Link href="/admin" className="text-[13px] text-gray-500 hover:text-gray-700 inline-flex items-center gap-1 mb-1">
+            <span className="mi text-[16px]">arrow_back</span> Dashboard
+          </Link>
+          <h1 className="text-xl font-bold text-gray-900 m-0">Homepage Hero Slider</h1>
+          <p className="text-[13px] text-gray-500 mt-1 mb-0">
+            One shared background sits behind every slide. Each slide stacks three independent layers on top — product
+            image, brand logo and text. Use the gear icon beside any item to set its layer order, size and position,
+            separately for desktop 16:9 and mobile 1:1.
+          </p>
+        </div>
+
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 mb-5">
+          <h2 className="text-[15px] font-bold text-gray-900 m-0 mb-4">Shared background</h2>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <ImagePicker
+              label="Desktop background (16:9)"
+              hint="Used on tablets and up. Recommended 1920 × 1080."
+              value={db.bgDesktop}
+              onChange={(url) => updateBackground({ bgDesktop: url })}
+              boxClass="w-40 h-[90px]"
+            />
+            <ImagePicker
+              label="Mobile background (1:1)"
+              hint="Square artwork. Leave empty to reuse the desktop background."
+              value={db.bgMobile}
+              onChange={(url) => updateBackground({ bgMobile: url })}
+              boxClass="w-[90px] h-[90px]"
+            />
+          </div>
+        </div>
+
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-[15px] font-bold text-gray-900 m-0">Slides</h2>
+            <button
+              type="button"
+              onClick={addSlide}
+              className="h-8 px-4 rounded-full text-white text-[12.5px] font-semibold cursor-pointer"
+              style={{ backgroundColor: RED }}
+            >
+              + Add slide
+            </button>
+          </div>
+          <div className="space-y-4">
+            {db.slides.length === 0 && (
+              <p className="text-[13px] text-gray-400">No slides yet. Add one to show it on the homepage.</p>
+            )}
+            {db.slides.map((slide, i) => (
+              <SlideCard key={slide.id} slide={slide} index={i} count={db.slides.length} />
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
