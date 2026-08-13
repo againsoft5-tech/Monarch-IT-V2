@@ -14,6 +14,8 @@ import {
   removeSlide,
   reorderSlide,
   updateBackground,
+  DEFAULT_SUBTITLE_COLOR,
+  DEFAULT_TITLE_COLOR,
   type Device,
   type HeroSlide,
   type ImageBox,
@@ -70,6 +72,70 @@ function GearButton({ onClick, title }: { onClick: () => void; title: string }) 
     >
       <span className="mi text-[16px]">settings</span>
     </button>
+  )
+}
+
+const SWATCHES = ['#ee1c25', '#bd2026', '#111827', '#3f3f46', '#6b7280', '#ffffff']
+
+/** Swatch row + native picker + hex field, kept in sync. */
+function ColorControl({
+  label,
+  value,
+  fallback,
+  onChange,
+}: {
+  label: string
+  value: string
+  fallback: string
+  onChange: (v: string) => void
+}) {
+  const current = value || fallback
+
+  return (
+    <div>
+      <div className="flex items-center justify-between gap-2 mb-1.5">
+        <label className="text-[12px] font-semibold text-gray-700">{label}</label>
+        <button
+          type="button"
+          onClick={() => onChange(fallback)}
+          className="text-[11px] font-semibold text-gray-400 hover:text-gray-600 cursor-pointer"
+        >
+          Reset
+        </button>
+      </div>
+      <div className="flex items-center gap-2">
+        <input
+          type="color"
+          value={current}
+          onChange={(e) => onChange(e.target.value)}
+          aria-label={`${label} picker`}
+          className="w-9 h-9 shrink-0 rounded-lg border border-gray-200 bg-white cursor-pointer p-0.5"
+        />
+        <input
+          type="text"
+          value={current}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={fallback}
+          spellCheck={false}
+          className="w-[92px] h-9 px-2.5 rounded-lg border border-gray-200 text-[12px] text-gray-800 outline-none focus:border-gray-400 uppercase"
+        />
+        <div className="flex items-center gap-1.5 flex-wrap">
+          {SWATCHES.map((c) => (
+            <button
+              key={c}
+              type="button"
+              onClick={() => onChange(c)}
+              aria-label={`Use ${c}`}
+              title={c}
+              className={`w-6 h-6 rounded-full cursor-pointer transition-transform hover:scale-110 ${
+                current.toLowerCase() === c ? 'ring-2 ring-offset-1 ring-gray-400' : 'border border-gray-200'
+              }`}
+              style={{ backgroundColor: c }}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
   )
 }
 
@@ -218,6 +284,27 @@ function LayerSettingsModal({
                 Defaults: product 1, brand logo 2, text 3 — text sits on top.
               </p>
             </div>
+
+            {isText && (
+              <div className="rounded-xl border border-gray-100 p-3.5 space-y-3.5">
+                <div className="flex items-baseline justify-between gap-2">
+                  <p className="text-[12px] font-bold text-gray-900 m-0">Colour</p>
+                  <p className="text-[11px] text-gray-400 m-0">Applies to both devices</p>
+                </div>
+                <ColorControl
+                  label="Headline"
+                  value={slide.titleColor}
+                  fallback={DEFAULT_TITLE_COLOR}
+                  onChange={(titleColor) => updateSlide(slide.id, { titleColor })}
+                />
+                <ColorControl
+                  label="Subtitle"
+                  value={slide.subtitleColor}
+                  fallback={DEFAULT_SUBTITLE_COLOR}
+                  onChange={(subtitleColor) => updateSlide(slide.id, { subtitleColor })}
+                />
+              </div>
+            )}
 
             <div className="rounded-xl border border-gray-100 p-3.5 space-y-3.5">
               <p className="text-[12px] font-bold text-gray-900 m-0">Size</p>

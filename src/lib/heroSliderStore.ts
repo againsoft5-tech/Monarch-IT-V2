@@ -46,6 +46,9 @@ export type HeroSlide = {
   title: string
   subtitle: string
   href: string
+  /** Text colours. Shared by both devices — only geometry differs per device. */
+  titleColor: string
+  subtitleColor: string
   /** Independent layout per device — mobile never inherits desktop geometry. */
   desktop: SlideLayout
   mobile: SlideLayout
@@ -69,6 +72,9 @@ const LOCAL_EVENT = 'monarch-hero-slider-local-change'
 const SEED_VERSION = 5
 
 const DEFAULT_BG = '/images/hero-slider/slider-bg.jpg'
+
+export const DEFAULT_TITLE_COLOR = '#ee1c25'
+export const DEFAULT_SUBTITLE_COLOR = '#3f3f46'
 
 /**
  * Default stacking order, bottom to top: product image → brand logo → text.
@@ -139,6 +145,8 @@ export function seedDB(): HeroSliderDB {
         title: 'CLOUD II',
         subtitle: '',
         href: '/offers',
+        titleColor: DEFAULT_TITLE_COLOR,
+        subtitleColor: DEFAULT_SUBTITLE_COLOR,
         // The HyperX wordmark is wider than the FANTECH mark and the CLOUD II
         // cut-out sits lower in its frame, so this slide carries its own boxes
         // rather than the shared defaults.
@@ -160,6 +168,8 @@ export function seedDB(): HeroSliderDB {
         title: 'CURL 7.1',
         subtitle: 'RGB Gaming Headset',
         href: '/offers',
+        titleColor: DEFAULT_TITLE_COLOR,
+        subtitleColor: DEFAULT_SUBTITLE_COLOR,
         // Desktop composition as set in the admin panel: logo and text shifted
         // right and the product pulled left, closing the gap in the middle.
         desktop: {
@@ -209,7 +219,13 @@ function normalizeSlide(slide: HeroSlide): HeroSlide {
       text: { ...base.text, ...saved.text },
     }
   }
-  return { ...slide, desktop: fill('desktop'), mobile: fill('mobile') }
+  return {
+    ...slide,
+    titleColor: slide.titleColor || DEFAULT_TITLE_COLOR,
+    subtitleColor: slide.subtitleColor || DEFAULT_SUBTITLE_COLOR,
+    desktop: fill('desktop'),
+    mobile: fill('mobile'),
+  }
 }
 
 function readDB(): HeroSliderDB {
@@ -295,6 +311,8 @@ export function addSlide() {
     title: 'PRODUCT NAME',
     subtitle: 'Short tagline',
     href: '/',
+    titleColor: DEFAULT_TITLE_COLOR,
+    subtitleColor: DEFAULT_SUBTITLE_COLOR,
     desktop: defaultLayout('desktop'),
     mobile: defaultLayout('mobile'),
   }

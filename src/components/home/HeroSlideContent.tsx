@@ -1,6 +1,7 @@
 'use client'
 
 import type { CSSProperties } from 'react'
+import { DEFAULT_SUBTITLE_COLOR, DEFAULT_TITLE_COLOR } from '@/lib/heroSliderStore'
 import type { Device, HeroSlide, ImageBox, TextBox } from '@/lib/heroSliderStore'
 
 /**
@@ -81,16 +82,20 @@ export default function HeroSlideContent({ slide, device }: { slide: HeroSlide; 
       <div className="slider-text-content" style={textStyle(layout.text)}>
         {slide.title && (
           <h2
-            className="m-0 font-bold uppercase text-[#ee1c25] leading-[0.92] tracking-[-0.015em]"
-            style={{ fontSize: `${layout.text.size}cqw` }}
+            className="m-0 font-bold uppercase leading-[0.92] tracking-[-0.015em]"
+            style={{ fontSize: `${layout.text.size}cqw`, color: slide.titleColor || DEFAULT_TITLE_COLOR }}
           >
             {slide.title}
           </h2>
         )}
         {slide.subtitle && (
           <p
-            className="m-0 font-semibold uppercase text-[#3f3f46] tracking-[0.4em]"
-            style={{ fontSize: `${layout.text.subSize}cqw`, marginTop: `${layout.text.subSize * 0.9}cqw` }}
+            className="m-0 font-semibold uppercase tracking-[0.4em]"
+            style={{
+              fontSize: `${layout.text.subSize}cqw`,
+              marginTop: `${layout.text.subSize * 0.9}cqw`,
+              color: slide.subtitleColor || DEFAULT_SUBTITLE_COLOR,
+            }}
           >
             {slide.subtitle}
           </p>
