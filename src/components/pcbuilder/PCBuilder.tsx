@@ -18,6 +18,12 @@ const breadcrumbItems = [
   { label: 'PC Builder', href: '/pc-builder' },
 ]
 
+// The build survives reloads and navigation — it is only cleared when the user resets it
+// or removes the parts themselves.
+const STORAGE_KEY = 'monarch:pc-builder'
+
+type StoredBuild = { chipset?: 'AMD' | 'Intel'; builds?: Record<string, Selection[]> }
+
 
 export default function PCBuilder() {
   const [chipset, setChipset] = useState<'AMD' | 'Intel'>('AMD')
@@ -33,12 +39,14 @@ export default function PCBuilder() {
   const [priceMax, setPriceMax] = useState(0)
   const [warningMessage, setWarningMessage] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
+  const [componentListOpen, setComponentListOpen] = useState(false)
   const [mobileBuilderOpen, setMobileBuilderOpen] = useState(false)
   const [sortOpenDesktop, setSortOpenDesktop] = useState(false)
   const [sortOpenMobile, setSortOpenMobile] = useState(false)
   const { addItems } = useCart()
   const { toast, showToast } = useToast()
+
+  const [buildRestored, setBuildRestored] = useState(false)
 
   const leftPanelRef = useRef<HTMLDivElement>(null)
   const [rightPanelHeight, setRightPanelHeight] = useState<number | null>(null)
@@ -50,6 +58,30 @@ export default function PCBuilder() {
     'price-asc': 'Low To High',
     'price-desc': 'High To Low',
   }
+
+  // Restore a previously started build, then keep it in sync on every change.
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem(STORAGE_KEY)
+      if (raw) {
+        const saved = JSON.parse(raw) as StoredBuild
+        if (saved.chipset === 'AMD' || saved.chipset === 'Intel') setChipset(saved.chipset)
+        if (saved.builds && typeof saved.builds === 'object') setBuilds(saved.builds)
+      }
+    } catch {
+      // corrupt or unavailable storage — start with an empty build
+    }
+    setBuildRestored(true)
+  }, [])
+
+  useEffect(() => {
+    if (!buildRestored) return
+    try {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ chipset, builds } satisfies StoredBuild))
+    } catch {
+      // storage full or blocked — the build just won't persist
+    }
+  }, [buildRestored, chipset, builds])
 
   useEffect(() => {
     const el = leftPanelRef.current
@@ -69,6 +101,15 @@ export default function PCBuilder() {
     document.addEventListener('mousedown', handleClick)
     return () => document.removeEventListener('mousedown', handleClick)
   }, [sortOpenDesktop])
+
+  useEffect(() => {
+    if (!componentListOpen) return
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setComponentListOpen(false)
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [componentListOpen])
 
   useEffect(() => {
     if (!sortOpenMobile) return
@@ -114,6 +155,11 @@ export default function PCBuilder() {
         (sum, items) => sum + items.reduce((s, sel) => s + sel.product.priceNew * sel.qty, 0),
         0
       ),
+    [builds]
+  )
+
+  const selectedCount = useMemo(
+    () => Object.values(builds).reduce((sum, items) => sum + items.length, 0),
     [builds]
   )
 
@@ -510,7 +556,7 @@ export default function PCBuilder() {
             <span className="mi text-[48px] text-gray-300 block mb-3">search_off</span>
             <p className="text-gray-500 text-[14px]">No products match your search.</p>
           </div>
-        ) : viewMode === 'list' ? (
+        ) : (
           <div className="flex flex-col gap-3">
             {products.map((p) => {
               const isPicked = (builds[activeCategory] ?? []).some((s) => s.product.id === p.id)
@@ -590,74 +636,6 @@ export default function PCBuilder() {
                 </div>
               )
             })}
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
-          {products.map((p) => {
-            const isPicked = (builds[activeCategory] ?? []).some((s) => s.product.id === p.id)
-            const qty = getQty(p.id)
-            return (
-              <div
-                key={p.id}
-                className={`bg-white rounded-[14px] p-2.5 flex flex-col shadow-[0_2px_10px_rgba(0,0,0,0.06)] border-2 transition-colors ${
-                  isPicked ? 'border-[#c3272b]' : 'border-transparent'
-                }`}
-              >
-                <PartThumb
-                  icon={activeCat.icon}
-                  iconSvg={activeCat.iconSvgActive ?? activeCat.iconSvg}
-                  image={p.image}
-                  accent={activeCat.accent}
-                />
-                <div className="pt-2.5 flex flex-col flex-1">
-                  <div className="text-[12.5px] font-semibold text-gray-700 leading-[1.4] mb-2 line-clamp-2 min-h-[2.8em]">
-                    {p.name}
-                  </div>
-                  <div className="flex items-center gap-1.5 flex-wrap mb-2.5">
-                    <span className="text-[14px] font-bold text-[#c3272b]">৳{p.priceNew.toLocaleString()}</span>
-                    {p.discountPct > 0 && (
-                      <>
-                        <span className="text-[11px] text-gray-400 line-through">
-                          ৳{p.priceOld.toLocaleString()}
-                        </span>
-                        <span className="text-[10.5px] font-bold text-[#00c68b]">{p.discountPct}% OFF</span>
-                      </>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-1.5 mt-auto">
-                    <button
-                      type="button"
-                      onClick={() => selectProduct(activeCategory, p)}
-                      className={`flex-1 rounded-full py-1.5 text-[12.5px] font-bold border-2 transition-colors cursor-pointer ${
-                        isPicked
-                          ? 'bg-[#c3272b] text-white border-[#c3272b]'
-                          : 'bg-white text-[#c3272b] border-[#c3272b] hover:bg-[#c3272b] hover:text-white'
-                      }`}
-                    >
-                      {isPicked ? 'Added' : 'Add'}
-                    </button>
-                    <div className="shrink-0 flex items-center gap-1.5 bg-[#f5f6fa] rounded-full px-1.5 py-1">
-                      <button
-                        type="button"
-                        onClick={() => setQty(p.id, qty - 1)}
-                        className="w-5 h-5 flex items-center justify-center text-gray-500 hover:text-[#c3272b] cursor-pointer"
-                      >
-                        −
-                      </button>
-                      <span className="text-[12px] font-semibold text-gray-700 w-3 text-center">{qty}</span>
-                      <button
-                        type="button"
-                        onClick={() => setQty(p.id, qty + 1)}
-                        className="w-5 h-5 flex items-center justify-center text-gray-500 hover:text-[#c3272b] cursor-pointer"
-                      >
-                        +
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )
-          })}
           </div>
         )}
       </div>
@@ -1055,13 +1033,16 @@ export default function PCBuilder() {
                 <div className="flex items-center h-11 sm:h-14 gap-1 sm:gap-2 bg-white rounded-full px-1.5 sm:px-2">
                   <button
                     type="button"
-                    title={viewMode === 'grid' ? 'Switch to list view' : 'Switch to grid view'}
-                    onClick={() => setViewMode((v) => (v === 'grid' ? 'list' : 'grid'))}
-                    className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-colors cursor-pointer ${
-                      viewMode === 'list' ? 'bg-[#c3272b] text-white' : 'bg-[#f4f5f7] text-gray-600 hover:bg-[#e8eaed]'
-                    }`}
+                    title="Build Component List"
+                    onClick={() => setComponentListOpen(true)}
+                    className="relative w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-[#f4f5f7] text-gray-600 flex items-center justify-center hover:bg-[#e8eaed] transition-colors cursor-pointer"
                   >
                     <span className="mi text-[18px] sm:text-[23px]">format_list_bulleted</span>
+                    {selectedCount > 0 && (
+                      <span className="absolute -top-1 -right-1 min-w-[17px] h-[17px] px-1 rounded-full bg-[#c3272b] text-white text-[10px] font-bold flex items-center justify-center border border-white leading-none">
+                        {selectedCount}
+                      </span>
+                    )}
                   </button>
                   <button
                     type="button"
@@ -1251,6 +1232,109 @@ export default function PCBuilder() {
             </button>
           </div>
           {renderMobileBrowserContent()}
+        </div>
+
+        {/* Build component list popup */}
+        <div
+          onClick={() => setComponentListOpen(false)}
+          className={`fixed inset-0 bg-black/50 z-[10004] transition-opacity ${
+            componentListOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+          }`}
+        />
+        <div
+          className={`fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[min(680px,calc(100%-24px))] max-h-[calc(100dvh-6rem)] z-[10005] bg-white rounded-[28px] shadow-2xl flex flex-col p-4 sm:p-6 transition-opacity duration-200 ${
+            componentListOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+          }`}
+        >
+          <div className="flex items-center justify-between gap-3 mb-4 shrink-0">
+            <div>
+              <h3 className="text-[16px] font-bold text-gray-900">Build Component List</h3>
+              <p className="text-[12px] text-gray-500 mt-0.5">
+                {selectedCount > 0 ? `${selectedCount} component${selectedCount > 1 ? 's' : ''} selected` : 'No components selected yet'}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setComponentListOpen(false)}
+              className="w-8 h-8 shrink-0 rounded-full bg-[#f4f5f7] flex items-center justify-center hover:bg-[#e8eaed] transition-colors cursor-pointer"
+              aria-label="Close"
+            >
+              <span className="mi text-[18px] text-gray-600">close</span>
+            </button>
+          </div>
+
+          <div className="min-h-0 overflow-y-auto pr-1 thin-scroll-gray flex flex-col gap-2">
+            {selectedCount === 0 && (
+              <div className="py-12 text-center">
+                <span className="mi text-[44px] text-gray-300 block mb-2">inventory_2</span>
+                <p className="text-[13.5px] font-semibold text-gray-600">Your component list is empty</p>
+                <p className="text-[12px] text-gray-400 mt-1">Add parts to your build and they will show up here.</p>
+              </div>
+            )}
+
+            {buildCategories.map((cat) => {
+              const items = builds[cat.key] ?? []
+              if (items.length === 0) return null
+              return (
+                <div key={cat.key} className="rounded-2xl border border-gray-100 bg-[#fafbfc] p-3">
+                  <div className="flex items-center justify-between gap-2 mb-2">
+                    <span className="text-[12.5px] font-bold text-gray-700">
+                      {cat.label}
+                      {cat.required && <span className="text-[#c3272b]">*</span>}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setComponentListOpen(false)
+                        openCategory(cat.key)
+                      }}
+                      className="text-[11.5px] font-semibold text-[#c3272b] hover:underline cursor-pointer"
+                    >
+                      Change
+                    </button>
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    {items.map((sel) => (
+                        <div key={sel.product.id} className="flex items-center gap-2.5 bg-white rounded-xl p-2">
+                          <PartThumb
+                            icon={cat.icon}
+                            iconSvg={cat.iconSvgActive ?? cat.iconSvg}
+                            image={sel.product.image}
+                            accent={cat.accent}
+                            size="sm"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <div className="text-[12.5px] font-semibold text-gray-800 leading-tight">
+                              {sel.product.name}
+                            </div>
+                            <div className="text-[11px] text-gray-500 mt-0.5">
+                              ৳{sel.product.priceNew.toLocaleString()} × {sel.qty}
+                            </div>
+                          </div>
+                          <span className="shrink-0 text-[13px] font-bold text-[#c3272b] whitespace-nowrap">
+                            ৳{(sel.product.priceNew * sel.qty).toLocaleString()}
+                          </span>
+                          <button
+                            type="button"
+                            title="Remove"
+                            onClick={() => removeSelection(cat.key, sel.product.id)}
+                            className="shrink-0 text-gray-400 hover:text-[#c3272b] transition-colors cursor-pointer"
+                          >
+                            <span className="mi text-[16px]">close</span>
+                          </button>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+
+          <div className="shrink-0 mt-4 pt-3 border-t border-gray-100 flex items-center justify-between gap-3">
+            <span className="text-[13px] font-semibold text-gray-600">Total</span>
+            <span className="text-[17px] font-bold text-[#c3272b]">৳{total.toLocaleString()}</span>
+          </div>
         </div>
       </div>
     </div>
