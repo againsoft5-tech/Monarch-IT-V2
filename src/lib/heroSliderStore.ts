@@ -66,7 +66,7 @@ const LOCAL_EVENT = 'monarch-hero-slider-local-change'
 
 // Bump when seedDB() gains new default slides so already-seeded browsers pick
 // them up instead of being stuck on whatever was saved on their first visit.
-const SEED_VERSION = 4
+const SEED_VERSION = 5
 
 const DEFAULT_BG = '/images/hero-slider/slider-bg.jpg'
 
@@ -90,15 +90,24 @@ export const DEFAULT_LAYOUT: Record<Device, SlideLayout> = {
 }
 
 /**
- * Desktop defaults from the short-lived 16:9 build. Slides still carrying these
- * exact numbers were never touched by an admin, so the v3 migration re-tunes
- * them for the 1350x600 box; anything customised is left alone.
+ * Desktop boxes earlier versions handed out automatically. A saved slide still
+ * carrying one of these exactly was never adjusted by an admin, so migrations
+ * may re-tune it; anything else is a deliberate edit and is left alone.
  */
-const LEGACY_16_9_DESKTOP: SlideLayout = {
-  product: { x: 73, y: 50, w: 52, h: 0, z: 1 },
-  logo: { x: 14.5, y: 40, w: 11, h: 0, z: 2 },
-  text: { x: 27.5, y: 59, w: 37, z: 3, size: 7.6, subSize: 1.55, align: 'left' },
-}
+const SUPERSEDED_DESKTOP: SlideLayout[] = [
+  // The short-lived 16:9 build.
+  {
+    product: { x: 73, y: 50, w: 52, h: 0, z: 1 },
+    logo: { x: 14.5, y: 40, w: 11, h: 0, z: 2 },
+    text: { x: 27.5, y: 59, w: 37, z: 3, size: 7.6, subSize: 1.55, align: 'left' },
+  },
+  // First 1350x600 pass, before the CURL 7.1 composition was tuned.
+  {
+    product: { x: 72, y: 53, w: 36, h: 0, z: 1 },
+    logo: { x: 14.5, y: 30, w: 11, h: 0, z: 2 },
+    text: { x: 27.5, y: 60, w: 37, z: 3, size: 7.6, subSize: 1.55, align: 'left' },
+  },
+]
 
 export function defaultLayout(device: Device): SlideLayout {
   const d = DEFAULT_LAYOUT[device]
@@ -151,7 +160,13 @@ export function seedDB(): HeroSliderDB {
         title: 'CURL 7.1',
         subtitle: 'RGB Gaming Headset',
         href: '/offers',
-        desktop: defaultLayout('desktop'),
+        // Desktop composition as set in the admin panel: logo and text shifted
+        // right and the product pulled left, closing the gap in the middle.
+        desktop: {
+          product: { x: 61.5, y: 53, w: 36, h: 0, z: 1 },
+          logo: { x: 29, y: 39, w: 11, h: 0, z: 2 },
+          text: { x: 41, y: 59, w: 37, z: 3, size: 7.6, subSize: 1.55, align: 'left' },
+        },
         mobile: defaultLayout('mobile'),
       },
     ],
@@ -173,11 +188,13 @@ function mergeSeedSlides(existing: HeroSlide[], seed: HeroSlide[]): HeroSlide[] 
   return merged
 }
 
-/** Re-tunes untouched 16:9-era desktop layouts for the 1350x600 box. */
-function retuneLegacyDesktop(slide: HeroSlide): HeroSlide {
+/** Moves untouched slides onto the current seed composition for their product. */
+function retuneStaleDesktop(slide: HeroSlide): HeroSlide {
   if (!slide.desktop) return slide
-  if (JSON.stringify(slide.desktop) !== JSON.stringify(LEGACY_16_9_DESKTOP)) return slide
-  return { ...slide, desktop: defaultLayout('desktop') }
+  const saved = JSON.stringify(slide.desktop)
+  if (!SUPERSEDED_DESKTOP.some((l) => JSON.stringify(l) === saved)) return slide
+  const seeded = seedDB().slides.find((s) => s.productImage === slide.productImage)
+  return { ...slide, desktop: seeded ? seeded.desktop : defaultLayout('desktop') }
 }
 
 /** Fills in any layout a slide is missing so older saved DBs keep working. */
@@ -214,7 +231,7 @@ function readDB(): HeroSliderDB {
       const migrated: HeroSliderDB = {
         bgDesktop: parsed.bgDesktop || seed.bgDesktop,
         bgMobile: parsed.bgMobile || seed.bgMobile,
-        slides: mergeSeedSlides(parsed.slides, seed.slides).map(normalizeSlide).map(retuneLegacyDesktop),
+        slides: mergeSeedSlides(parsed.slides, seed.slides).map(normalizeSlide).map(retuneStaleDesktop),
       }
       localStorage.setItem(DB_KEY, JSON.stringify(migrated))
       localStorage.setItem(VERSION_KEY, String(SEED_VERSION))
