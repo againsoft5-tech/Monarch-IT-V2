@@ -78,6 +78,40 @@ function GearButton({ onClick, title }: { onClick: () => void; title: string }) 
   )
 }
 
+function Switch({
+  checked,
+  onChange,
+  label,
+  size = 'md',
+}: {
+  checked: boolean
+  onChange: (v: boolean) => void
+  label: string
+  size?: 'sm' | 'md'
+}) {
+  const sm = size === 'sm'
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      aria-label={label}
+      onClick={() => onChange(!checked)}
+      className="flex items-center gap-2 cursor-pointer"
+    >
+      <span
+        className={`${sm ? 'w-8 h-[18px]' : 'w-10 h-6'} rounded-full p-0.5 flex transition-colors ${
+          checked ? 'justify-end' : 'justify-start bg-gray-300'
+        }`}
+        style={checked ? { backgroundColor: RED } : undefined}
+      >
+        <span className={`${sm ? 'w-3.5 h-3.5' : 'w-5 h-5'} rounded-full bg-white shadow-sm`} />
+      </span>
+      <span className={`${sm ? 'text-[12px]' : 'text-[13px]'} font-semibold text-gray-800`}>{label}</span>
+    </button>
+  )
+}
+
 const SWATCHES = ['#ee1c25', '#bd2026', '#111827', '#3f3f46', '#6b7280', '#ffffff']
 
 /** Swatch row + native picker + hex field, kept in sync. */
@@ -532,9 +566,21 @@ function SlideCard({ slide, index, count }: { slide: HeroSlide; index: number; c
   const [settingsFor, setSettingsFor] = useState<SlidePart | null>(null)
 
   return (
-    <div className="border border-gray-100 rounded-2xl p-4 space-y-4">
-      <div className="flex items-center justify-between">
-        <p className="text-[12px] font-semibold text-gray-400 m-0">Slide {index + 1}</p>
+    <div
+      className={`border rounded-2xl p-4 space-y-4 transition-colors ${
+        slide.enabled ? 'border-gray-100' : 'border-dashed border-gray-300 bg-[#fafafa]'
+      }`}
+    >
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center gap-3">
+          <p className="text-[12px] font-semibold text-gray-400 m-0">Slide {index + 1}</p>
+          <Switch
+            size="sm"
+            checked={slide.enabled}
+            onChange={(enabled) => updateSlide(slide.id, { enabled })}
+            label={slide.enabled ? 'Visible' : 'Hidden'}
+          />
+        </div>
         <div className="flex items-center gap-1.5">
           <button
             type="button"
@@ -670,25 +716,11 @@ export default function AdminHeroSliderPage() {
         {/* Draft controls follow the page so Save is always one click away. */}
         <div className="sticky top-0 z-40 mb-5">
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 px-5 py-3.5 flex flex-wrap items-center gap-x-5 gap-y-3">
-            <button
-              type="button"
-              role="switch"
-              aria-checked={db.enabled}
-              onClick={() => setSliderEnabled(!db.enabled)}
-              className="flex items-center gap-2.5 cursor-pointer"
-            >
-              <span
-                className={`w-10 h-6 rounded-full p-0.5 flex transition-colors ${
-                  db.enabled ? 'justify-end' : 'justify-start bg-gray-300'
-                }`}
-                style={db.enabled ? { backgroundColor: RED } : undefined}
-              >
-                <span className="w-5 h-5 rounded-full bg-white shadow-sm" />
-              </span>
-              <span className="text-[13px] font-semibold text-gray-800">
-                Slider {db.enabled ? 'enabled' : 'disabled'}
-              </span>
-            </button>
+            <Switch
+              checked={db.enabled}
+              onChange={setSliderEnabled}
+              label={`Slider ${db.enabled ? 'enabled' : 'disabled'}`}
+            />
 
             <span className="text-[12px] text-gray-400 hidden sm:block">
               {db.enabled ? 'Shown at the top of the homepage.' : 'Hidden from the homepage once saved.'}
@@ -749,7 +781,14 @@ export default function AdminHeroSliderPage() {
 
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-[15px] font-bold text-gray-900 m-0">Slides</h2>
+            <div className="flex items-baseline gap-2.5">
+              <h2 className="text-[15px] font-bold text-gray-900 m-0">Slides</h2>
+              {db.slides.length > 0 && (
+                <span className="text-[12px] text-gray-400">
+                  {db.slides.filter((s) => s.enabled).length} of {db.slides.length} visible
+                </span>
+              )}
+            </div>
             <button
               type="button"
               onClick={addSlide}

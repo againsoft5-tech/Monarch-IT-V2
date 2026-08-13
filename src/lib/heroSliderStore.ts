@@ -41,6 +41,8 @@ export type SlideLayout = {
 
 export type HeroSlide = {
   id: string
+  /** Off keeps the slide in the admin panel but out of the rotation. */
+  enabled: boolean
   brandLogo: string
   productImage: string
   title: string
@@ -152,6 +154,7 @@ export function seedDB(): HeroSliderDB {
     slides: [
       {
         id: 'hero-seed-hyperx-cloud-ii',
+        enabled: true,
         brandLogo: '/images/hero-slider/brand-hyperx.png',
         productImage: '/images/hero-slider/hyperx-cloud-ii.png',
         title: 'CLOUD II',
@@ -175,6 +178,7 @@ export function seedDB(): HeroSliderDB {
       },
       {
         id: 'hero-seed-fantech-curl-71',
+        enabled: true,
         brandLogo: '/images/hero-slider/brand-fantech.png',
         productImage: '/images/hero-slider/fantech-curl-7-1.png',
         title: 'CURL 7.1',
@@ -233,6 +237,7 @@ function normalizeSlide(slide: HeroSlide): HeroSlide {
   }
   return {
     ...slide,
+    enabled: slide.enabled ?? true,
     titleColor: slide.titleColor || DEFAULT_TITLE_COLOR,
     subtitleColor: slide.subtitleColor || DEFAULT_SUBTITLE_COLOR,
     desktop: fill('desktop'),
@@ -386,6 +391,7 @@ export function addSlide() {
   const db = readDraft()
   const slide: HeroSlide = {
     id: makeId(),
+    enabled: true,
     brandLogo: '',
     productImage: '',
     title: 'PRODUCT NAME',

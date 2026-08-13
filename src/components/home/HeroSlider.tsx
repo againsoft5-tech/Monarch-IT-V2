@@ -32,7 +32,8 @@ function SlideLayer({
 
 export default function HeroSlider() {
   const { db } = useHeroSliderStore()
-  const slides = db.slides
+  // Slides switched off in the admin panel stay out of the rotation entirely.
+  const slides = db.slides.filter((s) => s.enabled !== false)
   const [current, setCurrent] = useState(0)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const touchStartX = useRef(0)
