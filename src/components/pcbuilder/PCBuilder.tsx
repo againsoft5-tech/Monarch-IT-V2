@@ -550,16 +550,17 @@ export default function PCBuilder() {
 
       <h2 className="text-center text-lg font-bold text-gray-900 mb-5 shrink-0">{activeCat.label}</h2>
 
-      <div className="flex-1 min-h-0 overflow-y-auto pr-1.5 thin-scroll-gray">
+      <div className="@container flex-1 min-h-0 overflow-y-auto pr-1.5 thin-scroll-gray">
         {products.length === 0 ? (
           <div className="text-center py-16">
             <span className="mi text-[48px] text-gray-300 block mb-3">search_off</span>
             <p className="text-gray-500 text-[14px]">No products match your search.</p>
           </div>
         ) : (
-          // auto-fill keeps the column count tied to the panel's own width, so
-          // it reflows with the sidebar rather than with the viewport
-          <div className="grid gap-3 [grid-template-columns:repeat(auto-fill,minmax(210px,1fr))]">
+          // Three across is the target; container queries drop that to two or
+          // one when the panel itself is too narrow, since the panel shrinks
+          // with the sidebar rather than tracking the viewport
+          <div className="grid gap-3 grid-cols-1 @[420px]:grid-cols-2 @[600px]:grid-cols-3">
             {products.map((p) => {
               const isPicked = (builds[activeCategory] ?? []).some((s) => s.product.id === p.id)
               const qty = getQty(p.id)
