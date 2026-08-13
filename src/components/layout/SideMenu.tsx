@@ -43,11 +43,11 @@ function renderMobileItem(item: (typeof menuItems)[number], count: number, handl
       </div>
       {item.label === 'Compare' &&
         (count > 0 ? (
-          <span className="absolute -top-1 right-0 min-w-[16px] h-4 px-1 bg-[#e0272e] text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-[#F0F0F2] leading-none">
+          <span className="absolute top-0 right-0.5 min-w-[16px] h-4 px-1 bg-[#e0272e] text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-[#F0F0F2] leading-none">
             {count}
           </span>
         ) : (
-          <span className="absolute -top-0.5 right-0 w-2.5 h-2.5 bg-[#e0272e] rounded-full border-2 border-[#F0F0F2]" />
+          <span className="absolute top-0 right-0.5 w-2.5 h-2.5 bg-[#e0272e] rounded-full border-2 border-[#F0F0F2]" />
         ))}
     </>
   )
