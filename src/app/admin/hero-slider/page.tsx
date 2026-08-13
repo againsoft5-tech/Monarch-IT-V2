@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAdminAuth } from '@/context/AdminAuthContext'
-import HeroSlideContent, { slideAspect } from '@/components/home/HeroSlideContent'
+import HeroSlideContent, { slideAspect, slideRatio } from '@/components/home/HeroSlideContent'
 import {
   useHeroSliderDraft,
   publishDraft,
@@ -297,9 +297,9 @@ function LayerSettingsModal({
         {/* Below md the whole body scrolls; from md up the grid is pinned and
             the right column scrolls on its own. */}
         <div className="flex-1 min-h-0 p-5 grid gap-5 md:grid-cols-2 overflow-y-auto md:overflow-hidden thin-scroll-gray">
-          <div className="md:self-start">
+          <div className="md:self-start md:min-h-0 md:overflow-y-auto thin-scroll-gray">
             <p className="text-[11px] font-semibold text-gray-400 mb-1.5 m-0">Live preview</p>
-            <SlidePreview slide={slide} device={device} />
+            <SlidePreview slide={slide} device={device} maxHeight="max(140px, 88vh - 320px)" />
             <button
               type="button"
               onClick={() => resetLayout(slide.id, device, part)}
@@ -471,14 +471,32 @@ function LayerSettingsModal({
 
 /* ---------------------------------------------------------------- previews */
 
-function SlidePreview({ slide, device }: { slide: HeroSlide; device: Device }) {
+function SlidePreview({
+  slide,
+  device,
+  /**
+   * Height budget for previews that must fit a fixed panel. Aspect ratio makes
+   * height follow width, so the cap is applied as a max-width — without it the
+   * 1:1 mobile preview grows taller than the popup and its lower half becomes
+   * unreachable, since only the settings column scrolls.
+   */
+  maxHeight,
+}: {
+  slide: HeroSlide
+  device: Device
+  maxHeight?: string
+}) {
   const { db } = useHeroSliderDraft()
   const bg = device === 'desktop' ? db.bgDesktop : db.bgMobile || db.bgDesktop
 
   return (
     <div
-      className="relative w-full overflow-hidden rounded-xl border border-gray-100 bg-white"
-      style={{ containerType: 'inline-size', aspectRatio: slideAspect(device) }}
+      className="relative w-full mx-auto overflow-hidden rounded-xl border border-gray-100 bg-white"
+      style={{
+        containerType: 'inline-size',
+        aspectRatio: slideAspect(device),
+        maxWidth: maxHeight ? `calc(${maxHeight} * ${slideRatio(device)})` : undefined,
+      }}
     >
       {bg && (
         // eslint-disable-next-line @next/next/no-img-element

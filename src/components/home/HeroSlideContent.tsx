@@ -30,6 +30,11 @@ export function slideAspect(device: Device) {
   return device === 'desktop' ? DESKTOP_ASPECT : MOBILE_ASPECT
 }
 
+/** Same ratio as a number, for width-from-height maths. */
+export function slideRatio(device: Device) {
+  return device === 'desktop' ? 1350 / 600 : 1
+}
+
 function imageStyle(box: ImageBox): CSSProperties {
   return {
     position: 'absolute',
