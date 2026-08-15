@@ -125,7 +125,7 @@ export default function OfferInfoPage({ offer }: { offer: OfferInfo }) {
           </div>
         </div>
 
-        <div className="sticky top-16 md:top-[72px] z-30 bg-white/95 backdrop-blur-sm -mx-4 px-4 md:mx-0 md:px-0 py-3 mb-8 border-b border-gray-100 overflow-x-auto thin-scroll-red">
+        <div className="sticky top-16 desk:top-[72px] z-30 bg-white/95 backdrop-blur-sm -mx-4 px-4 md:mx-0 md:px-0 py-3 mb-8 border-b border-gray-100 overflow-x-auto thin-scroll-red">
           <div className="flex items-center gap-2 w-max mx-auto">
             {offer.sections.map((s) => (
               <button

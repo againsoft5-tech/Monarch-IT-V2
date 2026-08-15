@@ -61,7 +61,7 @@ export default function MobileHeader({ data }: Props) {
     <>
       <div
         ref={searchRef}
-        className={`md:hidden sticky top-0 z-40 flex items-center gap-2.5 px-4 py-3 transition-all duration-300 ${
+        className={`desk:hidden sticky top-0 z-40 flex items-center gap-2.5 px-4 py-3 md:justify-between transition-all duration-300 ${
           scrolled ? 'bg-[#f4f5f7]/70 backdrop-blur-md shadow-[0_2px_20px_rgba(0,0,0,0.06)]' : 'bg-[#f4f5f7]'
         }`}
       >
@@ -75,7 +75,8 @@ export default function MobileHeader({ data }: Props) {
           />
         </Link>
 
-        <div className="flex-1 min-w-0">
+        {/* Tablet: 340px pinned to the header's centre, same as the desktop header does above 1400px. */}
+        <div className="flex-1 min-w-0 md:absolute md:left-1/2 md:top-1/2 md:w-[340px] md:flex-none md:-translate-x-1/2 md:-translate-y-1/2">
           <div className="flex items-center bg-white rounded-full px-4 py-2.5">
             <Image src="/images/compare-icons/search-icon.svg" alt="" width={18} height={18} className="w-[18px] h-[18px] mr-2.5 shrink-0" />
             <input
@@ -145,7 +146,7 @@ export default function MobileHeader({ data }: Props) {
               setSearchFocused(false)
               setQuery('')
             }}
-            positionClassName="absolute left-3 right-3 top-full mt-2"
+            positionClassName="absolute left-3 right-3 top-full mt-2 md:left-1/2 md:right-auto md:w-[340px] md:-translate-x-1/2"
           />
         )}
       </div>

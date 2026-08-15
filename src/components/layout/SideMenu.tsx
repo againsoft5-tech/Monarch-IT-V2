@@ -199,11 +199,11 @@ export default function SideMenu({ data, embedded = false }: Props) {
 
   return (
     <>
-      <div className="pointer-events-none fixed left-0 top-0 z-[9999] hidden h-screen w-24 items-center md:flex">
+      <div className="pointer-events-none fixed left-0 top-0 z-[9999] hidden h-screen w-24 items-center desk:flex">
         <div className="ml-3.5">{rail}</div>
       </div>
 
-      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-[9999] px-[10px] pb-3 md:hidden">
+      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-[9999] px-[10px] pb-3 desk:hidden">
         <div className="pointer-events-auto flex h-16 items-center justify-between rounded-full bg-[#f4f5f7]/70 px-[10px] shadow-[0_6px_20px_rgba(0,0,0,0.12)] backdrop-blur-md">
           {mobileItems.map((item) => renderMobileItem(item, count, handleChatClick))}
         </div>

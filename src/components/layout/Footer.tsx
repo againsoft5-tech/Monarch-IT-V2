@@ -182,7 +182,7 @@ export default function Footer({ data }: Props) {
         </div>
       </div>
 
-      <div className="md:border-t border-white/10 text-center px-5 min-[992px]:px-28 py-[25px] container mx-auto">
+      <div className="md:border-t border-white/10 text-center px-5 desk:px-28 py-[25px] container mx-auto">
         <p className="mb-[15px] text-[#d0d0d0]">
           {cfg.copyrightBefore}
           <span className="text-[#ff3d3d]">{cfg.copyrightBrand}</span>

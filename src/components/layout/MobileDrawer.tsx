@@ -18,13 +18,13 @@ export default function MobileDrawer({ open, onClose }: { open: boolean; onClose
     <>
       <div
         onClick={onClose}
-        className={`md:hidden fixed inset-0 bg-black/50 z-[9998] transition-opacity ${
+        className={`desk:hidden fixed inset-0 bg-black/50 z-[9998] transition-opacity ${
           open ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
         }`}
       />
 
       <div
-        className={`md:hidden fixed top-0 right-0 h-full w-[85%] max-w-[340px] bg-white z-[9999] shadow-2xl transition-transform duration-300 flex flex-col ${
+        className={`desk:hidden fixed top-0 right-0 h-full w-[85%] max-w-[340px] bg-white z-[9999] shadow-2xl transition-transform duration-300 flex flex-col ${
           open ? 'translate-x-0' : 'translate-x-full'
         }`}
       >

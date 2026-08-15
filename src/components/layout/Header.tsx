@@ -72,7 +72,7 @@ export default function Header({ data }: Props) {
   return (
     <header
       ref={headerRef}
-      className={`fixed top-0 inset-x-0 z-30 hidden md:block transition-all duration-300 ${
+      className={`fixed top-0 inset-x-0 z-30 hidden desk:block transition-all duration-300 ${
         scrolled
           ? "bg-white/70 backdrop-blur-md shadow-[0_2px_20px_rgba(0,0,0,0.06)]"
           : "bg-transparent"

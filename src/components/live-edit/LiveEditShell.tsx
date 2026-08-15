@@ -46,7 +46,7 @@ const DEVICES: {
   Icon: typeof Monitor
 }[] = [
   { id: 'desktop', label: 'Desktop', width: '100%', Icon: Monitor },
-  { id: 'tablet', label: 'Tablet', width: '768px', Icon: Tablet },
+  { id: 'tablet', label: 'Tablet', width: '1024px', Icon: Tablet },
   { id: 'mobile', label: 'Mobile', width: '390px', Icon: Smartphone },
 ]
 

@@ -87,7 +87,7 @@ export default function BrandSlider({
         />
 
         <div
-          className="relative mx-auto px-4 md:px-28"
+          className="relative mx-auto px-4 desk:px-28"
           onMouseEnter={pause}
           onMouseLeave={resume}
           onTouchStart={pause}
@@ -97,7 +97,7 @@ export default function BrandSlider({
             type="button"
             onClick={() => scroll(-300)}
             aria-label="Previous brand"
-            className="hidden md:flex absolute left-4 md:left-28 top-1/2 -translate-y-1/2 z-10 w-[38px] h-[38px] rounded-full bg-[#f5f5f7] items-center justify-center cursor-pointer"
+            className="hidden desk:flex absolute left-28 top-1/2 -translate-y-1/2 z-10 w-[38px] h-[38px] rounded-full bg-[#f5f5f7] items-center justify-center cursor-pointer"
           >
             <Image src="/images/promo-banner/left-arrow.svg" alt="" width={9} height={16} className="w-[9px] h-4" />
           </button>
@@ -133,7 +133,7 @@ export default function BrandSlider({
             type="button"
             onClick={() => scroll(300)}
             aria-label="Next brand"
-            className="hidden md:flex absolute right-4 md:right-28 top-1/2 -translate-y-1/2 z-10 w-[38px] h-[38px] rounded-full bg-[#f5f5f7] items-center justify-center cursor-pointer"
+            className="hidden desk:flex absolute right-28 top-1/2 -translate-y-1/2 z-10 w-[38px] h-[38px] rounded-full bg-[#f5f5f7] items-center justify-center cursor-pointer"
           >
             <Image src="/images/promo-banner/right-arrow.svg" alt="" width={9} height={16} className="w-[9px] h-4" />
           </button>

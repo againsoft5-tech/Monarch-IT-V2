@@ -195,7 +195,7 @@ export default function CategoryPage({ categoryName, products, priceMinDefault, 
         {/* Sidebar filters (off-canvas at every breakpoint) */}
         <div
           onClick={() => setFilterOpen(false)}
-          className={`fixed inset-0 md:top-[72px] bg-black/50 z-[9998] transition-opacity ${
+          className={`fixed inset-0 desk:top-[72px] bg-black/50 z-[9998] transition-opacity ${
             filterOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
           }`}
         />

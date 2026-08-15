@@ -114,7 +114,7 @@ export default function LiveEditPreviewDocument({ initial }: Props) {
       <SideMenu data={content.sideMenu} />
 
       {!locked ? (
-        <div className="pointer-events-none fixed inset-x-0 top-0 z-[70] flex justify-center gap-2 p-2 md:justify-start md:px-28">
+        <div className="pointer-events-none fixed inset-x-0 top-0 z-[70] flex justify-center gap-2 p-2 desk:justify-start desk:px-28">
           <button
             type="button"
             data-live-ignore
@@ -154,7 +154,7 @@ export default function LiveEditPreviewDocument({ initial }: Props) {
         </div>
       ) : null}
 
-      <div className="flex min-h-screen flex-col pb-[76px] md:pb-0">
+      <div className="flex min-h-screen flex-col pb-[76px] desk:pb-0">
         <Header data={content.header} />
         <MobileHeader data={content.header} />
 

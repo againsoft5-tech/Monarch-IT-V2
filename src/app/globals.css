@@ -1,5 +1,15 @@
 @import "tailwindcss";
 
+/*
+ * Site chrome breakpoint. Below this the header/side rail use the mobile
+ * layout (top search bar + bottom pill nav); at/above it the desktop header
+ * and the fixed left rail take over. 1025px so a 1024px tablet still gets
+ * the mobile chrome.
+ */
+@theme {
+  --breakpoint-desk: 1025px;
+}
+
 .container {
   width: 100%;
   max-width: none;
@@ -8,7 +18,8 @@
   padding-right: 1rem !important;
 }
 
-@media (min-width: 768px) {
+/* 7rem gutter only exists to clear the desktop left rail. */
+@media (min-width: 1025px) {
   .container {
     padding-left: 7rem !important;
     padding-right: 7rem !important;
