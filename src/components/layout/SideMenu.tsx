@@ -91,7 +91,7 @@ export default function SideMenu({ data, embedded = false }: Props) {
     const byId = new Map((cfg.items ?? []).map((i) => [i.id, i]))
     const fromIds = (cfg.mobileIds ?? [])
       .map((id) => byId.get(id))
-      .filter((i): i is SideMenuItem => Boolean(i) && !i.hidden)
+      .filter((i): i is SideMenuItem => i != null && !i.hidden)
     if (fromIds.length > 0) return fromIds
     return (cfg.items ?? []).filter((i) => !i.hidden && i.showOnMobile !== false)
   }, [cfg.items, cfg.mobileIds])
