@@ -269,7 +269,7 @@ export default function CategoriesDrawer({ open, value, onChange, onClose, onBac
     <aside className="fixed right-0 top-0 z-[80] flex h-full w-full max-w-[420px] flex-col border-l border-[#e5e5e5] bg-[#eceff3] shadow-xl">
       <DrawerHeader title="Category carousel" onClose={onClose} onBack={onBack} />
 
-      <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-4">
+      <div className="thin-scroll-gray min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-4">
         <div className="flex items-center justify-between gap-2">
           <p className="m-0 text-[11px] font-semibold uppercase tracking-wide text-[#666]">
             Categories · drag · select · eye hide

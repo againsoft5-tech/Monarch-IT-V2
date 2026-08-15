@@ -20,7 +20,7 @@ export default function HeaderDrawer({ open, value, onChange, onClose, onBack }:
     <aside className="fixed right-0 top-0 z-[80] flex h-full w-full max-w-[420px] flex-col border-l border-[#e5e5e5] bg-[#eceff3] shadow-xl">
       <DrawerHeader eyebrow="Chrome" title="Header" onClose={onClose} onBack={onBack} />
 
-      <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-4 py-4">
+      <div className="thin-scroll-gray min-h-0 flex-1 space-y-5 overflow-y-auto px-4 py-4">
         <div className="space-y-2 rounded-none border border-[#e5e5e5] bg-white p-3">
           <p className="m-0 text-[11px] font-semibold uppercase tracking-wide text-[#666]">Logos</p>
           <div className="flex gap-3">

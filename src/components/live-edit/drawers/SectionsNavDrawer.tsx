@@ -95,7 +95,7 @@ export default function SectionsNavDrawer({ open, content, onClose, onOpen }: Pr
         </button>
       </div>
 
-      <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-4">
+      <div className="thin-scroll-gray min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-4">
         <CollapsibleGroup
           title="Site chrome"
           meta={`${CHROME_ITEMS.length} items · shared across pages`}

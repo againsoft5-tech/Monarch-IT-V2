@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import {
   DndContext,
   PointerSensor,
@@ -16,10 +16,13 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { ChevronDown, Copy, Eye, EyeOff, GripVertical, ImageUp, Plus, Trash2 } from 'lucide-react'
-import type { HeroObjectFit, HeroSection, HeroSlide, HeroSlideLayout } from '@/lib/live-edit/homepage'
+import { ChevronDown, Copy, Eye, EyeOff, GripVertical, Plus, Settings, Trash2 } from 'lucide-react'
+import type { HeroSection, HeroSlide, HeroSlideLayout } from '@/lib/live-edit/homepage'
 import { DEFAULT_LAYOUT, DEFAULT_SUBTITLE_COLOR, DEFAULT_TITLE_COLOR } from '@/lib/heroSliderStore'
+import type { Device } from '@/lib/heroSliderStore'
 import { DrawerHeader } from '@/components/live-edit/drawers/DrawerHeader'
+import HeroLayerDrawer, { type HeroLayerPart } from '@/components/live-edit/drawers/HeroLayerDrawer'
+import ImageField from '@/components/live-edit/drawers/ImageField'
 
 type Props = {
   open: boolean
@@ -29,81 +32,22 @@ type Props = {
   onBack?: () => void
 }
 
-/** Monarch desktop hero box (matches HeroSlideContent DESKTOP_ASPECT). */
-const SECTION_W = 1350
-const SECTION_H = 600
-
 function cn(...parts: Array<string | false | null | undefined>) {
   return parts.filter(Boolean).join(' ')
 }
 
-function gcd(a: number, b: number): number {
-  let x = Math.abs(Math.round(a))
-  let y = Math.abs(Math.round(b))
-  while (y) {
-    const t = y
-    y = x % y
-    x = t
-  }
-  return x || 1
-}
-
-function formatRatio(width: number, height: number): string {
-  if (!width || !height) return '—'
-  const w = Math.round(width)
-  const h = Math.round(height)
-  const g = gcd(w, h)
-  return `${w / g}:${h / g}`
-}
-
-function ratiosMatch(
-  sectionW: number,
-  sectionH: number,
-  imageW: number | null | undefined,
-  imageH: number | null | undefined,
-): boolean | null {
-  if (!sectionW || !sectionH || !imageW || !imageH) return null
-  const a = sectionW / sectionH
-  const b = imageW / imageH
-  return Math.abs(a - b) / a < 0.02
-}
-
-function readImageSize(url: string): Promise<{ width: number; height: number } | null> {
-  if (!url || typeof window === 'undefined') return Promise.resolve(null)
-  return new Promise((resolve) => {
-    const img = new window.Image()
-    img.onload = () => resolve({ width: img.naturalWidth, height: img.naturalHeight })
-    img.onerror = () => resolve(null)
-    img.src = url
-  })
-}
-
-function FitToggle({
-  value,
-  onChange,
-}: {
-  value: HeroObjectFit
-  onChange: (fit: HeroObjectFit) => void
-}) {
+/** Opens the stacked layer drawer for one of a slide's three layers. */
+function GearButton({ onClick, title }: { onClick: () => void; title: string }) {
   return (
-    <div className="inline-flex rounded-none border border-white/20 bg-black/55 p-0.5 backdrop-blur-sm">
-      {(['fill', 'fit'] as const).map((fit) => (
-        <button
-          key={fit}
-          type="button"
-          className={cn(
-            'h-7 rounded-none px-2 text-[11px] font-medium capitalize transition-colors',
-            value === fit ? 'bg-white text-[#111] shadow-sm' : 'text-white/80 hover:text-white',
-          )}
-          onClick={(e) => {
-            e.stopPropagation()
-            onChange(fit)
-          }}
-        >
-          {fit}
-        </button>
-      ))}
-    </div>
+    <button
+      type="button"
+      onClick={onClick}
+      title={title}
+      aria-label={title}
+      className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-none border border-[#ddd] bg-white text-[#777] hover:border-[#bd2026] hover:text-[#bd2026]"
+    >
+      <Settings className="h-3.5 w-3.5" />
+    </button>
   )
 }
 
@@ -126,9 +70,6 @@ function newSlide(): HeroSlide {
     href: '/',
     titleColor: DEFAULT_TITLE_COLOR,
     subtitleColor: DEFAULT_SUBTITLE_COLOR,
-    objectFit: 'fill',
-    imageWidth: null,
-    imageHeight: null,
     ...layouts,
   }
 }
@@ -142,6 +83,7 @@ function SortableBannerRow({
   onRemove,
   onDuplicate,
   onToggleHidden,
+  onOpenLayer,
 }: {
   slide: HeroSlide
   index: number
@@ -151,37 +93,13 @@ function SortableBannerRow({
   onRemove: () => void
   onDuplicate: () => void
   onToggleHidden: () => void
+  onOpenLayer: (part: HeroLayerPart) => void
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: slide.id,
   })
   const preview = slide.productImage || ''
-  const fit = slide.objectFit ?? 'fill'
   const isHidden = slide.enabled === false
-  const sectionRatio = formatRatio(SECTION_W, SECTION_H)
-  const imageLabel =
-    slide.imageWidth && slide.imageHeight
-      ? `${slide.imageWidth} × ${slide.imageHeight} px`
-      : '—'
-  const imageRatio =
-    slide.imageWidth && slide.imageHeight
-      ? formatRatio(slide.imageWidth, slide.imageHeight)
-      : '—'
-  const match = ratiosMatch(SECTION_W, SECTION_H, slide.imageWidth, slide.imageHeight)
-
-  useEffect(() => {
-    let cancelled = false
-    if (!preview) return
-    if (slide.imageWidth && slide.imageHeight) return
-    void readImageSize(preview).then((size) => {
-      if (cancelled || !size) return
-      onUpdate({ imageWidth: size.width, imageHeight: size.height })
-    })
-    return () => {
-      cancelled = true
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [preview])
 
   return (
     <div
@@ -217,11 +135,7 @@ function SortableBannerRow({
           <div className="relative h-12 w-[84px] shrink-0 overflow-hidden rounded-none border border-[#e5e5e5] bg-[#f5f5f7]">
             {preview ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={preview}
-                alt=""
-                className={cn('h-full w-full', fit === 'fit' ? 'object-contain' : 'object-cover')}
-              />
+              <img src={preview} alt="" className="h-full w-full object-contain" />
             ) : (
               <div className="flex h-full items-center justify-center text-[10px] text-[#999]">Empty</div>
             )}
@@ -243,6 +157,17 @@ function SortableBannerRow({
           />
         </button>
 
+        <button
+          type="button"
+          className="inline-flex shrink-0 items-center justify-center rounded-none px-1.5 text-[#888] hover:bg-[#f5f5f7] hover:text-[#bd2026]"
+          title="Layer settings — logo, text & product image"
+          onClick={(e) => {
+            e.stopPropagation()
+            onOpenLayer('logo')
+          }}
+        >
+          <Settings className="h-3.5 w-3.5" />
+        </button>
         <button
           type="button"
           className="inline-flex shrink-0 items-center justify-center rounded-none px-1.5 text-[#888] hover:bg-[#f5f5f7] hover:text-[#222]"
@@ -283,112 +208,60 @@ function SortableBannerRow({
 
       {expanded ? (
         <div className="space-y-2 border-t border-[#eee] px-2.5 py-2.5">
-          <div
-            className="relative overflow-hidden rounded-none border border-[#e5e5e5] bg-[#f5f5f7]"
-            style={{ aspectRatio: `${SECTION_W} / ${SECTION_H}` }}
-          >
-            {preview ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={preview}
-                alt={slide.title || `Banner ${index + 1}`}
-                className={cn('h-full w-full', fit === 'fit' ? 'object-contain' : 'object-cover')}
+          <ImageField
+            label="Product / banner image"
+            value={slide.productImage}
+            hint="Cut-out PNG with a transparent background works best."
+            onChange={(productImage) => onUpdate({ productImage })}
+            action={
+              <GearButton
+                onClick={() => onOpenLayer('product')}
+                title="Product image — z-index, size & position"
               />
-            ) : (
-              <div className="flex h-full items-center justify-center text-[12px] text-[#999]">No image</div>
-            )}
-            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-black/25" />
-            <div className="absolute left-2 top-2 z-[2]">
-              <label
-                className="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-none border border-white/20 bg-black/55 text-white backdrop-blur-sm hover:bg-black/70"
-                title="Change image URL below, or paste path"
-              >
-                <ImageUp className="h-3.5 w-3.5" />
-              </label>
+            }
+          />
+          <ImageField
+            label="Brand logo"
+            value={slide.brandLogo}
+            hint="Transparent PNG or SVG works best."
+            boxClass="h-12 w-12"
+            onChange={(brandLogo) => onUpdate({ brandLogo })}
+            action={
+              <GearButton
+                onClick={() => onOpenLayer('logo')}
+                title="Brand logo — z-index, size & position"
+              />
+            }
+          />
+          <div>
+            <div className="mb-1 flex items-center justify-between gap-2">
+              <label className="text-[11px] font-semibold text-[#555]">Title</label>
+              <GearButton
+                onClick={() => onOpenLayer('text')}
+                title="Text — z-index, size, position & colour"
+              />
             </div>
-            <div className="absolute right-2 top-2 z-[2]">
-              <FitToggle value={fit} onChange={(objectFit) => onUpdate({ objectFit })} />
-            </div>
+            <input
+              value={slide.title}
+              onChange={(e) => onUpdate({ title: e.target.value })}
+              className="h-8 w-full rounded-none border border-[#ddd] px-2 text-[12px]"
+            />
           </div>
-
-          <div className="space-y-1.5 rounded-none bg-[#f5f5f7] px-2.5 py-2 text-[11px] leading-snug">
-            <div className="grid grid-cols-2 gap-2 text-[#666]">
-              <div>
-                <p className="font-medium text-[#222]">Section</p>
-                <p>
-                  {SECTION_W} × {SECTION_H} px
-                </p>
-                <p>
-                  Ratio <span className="font-medium text-[#222]">{sectionRatio}</span>
-                </p>
-              </div>
-              <div>
-                <p className="font-medium text-[#222]">Image</p>
-                <p>{imageLabel}</p>
-                <p>
-                  Ratio <span className="font-medium text-[#222]">{imageRatio}</span>
-                </p>
-              </div>
-            </div>
-            {match === false ? (
-              <p className="text-[#bd2026]">
-                Image {imageRatio} ≠ section {sectionRatio} — Fill crops · Fit letterbox
-              </p>
-            ) : match === true ? (
-              <p className="text-emerald-700">Image ratio matches section</p>
-            ) : (
-              <p className="text-[#888]">Set a product image to compare ratios</p>
-            )}
+          <div>
+            <label className="mb-1 block text-[11px] font-semibold text-[#555]">Subtitle</label>
+            <input
+              value={slide.subtitle}
+              onChange={(e) => onUpdate({ subtitle: e.target.value })}
+              className="h-8 w-full rounded-none border border-[#ddd] px-2 text-[12px]"
+            />
           </div>
-
-          <div className="space-y-2">
-            <div>
-              <label className="mb-1 block text-[11px] font-semibold text-[#555]">Product / banner image</label>
-              <input
-                value={slide.productImage}
-                onChange={(e) => {
-                  const productImage = e.target.value
-                  onUpdate({ productImage, imageWidth: null, imageHeight: null })
-                  void readImageSize(productImage).then((size) => {
-                    if (size) onUpdate({ productImage, imageWidth: size.width, imageHeight: size.height })
-                  })
-                }}
-                className="h-8 w-full rounded-none border border-[#ddd] px-2 text-[12px]"
-                placeholder="/images/..."
-              />
-            </div>
-            <div>
-              <label className="mb-1 block text-[11px] font-semibold text-[#555]">Brand logo</label>
-              <input
-                value={slide.brandLogo}
-                onChange={(e) => onUpdate({ brandLogo: e.target.value })}
-                className="h-8 w-full rounded-none border border-[#ddd] px-2 text-[12px]"
-              />
-            </div>
-            <div>
-              <label className="mb-1 block text-[11px] font-semibold text-[#555]">Title</label>
-              <input
-                value={slide.title}
-                onChange={(e) => onUpdate({ title: e.target.value })}
-                className="h-8 w-full rounded-none border border-[#ddd] px-2 text-[12px]"
-              />
-            </div>
-            <div>
-              <label className="mb-1 block text-[11px] font-semibold text-[#555]">Subtitle</label>
-              <input
-                value={slide.subtitle}
-                onChange={(e) => onUpdate({ subtitle: e.target.value })}
-                className="h-8 w-full rounded-none border border-[#ddd] px-2 text-[12px]"
-              />
-            </div>
-            <div>
-              <label className="mb-1 block text-[11px] font-semibold text-[#555]">Link</label>
-              <input
-                value={slide.href}
-                onChange={(e) => onUpdate({ href: e.target.value })}
-                className="h-8 w-full rounded-none border border-[#ddd] px-2 text-[12px]"
-              />
-            </div>
+          <div>
+            <label className="mb-1 block text-[11px] font-semibold text-[#555]">Link</label>
+            <input
+              value={slide.href}
+              onChange={(e) => onUpdate({ href: e.target.value })}
+              className="h-8 w-full rounded-none border border-[#ddd] px-2 text-[12px]"
+            />
           </div>
         </div>
       ) : null}
@@ -398,8 +271,16 @@ function SortableBannerRow({
 
 export default function HeroDrawer({ open, value, onChange, onClose, onBack }: Props) {
   const [expandedId, setExpandedId] = useState<string | null>(value.slides[0]?.id ?? null)
+  /** Which layer the stacked gear drawer is editing, if any. */
+  const [layerTarget, setLayerTarget] = useState<{ slideId: string; part: HeroLayerPart } | null>(null)
+  const [layerDevice, setLayerDevice] = useState<Device>('desktop')
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }))
   const ids = useMemo(() => value.slides.map((s) => s.id), [value.slides])
+
+  const layerSlideIndex = layerTarget
+    ? value.slides.findIndex((s) => s.id === layerTarget.slideId)
+    : -1
+  const layerSlide = layerSlideIndex >= 0 ? value.slides[layerSlideIndex] : null
 
   if (!open) return null
 
@@ -420,94 +301,117 @@ export default function HeroDrawer({ open, value, onChange, onClose, onBack }: P
   }
 
   return (
-    <aside className="fixed right-0 top-0 z-[80] flex h-full w-full max-w-[420px] flex-col border-l border-[#e5e5e5] bg-[#eceff3] shadow-xl">
-      <DrawerHeader title="Hero slider" onClose={onClose} onBack={onBack} />
+    <>
+      <aside className="fixed right-0 top-0 z-[80] flex h-full w-full max-w-[420px] flex-col border-l border-[#e5e5e5] bg-[#eceff3] shadow-xl">
+        <DrawerHeader title="Hero slider" onClose={onClose} onBack={onBack} />
 
-      <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-4">
-        <label className="flex items-center gap-2 text-[13px] text-[#333]">
-          <input
-            type="checkbox"
-            checked={value.enabled !== false}
-            onChange={(e) => onChange({ ...value, enabled: e.target.checked })}
-          />
-          Section enabled
-        </label>
-
-        <div className="grid grid-cols-1 gap-2">
-          <div>
-            <label className="mb-1 block text-[11px] font-semibold text-[#555]">Desktop background</label>
+        <div className="thin-scroll-gray min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-4">
+          <label className="flex items-center gap-2 text-[13px] text-[#333]">
             <input
+              type="checkbox"
+              checked={value.enabled !== false}
+              onChange={(e) => onChange({ ...value, enabled: e.target.checked })}
+            />
+            Section enabled
+          </label>
+
+          <div className="grid grid-cols-1 gap-3">
+            <ImageField
+              label="Desktop background"
               value={value.bgDesktop || ''}
-              onChange={(e) => onChange({ ...value, bgDesktop: e.target.value })}
-              className="h-8 w-full rounded-none border border-[#ddd] bg-white px-2 text-[12px]"
+              hint="Shared behind every banner. 1350 × 600 (2.25:1) artwork."
+              boxClass="h-12 w-[108px]"
+              onChange={(bgDesktop) => onChange({ ...value, bgDesktop })}
             />
-          </div>
-          <div>
-            <label className="mb-1 block text-[11px] font-semibold text-[#555]">Mobile background</label>
-            <input
+            <ImageField
+              label="Mobile background"
               value={value.bgMobile || ''}
-              onChange={(e) => onChange({ ...value, bgMobile: e.target.value })}
-              className="h-8 w-full rounded-none border border-[#ddd] bg-white px-2 text-[12px]"
+              hint="Square artwork. Leave empty to reuse the desktop background."
+              boxClass="h-12 w-12"
+              onChange={(bgMobile) => onChange({ ...value, bgMobile })}
             />
           </div>
-        </div>
 
-        <div className="space-y-2">
-          <div className="flex items-center justify-between gap-2">
-            <p className="m-0 text-[11px] font-semibold uppercase tracking-wide text-[#666]">
-              Banners · drag · duplicate · eye hide
-            </p>
-            <button
-              type="button"
-              className="inline-flex h-7 items-center gap-1 rounded-none border border-[#ddd] bg-white px-2 text-[11px] font-semibold text-[#333]"
-              onClick={() => {
-                const slide = newSlide()
-                onChange({ ...value, slides: [...value.slides, slide] })
-                setExpandedId(slide.id)
-              }}
-            >
-              <Plus className="h-3.5 w-3.5" />
-              Add
-            </button>
-          </div>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between gap-2">
+              <p className="m-0 text-[11px] font-semibold uppercase tracking-wide text-[#666]">
+                Banners · drag · duplicate · eye hide
+              </p>
+              <button
+                type="button"
+                className="inline-flex h-7 items-center gap-1 rounded-none border border-[#ddd] bg-white px-2 text-[11px] font-semibold text-[#333]"
+                onClick={() => {
+                  const slide = newSlide()
+                  onChange({ ...value, slides: [...value.slides, slide] })
+                  setExpandedId(slide.id)
+                }}
+              >
+                <Plus className="h-3.5 w-3.5" />
+                Add
+              </button>
+            </div>
 
-          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
-            <SortableContext items={ids} strategy={verticalListSortingStrategy}>
-              <div className="space-y-2">
-                {value.slides.map((slide, index) => (
-                  <SortableBannerRow
-                    key={slide.id}
-                    slide={slide}
-                    index={index}
-                    expanded={expandedId === slide.id}
-                    onToggle={() => setExpandedId((id) => (id === slide.id ? null : slide.id))}
-                    onUpdate={(patch) => patchSlide(slide.id, patch)}
-                    onRemove={() =>
-                      onChange({
-                        ...value,
-                        slides: value.slides.filter((s) => s.id !== slide.id),
-                      })
-                    }
-                    onDuplicate={() => {
-                      const copy: HeroSlide = {
-                        ...JSON.parse(JSON.stringify(slide)),
-                        id: `hero-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`,
-                        title: `${slide.title || 'Banner'} copy`,
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+              <SortableContext items={ids} strategy={verticalListSortingStrategy}>
+                <div className="space-y-2">
+                  {value.slides.map((slide, index) => (
+                    <SortableBannerRow
+                      key={slide.id}
+                      slide={slide}
+                      index={index}
+                      expanded={expandedId === slide.id}
+                      onToggle={() => setExpandedId((id) => (id === slide.id ? null : slide.id))}
+                      onUpdate={(patch) => patchSlide(slide.id, patch)}
+                      onRemove={() =>
+                        onChange({
+                          ...value,
+                          slides: value.slides.filter((s) => s.id !== slide.id),
+                        })
                       }
-                      const idx = value.slides.findIndex((s) => s.id === slide.id)
-                      const slides = [...value.slides]
-                      slides.splice(idx + 1, 0, copy)
-                      onChange({ ...value, slides })
-                      setExpandedId(copy.id)
-                    }}
-                    onToggleHidden={() => patchSlide(slide.id, { enabled: slide.enabled === false })}
-                  />
-                ))}
-              </div>
-            </SortableContext>
-          </DndContext>
+                      onDuplicate={() => {
+                        const copy: HeroSlide = {
+                          ...JSON.parse(JSON.stringify(slide)),
+                          id: `hero-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`,
+                          title: `${slide.title || 'Banner'} copy`,
+                        }
+                        const idx = value.slides.findIndex((s) => s.id === slide.id)
+                        const slides = [...value.slides]
+                        slides.splice(idx + 1, 0, copy)
+                        onChange({ ...value, slides })
+                        setExpandedId(copy.id)
+                      }}
+                      onToggleHidden={() => patchSlide(slide.id, { enabled: slide.enabled === false })}
+                      onOpenLayer={(part) => {
+                        setExpandedId(slide.id)
+                        setLayerTarget({ slideId: slide.id, part })
+                      }}
+                    />
+                  ))}
+                </div>
+              </SortableContext>
+            </DndContext>
+          </div>
         </div>
-      </div>
-    </aside>
+      </aside>
+
+      {layerSlide && layerTarget ? (
+        <HeroLayerDrawer
+          slide={layerSlide}
+          index={layerSlideIndex}
+          part={layerTarget.part}
+          onPartChange={(part) => setLayerTarget({ slideId: layerTarget.slideId, part })}
+          device={layerDevice}
+          onDeviceChange={setLayerDevice}
+          bgDesktop={value.bgDesktop || ''}
+          bgMobile={value.bgMobile || ''}
+          onUpdate={(patch) => patchSlide(layerTarget.slideId, patch)}
+          onBack={() => setLayerTarget(null)}
+          onClose={() => {
+            setLayerTarget(null)
+            onClose()
+          }}
+        />
+      ) : null}
+    </>
   )
 }

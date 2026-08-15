@@ -41,8 +41,6 @@ export type HeroSlideLayout = {
   text: HeroTextBox
 }
 
-export type HeroObjectFit = 'fill' | 'fit'
-
 export type HeroSlide = {
   id: string
   enabled: boolean
@@ -55,10 +53,6 @@ export type HeroSlide = {
   subtitleColor: string
   desktop: HeroSlideLayout
   mobile: HeroSlideLayout
-  /** Product/banner image fit in editor preview (fill crops, fit letterbox). */
-  objectFit?: HeroObjectFit
-  imageWidth?: number | null
-  imageHeight?: number | null
 }
 
 export type HeroSection = {
