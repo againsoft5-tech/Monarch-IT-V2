@@ -17,7 +17,12 @@ import {
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { ChevronDown, Copy, Eye, EyeOff, GripVertical, Plus, Settings, Trash2 } from 'lucide-react'
-import type { HeroSection, HeroSlide, HeroSlideLayout } from '@/lib/live-edit/homepage'
+import type {
+  HeroSection,
+  HeroSlide,
+  HeroSlideKind,
+  HeroSlideLayout,
+} from '@/lib/live-edit/homepage'
 import { DEFAULT_LAYOUT, DEFAULT_SUBTITLE_COLOR, DEFAULT_TITLE_COLOR } from '@/lib/heroSliderStore'
 import type { Device } from '@/lib/heroSliderStore'
 import { DrawerHeader } from '@/components/live-edit/drawers/DrawerHeader'
@@ -58,18 +63,39 @@ function defaultLayouts(): { desktop: HeroSlideLayout; mobile: HeroSlideLayout }
   }
 }
 
-function newSlide(): HeroSlide {
+const ADD_OPTIONS: { kind: HeroSlideKind; label: string; description: string }[] = [
+  {
+    kind: 'static',
+    label: 'Static banner',
+    description: 'One finished artwork per device. Nothing to position — just upload and link.',
+  },
+  {
+    kind: 'custom',
+    label: 'Custom banner',
+    description: 'Product image, brand logo and text as separate layers you can place.',
+  },
+]
+
+function makeSlideId() {
+  return `hero-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`
+}
+
+function newSlide(kind: HeroSlideKind): HeroSlide {
   const layouts = defaultLayouts()
   return {
-    id: `hero-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`,
+    id: makeSlideId(),
+    kind,
     enabled: true,
     brandLogo: '',
     productImage: '',
-    title: 'New banner',
+    // A static banner's wording lives in its artwork, so it starts with none.
+    title: kind === 'static' ? '' : 'New banner',
     subtitle: '',
     href: '/',
     titleColor: DEFAULT_TITLE_COLOR,
     subtitleColor: DEFAULT_SUBTITLE_COLOR,
+    staticDesktop: '',
+    staticMobile: '',
     ...layouts,
   }
 }
@@ -98,7 +124,8 @@ function SortableBannerRow({
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: slide.id,
   })
-  const preview = slide.productImage || ''
+  const isStatic = slide.kind === 'static'
+  const preview = isStatic ? slide.staticDesktop || slide.staticMobile || '' : slide.productImage || ''
   const isHidden = slide.enabled === false
 
   return (
@@ -141,10 +168,18 @@ function SortableBannerRow({
             )}
           </div>
           <div className="min-w-0 flex-1 py-0.5">
-            <p className="truncate text-[12px] font-medium text-[#222]">
-              Banner {index + 1}
+            <p className="flex items-center gap-1.5 truncate text-[12px] font-medium text-[#222]">
+              <span className="truncate">Banner {index + 1}</span>
+              <span
+                className={cn(
+                  'shrink-0 rounded-none px-1 py-px text-[9px] font-bold uppercase tracking-wide',
+                  isStatic ? 'bg-[#e8eaf0] text-[#555]' : 'bg-[#fbe9ea] text-[#bd2026]',
+                )}
+              >
+                {isStatic ? 'Static' : 'Custom'}
+              </span>
               {isHidden ? (
-                <span className="ml-1.5 text-[10px] font-normal text-[#888]">(hidden)</span>
+                <span className="shrink-0 text-[10px] font-normal text-[#888]">(hidden)</span>
               ) : null}
             </p>
             <p className="truncate text-[10px] text-[#888]">{slide.href || 'No link'}</p>
@@ -157,17 +192,20 @@ function SortableBannerRow({
           />
         </button>
 
-        <button
-          type="button"
-          className="inline-flex shrink-0 items-center justify-center rounded-none px-1.5 text-[#888] hover:bg-[#f5f5f7] hover:text-[#bd2026]"
-          title="Layer settings — logo, text & product image"
-          onClick={(e) => {
-            e.stopPropagation()
-            onOpenLayer('logo')
-          }}
-        >
-          <Settings className="h-3.5 w-3.5" />
-        </button>
+        {/* Static banners have no layers to place, so no gear. */}
+        {!isStatic ? (
+          <button
+            type="button"
+            className="inline-flex shrink-0 items-center justify-center rounded-none px-1.5 text-[#888] hover:bg-[#f5f5f7] hover:text-[#bd2026]"
+            title="Layer settings — logo, text & product image"
+            onClick={(e) => {
+              e.stopPropagation()
+              onOpenLayer('logo')
+            }}
+          >
+            <Settings className="h-3.5 w-3.5" />
+          </button>
+        ) : null}
         <button
           type="button"
           className="inline-flex shrink-0 items-center justify-center rounded-none px-1.5 text-[#888] hover:bg-[#f5f5f7] hover:text-[#222]"
@@ -208,53 +246,74 @@ function SortableBannerRow({
 
       {expanded ? (
         <div className="space-y-2 border-t border-[#eee] px-2.5 py-2.5">
-          <ImageField
-            label="Product / banner image"
-            value={slide.productImage}
-            hint="Cut-out PNG with a transparent background works best."
-            onChange={(productImage) => onUpdate({ productImage })}
-            action={
-              <GearButton
-                onClick={() => onOpenLayer('product')}
-                title="Product image — z-index, size & position"
+          {isStatic ? (
+            <>
+              <ImageField
+                label="Desktop artwork"
+                value={slide.staticDesktop || ''}
+                hint="Whole banner, 1350 × 600 (2.25:1). Covers the shared background."
+                boxClass="h-12 w-[108px]"
+                onChange={(staticDesktop) => onUpdate({ staticDesktop })}
               />
-            }
-          />
-          <ImageField
-            label="Brand logo"
-            value={slide.brandLogo}
-            hint="Transparent PNG or SVG works best."
-            boxClass="h-12 w-12"
-            onChange={(brandLogo) => onUpdate({ brandLogo })}
-            action={
-              <GearButton
-                onClick={() => onOpenLayer('logo')}
-                title="Brand logo — z-index, size & position"
+              <ImageField
+                label="Mobile artwork"
+                value={slide.staticMobile || ''}
+                hint="Square 1:1. Leave empty to reuse the desktop artwork."
+                boxClass="h-12 w-12"
+                onChange={(staticMobile) => onUpdate({ staticMobile })}
               />
-            }
-          />
-          <div>
-            <div className="mb-1 flex items-center justify-between gap-2">
-              <label className="text-[11px] font-semibold text-[#555]">Title</label>
-              <GearButton
-                onClick={() => onOpenLayer('text')}
-                title="Text — z-index, size, position & colour"
+            </>
+          ) : (
+            <>
+              <ImageField
+                label="Product / banner image"
+                value={slide.productImage}
+                hint="Cut-out PNG with a transparent background works best."
+                onChange={(productImage) => onUpdate({ productImage })}
+                action={
+                  <GearButton
+                    onClick={() => onOpenLayer('product')}
+                    title="Product image — z-index, size & position"
+                  />
+                }
               />
-            </div>
-            <input
-              value={slide.title}
-              onChange={(e) => onUpdate({ title: e.target.value })}
-              className="h-8 w-full rounded-none border border-[#ddd] px-2 text-[12px]"
-            />
-          </div>
-          <div>
-            <label className="mb-1 block text-[11px] font-semibold text-[#555]">Subtitle</label>
-            <input
-              value={slide.subtitle}
-              onChange={(e) => onUpdate({ subtitle: e.target.value })}
-              className="h-8 w-full rounded-none border border-[#ddd] px-2 text-[12px]"
-            />
-          </div>
+              <ImageField
+                label="Brand logo"
+                value={slide.brandLogo}
+                hint="Transparent PNG or SVG works best."
+                boxClass="h-12 w-12"
+                onChange={(brandLogo) => onUpdate({ brandLogo })}
+                action={
+                  <GearButton
+                    onClick={() => onOpenLayer('logo')}
+                    title="Brand logo — z-index, size & position"
+                  />
+                }
+              />
+              <div>
+                <div className="mb-1 flex items-center justify-between gap-2">
+                  <label className="text-[11px] font-semibold text-[#555]">Title</label>
+                  <GearButton
+                    onClick={() => onOpenLayer('text')}
+                    title="Text — z-index, size, position & colour"
+                  />
+                </div>
+                <input
+                  value={slide.title}
+                  onChange={(e) => onUpdate({ title: e.target.value })}
+                  className="h-8 w-full rounded-none border border-[#ddd] px-2 text-[12px]"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-[11px] font-semibold text-[#555]">Subtitle</label>
+                <input
+                  value={slide.subtitle}
+                  onChange={(e) => onUpdate({ subtitle: e.target.value })}
+                  className="h-8 w-full rounded-none border border-[#ddd] px-2 text-[12px]"
+                />
+              </div>
+            </>
+          )}
           <div>
             <label className="mb-1 block text-[11px] font-semibold text-[#555]">Link</label>
             <input
@@ -270,7 +329,9 @@ function SortableBannerRow({
 }
 
 export default function HeroDrawer({ open, value, onChange, onClose, onBack }: Props) {
-  const [expandedId, setExpandedId] = useState<string | null>(value.slides[0]?.id ?? null)
+  // Banners start collapsed — the list is the overview; expand only what you edit.
+  const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [addMenuOpen, setAddMenuOpen] = useState(false)
   /** Which layer the stacked gear drawer is editing, if any. */
   const [layerTarget, setLayerTarget] = useState<{ slideId: string; part: HeroLayerPart } | null>(null)
   const [layerDevice, setLayerDevice] = useState<Device>('desktop')
@@ -280,7 +341,9 @@ export default function HeroDrawer({ open, value, onChange, onClose, onBack }: P
   const layerSlideIndex = layerTarget
     ? value.slides.findIndex((s) => s.id === layerTarget.slideId)
     : -1
-  const layerSlide = layerSlideIndex >= 0 ? value.slides[layerSlideIndex] : null
+  // Static banners have no layers, so the layer drawer never applies to them.
+  const candidate = layerSlideIndex >= 0 ? value.slides[layerSlideIndex] : null
+  const layerSlide = candidate && candidate.kind !== 'static' ? candidate : null
 
   if (!open) return null
 
@@ -337,18 +400,54 @@ export default function HeroDrawer({ open, value, onChange, onClose, onBack }: P
               <p className="m-0 text-[11px] font-semibold uppercase tracking-wide text-[#666]">
                 Banners · drag · duplicate · eye hide
               </p>
-              <button
-                type="button"
-                className="inline-flex h-7 items-center gap-1 rounded-none border border-[#ddd] bg-white px-2 text-[11px] font-semibold text-[#333]"
-                onClick={() => {
-                  const slide = newSlide()
-                  onChange({ ...value, slides: [...value.slides, slide] })
-                  setExpandedId(slide.id)
-                }}
-              >
-                <Plus className="h-3.5 w-3.5" />
-                Add
-              </button>
+              <div className="relative">
+                <button
+                  type="button"
+                  className="inline-flex h-7 items-center gap-1 rounded-none border border-[#ddd] bg-white px-2 text-[11px] font-semibold text-[#333] hover:border-[#bd2026]"
+                  onClick={() => setAddMenuOpen((v) => !v)}
+                  aria-expanded={addMenuOpen}
+                  aria-haspopup="menu"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  Add
+                  <ChevronDown className={cn('h-3 w-3 transition-transform', addMenuOpen && 'rotate-180')} />
+                </button>
+
+                {addMenuOpen ? (
+                  <>
+                    <button
+                      type="button"
+                      aria-label="Close add menu"
+                      className="fixed inset-0 z-[81] cursor-default border-0 bg-transparent p-0"
+                      onClick={() => setAddMenuOpen(false)}
+                    />
+                    <div
+                      role="menu"
+                      className="absolute right-0 top-8 z-[82] w-[248px] border border-[#ddd] bg-white shadow-[0_10px_30px_rgba(0,0,0,0.16)]"
+                    >
+                      {ADD_OPTIONS.map((opt) => (
+                        <button
+                          key={opt.kind}
+                          type="button"
+                          role="menuitem"
+                          className="block w-full border-0 border-b border-[#eee] bg-white px-2.5 py-2 text-left last:border-b-0 hover:bg-[#f5f5f7]"
+                          onClick={() => {
+                            const slide = newSlide(opt.kind)
+                            onChange({ ...value, slides: [...value.slides, slide] })
+                            setExpandedId(slide.id)
+                            setAddMenuOpen(false)
+                          }}
+                        >
+                          <span className="block text-[12px] font-semibold text-[#222]">{opt.label}</span>
+                          <span className="mt-0.5 block text-[10.5px] leading-snug text-[#888]">
+                            {opt.description}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                ) : null}
+              </div>
             </div>
 
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
@@ -381,10 +480,7 @@ export default function HeroDrawer({ open, value, onChange, onClose, onBack }: P
                         setExpandedId(copy.id)
                       }}
                       onToggleHidden={() => patchSlide(slide.id, { enabled: slide.enabled === false })}
-                      onOpenLayer={(part) => {
-                        setExpandedId(slide.id)
-                        setLayerTarget({ slideId: slide.id, part })
-                      }}
+                      onOpenLayer={(part) => setLayerTarget({ slideId: slide.id, part })}
                     />
                   ))}
                 </div>

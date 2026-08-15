@@ -60,6 +60,29 @@ function textStyle(box: TextBox): CSSProperties {
 }
 
 export default function HeroSlideContent({ slide, device }: { slide: HeroSlide; device: Device }) {
+  /**
+   * Static banners are finished artwork — no layers to place. The other
+   * device's image stands in when only one has been uploaded, so a slide is
+   * never blank on half the site.
+   */
+  if (slide.kind === 'static') {
+    const art =
+      device === 'desktop'
+        ? slide.staticDesktop || slide.staticMobile
+        : slide.staticMobile || slide.staticDesktop
+    if (!art) return null
+    return (
+      <div className="slider-content-wrapper absolute inset-0">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={art}
+          alt={slide.title || ''}
+          className="absolute inset-0 h-full w-full object-cover object-center"
+        />
+      </div>
+    )
+  }
+
   const layout = slide[device]
 
   return (

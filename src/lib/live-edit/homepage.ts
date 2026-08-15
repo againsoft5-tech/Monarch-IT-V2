@@ -41,8 +41,16 @@ export type HeroSlideLayout = {
   text: HeroTextBox
 }
 
+/**
+ * `custom` stacks the three editable layers (product, logo, text) over the
+ * shared background. `static` is a finished promotional artwork dropped in
+ * whole — one image per device, nothing to position. Absent means `custom`.
+ */
+export type HeroSlideKind = 'custom' | 'static'
+
 export type HeroSlide = {
   id: string
+  kind?: HeroSlideKind
   enabled: boolean
   brandLogo: string
   productImage: string
@@ -53,6 +61,9 @@ export type HeroSlide = {
   subtitleColor: string
   desktop: HeroSlideLayout
   mobile: HeroSlideLayout
+  /** Static banners only — full-bleed artwork, one per device box. */
+  staticDesktop?: string
+  staticMobile?: string
 }
 
 export type HeroSection = {

@@ -39,8 +39,15 @@ export type SlideLayout = {
   text: TextBox
 }
 
+/**
+ * `custom` stacks the three editable layers over the shared background.
+ * `static` is a finished artwork dropped in whole. Absent means `custom`.
+ */
+export type SlideKind = 'custom' | 'static'
+
 export type HeroSlide = {
   id: string
+  kind?: SlideKind
   /** Off keeps the slide in the admin panel but out of the rotation. */
   enabled: boolean
   brandLogo: string
@@ -54,6 +61,9 @@ export type HeroSlide = {
   /** Independent layout per device — mobile never inherits desktop geometry. */
   desktop: SlideLayout
   mobile: SlideLayout
+  /** Static banners only — full-bleed artwork, one per device box. */
+  staticDesktop?: string
+  staticMobile?: string
 }
 
 export type HeroSliderDB = {
