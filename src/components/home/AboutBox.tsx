@@ -2,7 +2,17 @@
 
 import { useEffect, useRef, useState } from 'react'
 
-export default function AboutBox() {
+type Props = {
+  title?: string
+  subtitle?: string
+  bodyHtml?: string
+}
+
+export default function AboutBox({
+  title = 'Monarch IT Ltd',
+  subtitle = 'A Trusted Computer Distributor & Retailer in Bangladesh',
+  bodyHtml,
+}: Props = {}) {
   const [open, setOpen] = useState(false)
   const contentRef = useRef<HTMLDivElement>(null)
   const [contentHeight, setContentHeight] = useState(0)
@@ -14,23 +24,27 @@ export default function AboutBox() {
     measure()
     window.addEventListener('resize', measure)
     return () => window.removeEventListener('resize', measure)
-  }, [])
+  }, [bodyHtml, open])
 
   return (
     <div className="container mx-auto my-10">
     <div className="bg-white border border-[#e5e5e5] rounded-[25px] px-[25px] pt-[25px] pb-[30px] relative shadow-[0_2px_10px_rgba(0,0,0,0.03)]">
-      <h2 className="text-center text-[#d52b2b] text-[22px] md:text-[34px] font-bold mb-[5px]">Monarch IT Ltd</h2>
+      <h2 className="text-center text-[#d52b2b] text-[22px] md:text-[34px] font-bold mb-[5px]">{title}</h2>
       <div className="text-center text-[#666] text-[13px] md:text-xl mb-[15px]">
-        A Trusted Computer Distributor &amp; Retailer in Bangladesh
+        {subtitle}
       </div>
       <div className="h-px bg-[#e7e7e7] mb-5" />
 
       <div className="relative text-center">
         <div
           ref={contentRef}
-          className="text-[#666] text-[13px] md:text-base leading-[1.7] text-left overflow-hidden transition-[height] duration-500 ease-in-out"
+          className="text-[#666] text-[13px] md:text-base leading-[1.7] text-left overflow-hidden transition-[height] duration-500 ease-in-out [&_h3]:text-[15px] [&_h3]:md:text-lg [&_h3]:font-semibold [&_h3]:text-[#333] [&_h3]:mt-0 [&_h3]:mb-2 [&_p]:mb-4 [&_a]:text-[#d52b2b] [&_a]:hover:underline"
           style={{ height: open ? contentHeight : 110 }}
         >
+          {bodyHtml ? (
+            <div dangerouslySetInnerHTML={{ __html: bodyHtml }} />
+          ) : (
+            <>
           <h3 className="text-[15px] md:text-lg font-semibold text-[#333] mt-0 mb-2">
             Leading Computer, Laptop &amp; Gaming PC Retail and Online Shop in Bangladesh
           </h3>
@@ -258,6 +272,8 @@ export default function AboutBox() {
             for all your technology needs. Experience the difference with Monarch IT Limited — where technology
             meets excellence.
           </p>
+            </>
+          )}
         </div>
 
         {!open && (

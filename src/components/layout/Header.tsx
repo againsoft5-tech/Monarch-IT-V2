@@ -8,10 +8,15 @@ import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import ShopMenu from "./ShopMenu";
 import SearchDropdown from "./SearchDropdown";
+import type { HeaderSection } from "@/lib/live-edit/homepage";
+import { DEFAULT_HEADER } from "@/lib/live-edit/site-chrome";
 
-const IMG_BASE = "/images";
+type Props = {
+  data?: Partial<HeaderSection> | null;
+};
 
-export default function Header() {
+export default function Header({ data }: Props) {
+  const cfg = { ...DEFAULT_HEADER, ...data };
   const [accountOpen, setAccountOpen] = useState(false);
   const { openCart, itemCount } = useCart();
   const { isLoggedIn, customerName, logout } = useAuth();
@@ -78,8 +83,8 @@ export default function Header() {
           <div className="flex-none flex items-center">
             <Link href="/" className="flex items-center no-underline">
               <Image
-                src={`${IMG_BASE}/image/catalog/website/logo/monarch-it-logo.png`}
-                alt="Monarch IT"
+                src={cfg.logoDesktop}
+                alt={cfg.logoAlt}
                 width={180}
                 height={44}
                 className="h-11 w-auto object-contain"
@@ -113,7 +118,7 @@ export default function Header() {
                   onChange={(e) => setQuery(e.target.value)}
                   onFocus={() => setSearchFocused(true)}
                   onKeyDown={handleSearchKeyDown}
-                  placeholder="Search Products"
+                  placeholder={cfg.searchPlaceholder}
                   autoComplete="off"
                   className="border-none bg-transparent outline-none flex-1 text-[15px] text-gray-700 placeholder-gray-400"
                 />
@@ -130,24 +135,24 @@ export default function Header() {
               <ShopMenu headerBottom={headerBottom} />
 
               <Link
-                href="/order-track"
+                href={cfg.orderTrackHref || "/order-track"}
                 className="flex items-center gap-1.5 font-semibold text-[15px] text-[#d32f2f] whitespace-nowrap hover:text-[#b71c1c] transition-colors no-underline"
               >
                 <Image
-                  src={`${IMG_BASE}/catalog/view/theme/default/image/svg/order-track-icon.svg`}
+                  src={cfg.orderTrackIcon}
                   alt=""
                   width={18}
                   height={18}
                   className="w-[18px] h-[18px]"
                 />
-                Order Track
+                {cfg.orderTrackLabel}
               </Link>
 
               <Link
-                href="/pc-builder"
+                href={cfg.pcBuilderHref || "/pc-builder"}
                 className="border-[1.8px] border-[#d32f2f] text-[#d32f2f] bg-white px-5 py-[9px] rounded-[30px] font-bold text-[13px] hover:bg-[#d32f2f] hover:text-white transition-all whitespace-nowrap"
               >
-                PC Builder
+                {cfg.pcBuilderLabel}
               </Link>
 
               <button
@@ -156,7 +161,7 @@ export default function Header() {
                 className="relative w-11 h-11 bg-[#f4f5f7] rounded-full flex items-center justify-center hover:bg-[#e8eaed] transition-colors cursor-pointer"
               >
                 <Image
-                  src={`${IMG_BASE}/catalog/view/theme/default/image/cart-icon.svg`}
+                  src="/images/catalog/view/theme/default/image/cart-icon.svg"
                   alt="Cart"
                   width={22}
                   height={22}
@@ -182,7 +187,7 @@ export default function Header() {
                   className="w-11 h-11 bg-[#f4f5f7] rounded-full flex items-center justify-center hover:bg-[#e8eaed] transition-colors cursor-pointer"
                 >
                   <Image
-                    src={`${IMG_BASE}/catalog/view/theme/default/image/account-icon.svg`}
+                    src="/images/catalog/view/theme/default/image/account-icon.svg"
                     alt="Account"
                     width={22}
                     height={22}

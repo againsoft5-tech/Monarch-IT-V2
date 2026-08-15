@@ -1,0 +1,631 @@
+{
+  "layout": [
+    {
+      "id": "hero",
+      "type": "hero",
+      "hidden": false
+    },
+    {
+      "id": "categories",
+      "type": "categories",
+      "hidden": false
+    },
+    {
+      "id": "promo",
+      "type": "promo",
+      "hidden": false
+    },
+    {
+      "id": "featured",
+      "type": "featured",
+      "hidden": false
+    },
+    {
+      "id": "dream_pc",
+      "type": "dream_pc",
+      "hidden": false
+    },
+    {
+      "id": "brands",
+      "type": "brands",
+      "hidden": false
+    },
+    {
+      "id": "about",
+      "type": "about",
+      "hidden": false
+    },
+    {
+      "id": "support",
+      "type": "support",
+      "hidden": false
+    }
+  ],
+  "hero": {
+    "enabled": true,
+    "bgDesktop": "/images/hero-slider/slider-bg.jpg",
+    "bgMobile": "/images/hero-slider/slider-bg.jpg",
+    "slides": [
+      {
+        "id": "hero-seed-hyperx-cloud-ii",
+        "enabled": true,
+        "brandLogo": "/images/hero-slider/brand-hyperx.png",
+        "productImage": "/images/hero-slider/hyperx-cloud-ii.png",
+        "title": "CLOUD II",
+        "subtitle": "",
+        "href": "/offers",
+        "titleColor": "#ee1c25",
+        "subtitleColor": "#3f3f46",
+        "desktop": {
+          "product": {
+            "x": 66.5,
+            "y": 55,
+            "w": 40,
+            "h": 0,
+            "z": 1
+          },
+          "logo": {
+            "x": 26,
+            "y": 35,
+            "w": 17,
+            "h": 0,
+            "z": 2
+          },
+          "text": {
+            "x": 40,
+            "y": 49,
+            "w": 45,
+            "z": 3,
+            "size": 8,
+            "subSize": 1.55,
+            "align": "left"
+          }
+        },
+        "mobile": {
+          "product": {
+            "x": 50,
+            "y": 68,
+            "w": 58,
+            "h": 0,
+            "z": 1
+          },
+          "logo": {
+            "x": 50,
+            "y": 15,
+            "w": 34,
+            "h": 0,
+            "z": 2
+          },
+          "text": {
+            "x": 50,
+            "y": 32,
+            "w": 88,
+            "z": 3,
+            "size": 13,
+            "subSize": 2.9,
+            "align": "center"
+          }
+        }
+      },
+      {
+        "id": "hero-seed-fantech-curl-71",
+        "enabled": true,
+        "brandLogo": "/images/hero-slider/brand-fantech.png",
+        "productImage": "/images/hero-slider/fantech-curl-7-1.png",
+        "title": "CURL 7.1",
+        "subtitle": "RGB Gaming Headset",
+        "href": "/offers",
+        "titleColor": "#ee1c25",
+        "subtitleColor": "#3f3f46",
+        "desktop": {
+          "product": {
+            "x": 61.5,
+            "y": 53,
+            "w": 36,
+            "h": 0,
+            "z": 1
+          },
+          "logo": {
+            "x": 29,
+            "y": 39,
+            "w": 11,
+            "h": 0,
+            "z": 2
+          },
+          "text": {
+            "x": 41,
+            "y": 59,
+            "w": 37,
+            "z": 3,
+            "size": 7.6,
+            "subSize": 1.55,
+            "align": "left"
+          }
+        },
+        "mobile": {
+          "product": {
+            "x": 50,
+            "y": 67,
+            "w": 52,
+            "h": 0,
+            "z": 1
+          },
+          "logo": {
+            "x": 50,
+            "y": 14.5,
+            "w": 15,
+            "h": 0,
+            "z": 2
+          },
+          "text": {
+            "x": 50,
+            "y": 32,
+            "w": 88,
+            "z": 3,
+            "size": 13,
+            "subSize": 2.9,
+            "align": "center"
+          }
+        }
+      }
+    ]
+  },
+  "categories": {
+    "items": [
+      {
+        "id": "cat-row-desktop",
+        "categoryId": "cat-desktop",
+        "name": "Desktop",
+        "img": "/images/image/cache/catalog/website/featured-category/desktop-3d.png",
+        "href": "/desktops"
+      },
+      {
+        "id": "cat-row-laptop",
+        "categoryId": "cat-laptop",
+        "name": "Laptop",
+        "img": "/images/image/cache/catalog/website/featured-category/laptop-3d.png",
+        "href": "/laptop"
+      },
+      {
+        "id": "cat-row-components",
+        "categoryId": "cat-components",
+        "name": "Components",
+        "img": "/images/image/cache/catalog/website/featured-category/graphics-card-3d.png",
+        "href": "/component"
+      },
+      {
+        "id": "cat-row-monitor",
+        "categoryId": "cat-monitor",
+        "name": "Monitor",
+        "img": "/images/image/cache/catalog/website/featured-category/monitor-500x400.png",
+        "href": "/monitor"
+      },
+      {
+        "id": "cat-row-mobile",
+        "categoryId": "cat-mobile-accessories",
+        "name": "Mobile Accessories",
+        "img": "/images/image/cache/catalog/website/featured-category/smartphone-500x400.png",
+        "href": "/mobile-accessories"
+      },
+      {
+        "id": "cat-row-security",
+        "categoryId": "cat-security",
+        "name": "Security",
+        "img": "/images/image/cache/catalog/website/featured-category/camera-icon-images-500x400.png",
+        "href": "/security"
+      },
+      {
+        "id": "cat-row-gadget",
+        "categoryId": "cat-gadget",
+        "name": "Gadget",
+        "img": "/images/image/cache/catalog/website/featured-category/drone-icon-500x400.png",
+        "href": "/gadget"
+      }
+    ]
+  },
+  "promo": {
+    "enabled": true,
+    "left": [
+      {
+        "id": "promo-left-onikuma",
+        "label": "Gaming Controller",
+        "title": "ONIKUMA C1",
+        "subtitle": "Dual-Mode Six-Axis Gyroscope",
+        "buttonText": "Buy",
+        "buttonLink": "/laptop",
+        "image": "/images/promo-banner/onikuma-c1.png"
+      },
+      {
+        "id": "promo-left-h105",
+        "label": "Corsair Hydro Series",
+        "title": "H105 CPU COOLER",
+        "subtitle": "240mm Radiator Liquid Cooling",
+        "buttonText": "Buy",
+        "buttonLink": "/component",
+        "image": "/images/promo-banner/h105-cpu-cooler.png"
+      }
+    ],
+    "right": [
+      {
+        "id": "promo-right-5090-oc",
+        "label": "Manli Gallardo GeForce",
+        "title": "RTX 5090 OC",
+        "subtitle": "32GB GDDR7",
+        "buttonText": "Buy",
+        "buttonLink": "/desktops",
+        "image": "/images/promo-banner/rtx-5090-oc.png"
+      },
+      {
+        "id": "promo-right-5090-xtreme",
+        "label": "Aorus Graphics Card",
+        "title": "RTX 5090 XTREME",
+        "subtitle": "32GB GDDR7 RGB Fusion",
+        "buttonText": "Buy",
+        "buttonLink": "/component",
+        "image": "/images/promo-banner/rtx-5090-graphics-card.png"
+      }
+    ]
+  },
+  "featured": {
+    "title": "Most Wanted",
+    "subtitle": "Explore Our Best-Selling Deal",
+    "categoryIds": [
+      "cat-monitor",
+      "cat-components",
+      "cat-refrigerator"
+    ]
+  },
+  "dreamPc": {
+    "image": "/images/image/cache/catalog/website/dream-pc/pc-builder-280x280.png",
+    "href": "/pc-builder",
+    "line1": "Build Your",
+    "line2": "Dream PC"
+  },
+  "brands": {
+    "title": "Brands We Distribute",
+    "subtitle": "Official distributor of trusted brands.",
+    "items": [
+      {
+        "id": "row-brand-sony",
+        "brandId": "brand-sony",
+        "name": "Sony",
+        "href": "/sony",
+        "logo": "/images/image/cache/catalog/brand-logo/sony-logo-100x100.jpg"
+      },
+      {
+        "id": "row-brand-apple",
+        "brandId": "brand-apple",
+        "name": "Apple",
+        "href": "/apple",
+        "logo": "/images/image/cache/catalog/brand-logo/apple-logo-100x100.jpg"
+      },
+      {
+        "id": "row-brand-edifier",
+        "brandId": "brand-edifier",
+        "name": "Edifier",
+        "href": "/edifier-speakers",
+        "logo": "/images/image/cache/catalog/edifier/Untitled-100x100.png"
+      },
+      {
+        "id": "row-brand-gree",
+        "brandId": "brand-gree",
+        "name": "Gree",
+        "href": "/gree",
+        "logo": "/images/image/cache/catalog/brand-logo/gree-logo-100x100.jpg"
+      },
+      {
+        "id": "row-brand-haier",
+        "brandId": "brand-haier",
+        "name": "Haier",
+        "href": "/haier",
+        "logo": "/images/image/cache/catalog/Air-Conditioner/haier-brand-logo-1-100x100.jpg"
+      },
+      {
+        "id": "row-brand-hisense",
+        "brandId": "brand-hisense",
+        "name": "Hisense",
+        "href": "/hisense",
+        "logo": "/images/image/cache/catalog/brand-logo/hisense-100x100.jpg"
+      },
+      {
+        "id": "row-brand-lg",
+        "brandId": "brand-lg",
+        "name": "LG",
+        "href": "/lg",
+        "logo": "/images/image/cache/catalog/brand-logo/lg-100x100.jpg"
+      },
+      {
+        "id": "row-brand-samsung",
+        "brandId": "brand-samsung",
+        "name": "Samsung",
+        "href": "/samsung",
+        "logo": "/images/image/cache/catalog/brand-logo/samsung-logo-100x100.jpg"
+      },
+      {
+        "id": "row-brand-vision",
+        "brandId": "brand-vision",
+        "name": "Vision",
+        "href": "/vision-1",
+        "logo": "/images/image/cache/catalog/vision/Screenshot-(60)-100x100.png"
+      },
+      {
+        "id": "row-brand-baseus",
+        "brandId": "brand-baseus",
+        "name": "Baseus",
+        "href": "/baseus-cleaner",
+        "logo": "/images/image/cache/catalog/brand-logo/baseus-100x100.jpg"
+      },
+      {
+        "id": "row-brand-benq",
+        "brandId": "brand-benq",
+        "name": "BenQ",
+        "href": "/benq",
+        "logo": "/images/image/cache/catalog/brand-logo/benq-100x100.jpg"
+      },
+      {
+        "id": "row-brand-epson",
+        "brandId": "brand-epson",
+        "name": "Epson",
+        "href": "/epson",
+        "logo": "/images/image/cache/catalog/brand-logo/epson-100x100.jpg"
+      },
+      {
+        "id": "row-brand-maono",
+        "brandId": "brand-maono",
+        "name": "Maono",
+        "href": "/maono",
+        "logo": "/images/image/cache/catalog/brand-logo/maono-100x100.jpg"
+      },
+      {
+        "id": "row-brand-oneplus",
+        "brandId": "brand-oneplus",
+        "name": "Oneplus",
+        "href": "/oneplus",
+        "logo": "/images/image/cache/catalog/brand-logo/onepluse-logo-100x100.jpg"
+      },
+      {
+        "id": "row-brand-oppo",
+        "brandId": "brand-oppo",
+        "name": "Oppo",
+        "href": "/oppo",
+        "logo": "/images/image/cache/catalog/brand-logo/oppo-logo-100x100.jpg"
+      }
+    ]
+  },
+  "about": {
+    "title": "Monarch IT Ltd",
+    "subtitle": "A Trusted Computer Distributor & Retailer in Bangladesh",
+    "bodyHtml": "<h3>Leading Computer, Laptop &amp; Gaming PC Retail and Online Shop in Bangladesh</h3><p>Technology has become an indispensable part of our daily lives. <a href=\"https://www.monarchit.com.bd/\">Monarch IT Limited</a>, a trusted name since January 1991, offers a wide range of tech products and services.</p><h3>Best Laptop Shop in Bangladesh</h3><p>Whether you are a freelancer, office professional, student, or gamer, Monarch IT has the perfect laptop to suit your needs.</p>"
+  },
+  "support": {
+    "title": "Support",
+    "subtitle": "Official distributor of trusted brands.",
+    "phone": "+8801332-812759",
+    "whatsapp": "+8801332-812764",
+    "hours": "10:00 AM - 08:00 PM",
+    "storeLabel": "Find our Stores",
+    "storeHref": "/outlets"
+  },
+  "blocks": {},
+  "header": {
+    "logoDesktop": "/images/image/catalog/website/logo/monarch-it-logo.png",
+    "logoMobile": "/images/catalog/view/theme/default/image/monarch-it-icon.png",
+    "logoAlt": "Monarch IT",
+    "searchPlaceholder": "Search Products",
+    "orderTrackLabel": "Order Track",
+    "orderTrackHref": "/order-track",
+    "orderTrackIcon": "/images/catalog/view/theme/default/image/svg/order-track-icon.svg",
+    "pcBuilderLabel": "PC Builder",
+    "pcBuilderHref": "/pc-builder"
+  },
+  "footer": {
+    "logo": "/images/catalog/view/theme/default/image/monarch-it.png",
+    "logoAlt": "Monarch IT",
+    "aboutText": "At Monarch IT, we are committed to create the future by delivering genuine tech products, reliable solutions, and unmatched support. Our goal is to inspire growth and success through technology.",
+    "social": [
+      {
+        "id": "soc-fb",
+        "icon": "fa-facebook-f",
+        "href": "#",
+        "hidden": false
+      },
+      {
+        "id": "soc-ig",
+        "icon": "fa-instagram",
+        "href": "#",
+        "hidden": false
+      },
+      {
+        "id": "soc-wa",
+        "icon": "fa-whatsapp",
+        "href": "#",
+        "hidden": false
+      },
+      {
+        "id": "soc-yt",
+        "icon": "fa-youtube",
+        "href": "#",
+        "hidden": false
+      }
+    ],
+    "socialMobile": [
+      {
+        "id": "socm-fb",
+        "icon": "fab fa-facebook-f",
+        "href": "#",
+        "hidden": false
+      },
+      {
+        "id": "socm-ig",
+        "icon": "fab fa-instagram",
+        "href": "#",
+        "hidden": false
+      },
+      {
+        "id": "socm-wa",
+        "icon": "fab fa-whatsapp",
+        "href": "#",
+        "hidden": false
+      },
+      {
+        "id": "socm-yt",
+        "icon": "fab fa-youtube",
+        "href": "#",
+        "hidden": false
+      },
+      {
+        "id": "socm-tt",
+        "icon": "fab fa-tiktok",
+        "href": "#",
+        "hidden": false
+      },
+      {
+        "id": "socm-li",
+        "icon": "fab fa-linkedin-in",
+        "href": "#",
+        "hidden": false
+      },
+      {
+        "id": "socm-mail",
+        "icon": "fas fa-envelope",
+        "href": "#",
+        "hidden": false
+      }
+    ],
+    "linksTitle": "Important Links",
+    "linksCol1": [
+      {
+        "id": "fl-about",
+        "name": "About Us",
+        "href": "#",
+        "hidden": false
+      },
+      {
+        "id": "fl-brands",
+        "name": "Brands",
+        "href": "/brands",
+        "hidden": false
+      },
+      {
+        "id": "fl-blog",
+        "name": "Blog",
+        "href": "#",
+        "hidden": false
+      },
+      {
+        "id": "fl-contact",
+        "name": "Contact Us",
+        "href": "#",
+        "hidden": false
+      }
+    ],
+    "linksCol2": [
+      {
+        "id": "fl-privacy",
+        "name": "Privacy Policy",
+        "href": "#",
+        "hidden": false
+      },
+      {
+        "id": "fl-terms",
+        "name": "Terms & Conditions",
+        "href": "#",
+        "hidden": false
+      },
+      {
+        "id": "fl-delivery",
+        "name": "Online Delivery",
+        "href": "#",
+        "hidden": false
+      },
+      {
+        "id": "fl-refund",
+        "name": "Refund & Return Policy",
+        "href": "#",
+        "hidden": false
+      }
+    ],
+    "membershipTitle": "Membership",
+    "membershipLogo": "/images/catalog/view/theme/default/image/partnership-logo.png",
+    "officeLabel": "Head Office:",
+    "officeAddress": "Bs Bhaban, 2nd Floor, 75-76, New Elephant Road, Dhaka-1205, Bangladesh",
+    "copyrightBefore": "© 2026, ",
+    "copyrightBrand": "Monarch IT Ltd",
+    "copyrightAfter": ", All Rights Reserved.",
+    "paymentImage": "/images/catalog/view/theme/default/image/payment-partner.png"
+  },
+  "sideMenu": {
+    "logo": "/images/catalog/view/theme/default/image/monarch-it-icon.png",
+    "logoHref": "/",
+    "logoAlt": "Monarch IT",
+    "items": [
+      {
+        "id": "sm-phone",
+        "label": "Phone",
+        "icon": "/images/catalog/view/theme/default/image/svg/phone-black-icon.svg",
+        "href": "#",
+        "action": "link",
+        "active": false,
+        "hidden": false,
+        "showOnMobile": false
+      },
+      {
+        "id": "sm-message",
+        "label": "Message",
+        "icon": "/images/catalog/view/theme/default/image/message-icon.svg",
+        "href": "#",
+        "action": "chat",
+        "active": false,
+        "hidden": false,
+        "showOnMobile": true
+      },
+      {
+        "id": "sm-compare",
+        "label": "Compare",
+        "icon": "/images/catalog/view/theme/default/image/compare-icon-svg.svg",
+        "href": "/compare",
+        "action": "link",
+        "active": false,
+        "hidden": false,
+        "showOnMobile": true
+      },
+      {
+        "id": "sm-gift",
+        "label": "Gift",
+        "icon": "/images/catalog/view/theme/default/image/svg/gift-black-icon.svg",
+        "href": "/offers",
+        "action": "link",
+        "active": false,
+        "hidden": false,
+        "showOnMobile": true
+      },
+      {
+        "id": "sm-hot",
+        "label": "Hot Deals",
+        "icon": "/images/catalog/view/theme/default/image/svg/fire-black-icon.svg",
+        "href": "#",
+        "action": "link",
+        "active": false,
+        "hidden": false,
+        "showOnMobile": true
+      },
+      {
+        "id": "sm-pc",
+        "label": "PC Builder",
+        "icon": "/images/catalog/view/theme/default/image/svg/pc-icon.svg",
+        "href": "/pc-builder",
+        "action": "link",
+        "active": true,
+        "hidden": false,
+        "showOnMobile": true
+      }
+    ],
+    "mobileIds": [
+      "sm-message",
+      "sm-compare",
+      "sm-pc",
+      "sm-gift",
+      "sm-hot"
+    ]
+  }
+}

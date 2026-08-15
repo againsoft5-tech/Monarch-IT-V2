@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import HeroSlideContent, { DESKTOP_ASPECT, MOBILE_ASPECT } from './HeroSlideContent'
-import { useHeroSliderStore, type Device, type HeroSlide } from '@/lib/heroSliderStore'
+import { useHeroSliderStore, type Device, type HeroSlide, type HeroSliderDB } from '@/lib/heroSliderStore'
 
 const AUTOPLAY_MS = 5000
 
@@ -30,8 +30,15 @@ function SlideLayer({
   )
 }
 
-export default function HeroSlider() {
-  const { db, ready } = useHeroSliderStore()
+type Props = {
+  /** When set (live-edit / CMS), skips localStorage and uses this payload. */
+  data?: HeroSliderDB | null
+}
+
+export default function HeroSlider({ data }: Props = {}) {
+  const store = useHeroSliderStore()
+  const db = data ?? store.db
+  const ready = data ? true : store.ready
   /**
    * The saved slider lives in localStorage, which the server cannot see, so the
    * first paint has nothing but the built-in seed. Painting that seed flashed

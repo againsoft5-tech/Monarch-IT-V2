@@ -7,11 +7,19 @@ import MobileHeader from './MobileHeader'
 import Footer from './Footer'
 import BackToTop from './BackToTop'
 import CartDrawer from '@/components/ui/CartDrawer'
+import type { FooterSection, HeaderSection, SideMenuSection } from '@/lib/live-edit/homepage'
 
-export default function StorefrontChrome({ children }: { children: React.ReactNode }) {
+type Props = {
+  children: React.ReactNode
+  header?: HeaderSection | null
+  footer?: FooterSection | null
+  sideMenu?: SideMenuSection | null
+}
+
+export default function StorefrontChrome({ children, header, footer, sideMenu }: Props) {
   const pathname = usePathname()
 
-  if (pathname?.startsWith('/admin')) {
+  if (pathname?.startsWith('/admin') || pathname?.startsWith('/website/live-edit')) {
     return <>{children}</>
   }
 
@@ -19,12 +27,12 @@ export default function StorefrontChrome({ children }: { children: React.ReactNo
 
   return (
     <>
-      <SideMenu />
+      <SideMenu data={sideMenu} />
       <div className="flex-1 flex flex-col pb-[76px] md:pb-0 relative">
-        <Header />
-        <MobileHeader />
+        <Header data={header} />
+        <MobileHeader data={header} />
         <main className={`flex-1 ${isHome ? '' : 'md:pt-[72px]'}`}>{children}</main>
-        <Footer />
+        <Footer data={footer} />
       </div>
       <CartDrawer />
       <BackToTop />

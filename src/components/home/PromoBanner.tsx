@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef } from 'react'
 import Link from 'next/link'
-import { usePromoBannerStore, type PromoSlide } from '@/lib/promoBannerStore'
+import { usePromoBannerStore, type PromoBannerDB, type PromoSlide } from '@/lib/promoBannerStore'
 
 const REPEATS = 3
 
@@ -124,8 +124,14 @@ function MobileCarousel({
   )
 }
 
-export default function PromoBanner() {
-  const db = usePromoBannerStore()
+type Props = {
+  /** When set (live-edit / CMS), skips localStorage store. */
+  data?: PromoBannerDB | null
+}
+
+export default function PromoBanner({ data }: Props) {
+  const store = usePromoBannerStore()
+  const db = data ?? store
   const leftRef = useRef<HTMLDivElement>(null)
   const rightRef = useRef<HTMLDivElement>(null)
   const mobileRef = useRef<HTMLDivElement>(null)
@@ -136,11 +142,13 @@ export default function PromoBanner() {
   const mobileBusyRef = useRef(false)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
-  const leftLen = db.left.length
-  const rightLen = db.right.length
+  const left = (db.left ?? []).filter((s) => !(s as { hidden?: boolean }).hidden)
+  const right = (db.right ?? []).filter((s) => !(s as { hidden?: boolean }).hidden)
+  const leftLen = left.length
+  const rightLen = right.length
   const maxLen = Math.max(leftLen, rightLen)
 
-  const mobileSlides = useMemo(() => [...db.left, ...db.right], [db.left, db.right])
+  const mobileSlides = useMemo(() => [...left, ...right], [left, right])
   const mobileLen = mobileSlides.length
 
   useEffect(() => {
@@ -234,7 +242,7 @@ export default function PromoBanner() {
   return (
     <div className="container mx-auto px-4 min-[992px]:px-14 py-5" onMouseEnter={stop} onMouseLeave={start}>
       <div className="flex items-stretch justify-center gap-2.5 max-[640px]:hidden">
-        <PromoColumn slides={db.left} trackRef={leftRef} />
+        <PromoColumn slides={left} trackRef={leftRef} />
 
         <div className="relative flex items-center justify-center w-[130px] -mx-[65px] z-[5] shrink-0">
           <div className="flex flex-col items-center justify-center h-full">
@@ -261,7 +269,7 @@ export default function PromoBanner() {
           </div>
         </div>
 
-        <PromoColumn slides={db.right} trackRef={rightRef} />
+        <PromoColumn slides={right} trackRef={rightRef} />
       </div>
 
       <MobileCarousel slides={mobileSlides} trackRef={mobileRef} go={goMobile} />

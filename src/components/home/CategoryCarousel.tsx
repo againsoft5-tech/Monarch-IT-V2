@@ -5,7 +5,14 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { featuredCategories } from '@/data/categories'
 
-export default function CategoryCarousel() {
+type Cat = { name: string; img: string; href: string }
+
+type Props = {
+  items?: Cat[]
+}
+
+export default function CategoryCarousel({ items }: Props = {}) {
+  const list = items?.length ? items : featuredCategories
   const carouselRef = useRef<HTMLDivElement>(null)
   const [atStart, setAtStart] = useState(true)
   const [atEnd, setAtEnd] = useState(false)
@@ -41,7 +48,7 @@ export default function CategoryCarousel() {
             onScroll={updateEdges}
             className="flex overflow-x-auto gap-[15px] scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden w-full"
           >
-            {featuredCategories.map((cat) => (
+            {list.map((cat) => (
               <Link
                 key={cat.name}
                 href={cat.href}

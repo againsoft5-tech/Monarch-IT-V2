@@ -6,6 +6,7 @@ import { CartProvider } from "@/context/CartContext";
 import { AuthProvider } from "@/context/AuthContext";
 import { WishlistProvider } from "@/context/WishlistContext";
 import { CompareProvider } from "@/context/CompareContext";
+import { homepageRepository } from "@/lib/live-edit/content-repository";
 
 const poppins = Poppins({
   variable: "--font-poppins",
@@ -19,11 +20,13 @@ export const metadata: Metadata = {
     "Monarchit is Bangladesh's top retailer for laptops, computers, gaming PCs, components, accessories, and gadgets, offering the latest tech at unbeatable prices.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const content = await homepageRepository.read();
+
   return (
     <html lang="en" className={`${poppins.variable} h-full antialiased`}>
       <head>
@@ -38,7 +41,13 @@ export default function RootLayout({
           <WishlistProvider>
             <CompareProvider>
               <CartProvider>
-                <StorefrontChrome>{children}</StorefrontChrome>
+                <StorefrontChrome
+                  header={content.header}
+                  footer={content.footer}
+                  sideMenu={content.sideMenu}
+                >
+                  {children}
+                </StorefrontChrome>
               </CartProvider>
             </CompareProvider>
           </WishlistProvider>

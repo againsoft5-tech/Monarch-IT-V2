@@ -1,12 +1,34 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import Image from 'next/image'
-import { brands } from '@/data/brands'
+import { brands as fallbackBrands } from '@/data/brands'
+import type { BrandItem } from '@/lib/live-edit/homepage'
 
-const loopBrands = [...brands, ...brands]
+type Props = {
+  title?: string
+  subtitle?: string
+  items?: BrandItem[]
+}
 
-export default function BrandSlider() {
+export default function BrandSlider({
+  title = 'Brands We Distribute',
+  subtitle = 'Official distributor of trusted brands.',
+  items,
+}: Props) {
+  const list = useMemo(() => {
+    const fromCms = (items ?? []).filter((b) => !b.hidden && (b.logo || b.name))
+    if (fromCms.length > 0) {
+      return fromCms.map((b) => ({
+        name: b.name,
+        href: b.href || '#',
+        logo: b.logo,
+      }))
+    }
+    return fallbackBrands
+  }, [items])
+
+  const loopBrands = useMemo(() => [...list, ...list], [list])
   const trackRef = useRef<HTMLDivElement>(null)
   const rafRef = useRef<number | null>(null)
   const pausedRef = useRef(false)
@@ -14,6 +36,7 @@ export default function BrandSlider() {
   useEffect(() => {
     const track = trackRef.current
     if (!track) return
+    track.scrollLeft = 0
 
     const step = () => {
       if (!pausedRef.current) {
@@ -27,7 +50,7 @@ export default function BrandSlider() {
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current)
     }
-  }, [])
+  }, [list])
 
   const pause = () => {
     pausedRef.current = true
@@ -43,8 +66,8 @@ export default function BrandSlider() {
   return (
     <div className="relative py-10 bg-white">
       <div className="text-center mb-[15px]">
-        <h2 className="m-0 mb-1 font-bold text-2xl md:text-[26px] text-[#333]">Brands We Distribute</h2>
-        <p className="m-0 text-sm text-[#777]">Official distributor of trusted brands.</p>
+        <h2 className="m-0 mb-1 font-bold text-2xl md:text-[26px] text-[#333]">{title}</h2>
+        <p className="m-0 text-sm text-[#777]">{subtitle}</p>
       </div>
 
       <div className="relative w-full mx-auto py-5 bg-[#f5f5f7]">
@@ -89,15 +112,19 @@ export default function BrandSlider() {
                 href={b.href}
                 className="flex-none w-[calc((100%-30px)/4)] md:w-[calc((100%-75px)/4)] lg:w-[calc((100%-125px)/6)] bg-white border border-[#f0f0f0] rounded-xl md:rounded-2xl px-2 md:px-3 py-2 flex items-center justify-center shadow-[0_2px_10px_rgba(0,0,0,0.02)] transition-all hover:-translate-y-[3px] hover:shadow-[0_8px_20px_rgba(0,0,0,0.06)]"
               >
-                <Image
-                  src={b.logo}
-                  alt={b.name}
-                  title={b.name}
-                  width={160}
-                  height={64}
-                  className="h-9 md:h-16 w-auto max-w-full object-contain"
-                  style={{ width: 'auto' }}
-                />
+                {b.logo ? (
+                  <Image
+                    src={b.logo}
+                    alt={b.name}
+                    title={b.name}
+                    width={160}
+                    height={64}
+                    className="h-9 md:h-16 w-auto max-w-full object-contain"
+                    style={{ width: 'auto' }}
+                  />
+                ) : (
+                  <span className="text-[12px] text-[#555]">{b.name}</span>
+                )}
               </a>
             ))}
           </div>

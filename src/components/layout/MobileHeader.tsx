@@ -8,10 +8,15 @@ import MobileDrawer from './MobileDrawer'
 import SearchDropdown from './SearchDropdown'
 import { useCart } from '@/context/CartContext'
 import { useAuth } from '@/context/AuthContext'
+import type { HeaderSection } from '@/lib/live-edit/homepage'
+import { DEFAULT_HEADER } from '@/lib/live-edit/site-chrome'
 
-const IMG_BASE = '/images'
+type Props = {
+  data?: Partial<HeaderSection> | null
+}
 
-export default function MobileHeader() {
+export default function MobileHeader({ data }: Props) {
+  const cfg = { ...DEFAULT_HEADER, ...data }
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [searchFocused, setSearchFocused] = useState(false)
   const [query, setQuery] = useState('')
@@ -62,8 +67,8 @@ export default function MobileHeader() {
       >
         <Link href="/" className="shrink-0 flex items-center">
           <Image
-            src={`${IMG_BASE}/catalog/view/theme/default/image/monarch-it-icon.png`}
-            alt="Monarch IT"
+            src={cfg.logoMobile}
+            alt={cfg.logoAlt}
             width={40}
             height={34}
             className="h-9 w-auto object-contain"
@@ -79,7 +84,7 @@ export default function MobileHeader() {
               onChange={(e) => setQuery(e.target.value)}
               onFocus={() => setSearchFocused(true)}
               onKeyDown={handleSearchKeyDown}
-              placeholder="Search Products"
+              placeholder={cfg.searchPlaceholder}
               autoComplete="off"
               className="flex-1 min-w-0 border-none bg-transparent outline-none text-[14px] text-gray-700 placeholder-gray-400"
             />
@@ -94,7 +99,7 @@ export default function MobileHeader() {
             aria-label="Cart"
           >
             <Image
-              src={`${IMG_BASE}/catalog/view/theme/default/image/cart-icon.svg`}
+              src="/images/catalog/view/theme/default/image/cart-icon.svg"
               alt="Cart"
               width={20}
               height={20}
@@ -115,7 +120,7 @@ export default function MobileHeader() {
             aria-label="Account"
           >
             <Image
-              src={`${IMG_BASE}/catalog/view/theme/default/image/account-icon.svg`}
+              src="/images/catalog/view/theme/default/image/account-icon.svg"
               alt="Account"
               width={20}
               height={20}
