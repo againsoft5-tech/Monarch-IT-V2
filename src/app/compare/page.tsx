@@ -8,8 +8,37 @@ import { compareProducts, type CompareProduct } from '@/data/compareProducts'
 import { useCompare } from '@/context/CompareContext'
 import { useCart } from '@/context/CartContext'
 
-const GRID_COLS_3 = 'grid-cols-[minmax(120px,160px)_repeat(3,minmax(180px,1fr))]'
-const GRID_COLS_2 = 'grid-cols-[minmax(120px,160px)_repeat(2,minmax(220px,1fr))]'
+/**
+ * One table at every width: a frozen feature column plus product columns wide
+ * enough to overflow, so phones scroll the products sideways instead of
+ * getting a different layout. `minW` must equal the sum of the track minimums
+ * — the row boxes have to be as wide as their tracks, or their backgrounds and
+ * borders stop short once you scroll.
+ */
+const GRID_COLS_3 = {
+  grid: 'grid-cols-[170px_repeat(3,minmax(200px,1fr))] md:grid-cols-[minmax(120px,160px)_repeat(3,minmax(180px,1fr))]',
+  minW: 'min-w-[770px] md:min-w-[760px]',
+}
+const GRID_COLS_2 = {
+  grid: 'grid-cols-[170px_repeat(2,minmax(224px,1fr))] md:grid-cols-[minmax(120px,160px)_repeat(2,minmax(220px,1fr))]',
+  minW: 'min-w-[618px] md:min-w-[760px]',
+}
+
+/**
+ * The feature-name column is frozen while the product columns scroll under it,
+ * so every value stays lined up with its label. Applied per row rather than to
+ * one column element, because each row is its own grid — that is also what
+ * keeps the vertical alignment exact.
+ *
+ * Each cell must set its own background: scrolled content passes behind it.
+ * The divider is a plain border rather than a drop shadow — a shadow with any
+ * vertical spread fades out near each row boundary, which reads as a gap in
+ * the line down the left edge of every value cell.
+ */
+const STICKY_LABEL = 'sticky left-0 z-10 border-r border-gray-100'
+
+/** Product columns divide from each other; the frozen column draws its own. */
+const DIVIDER = (i: number) => (i === 0 ? '' : 'border-l border-gray-50')
 
 function RamIllustration({ accent }: { accent: string }) {
   return (
@@ -383,7 +412,7 @@ function ComparePageInner() {
   const canStart = Boolean(slots[0] && slots[1])
   const showThirdColumn = Boolean(slots[1])
   const visibleIndexes = showThirdColumn ? [0, 1, 2] : [0, 1]
-  const deskGridCols = showThirdColumn ? GRID_COLS_3 : GRID_COLS_2
+  const cols = showThirdColumn ? GRID_COLS_3 : GRID_COLS_2
 
   return (
     <>
@@ -419,141 +448,26 @@ function ComparePageInner() {
             </button>
           </div>
         ) : (
-          <>
-            {/* Desktop / tablet table */}
-            <div className="hidden md:block bg-white border border-gray-100 rounded-2xl shadow-[0_2px_16px_rgba(0,0,0,0.05)] overflow-x-auto no-scrollbar">
-              <div className="min-w-[760px]">
-                {/* Search row */}
-                <div className={`grid ${deskGridCols} items-center border-b bg-gray-100 border-gray-100`}>
-                  <div className="flex items-center justify-center py-4">
-                    <button
-                      type="button"
-                      onClick={resetAll}
-                      title="Reset comparison"
-                      className="flex items-center justify-center hover:opacity-80 transition-opacity cursor-pointer"
-                    >
-                      <Image src="/images/compare-icons/refresh-icon.svg" alt="Reset" width={36} height={36} className="w-9 h-9" />
-                    </button>
-                  </div>
-                  {renderSearchCell(0, { hideRemove: true, hideName: true })}
-                  {renderSearchCell(1, { hideName: true })}
-                  {showThirdColumn && renderSearchCell(2, { hideName: true })}
-                </div>
-
-                {/* Product card row */}
-                <div className={`grid ${deskGridCols} border-b border-gray-100`}>
-                  <div />
-                  {visibleIndexes.map((i) => {
-                    const product = slots[i]
-                    return (
-                      <div key={i} className="px-4 py-5 border-l border-gray-50 flex flex-col items-center text-center min-h-[210px] justify-center">
-                        {product ? <ProductSummary product={product} /> : <EmptySlot />}
-                      </div>
-                    )
-                  })}
-                </div>
-
-                {/* Model row */}
-                <div className={`grid ${deskGridCols} border-b border-gray-100`}>
-                  <div className="px-4 py-3.5 text-[13px] font-semibold text-gray-700 flex items-center">Model</div>
-                  {visibleIndexes.map((i) => (
-                    <div key={i} className="px-4 py-3.5 border-l border-gray-50 text-[13px] text-gray-600 flex items-center justify-center text-center">
-                      {slots[i]?.model ?? '—'}
-                    </div>
-                  ))}
-                </div>
-
-                {/* Spec sections */}
-                {reference?.sections.map((section, si) => {
-                  const isOpen = openSections[section.title]
-                  return (
-                    <div key={section.title}>
-                      <button
-                        type="button"
-                        onClick={() => toggleSection(section.title)}
-                        className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer border-b border-gray-100"
-                      >
-                        <span className="text-[14px] font-bold text-[#d32f2f]">{section.title}</span>
-                        <span className={`mi text-[20px] text-[#d32f2f] transition-transform ${!isOpen ? 'rotate-180' : ''}`}>
-                          expand_more
-                        </span>
-                      </button>
-
-                      {isOpen &&
-                        section.rows.map(([label], ri) => (
-                          <div key={label} className={`grid ${deskGridCols} border-b border-gray-100`}>
-                            <div className="px-4 py-3 text-[13px] text-gray-700 flex items-center">{label}</div>
-                            {visibleIndexes.map((i) => (
-                              <div
-                                key={i}
-                                className="px-4 py-3 border-l border-gray-50 text-[13px] text-gray-600 flex items-center justify-center text-center"
-                              >
-                                {slots[i]?.sections[si]?.rows[ri]?.[1] ?? '—'}
-                              </div>
-                            ))}
-                          </div>
-                        ))}
-                    </div>
-                  )
-                })}
-
-                {/* Actions row */}
-                <div className={`grid ${deskGridCols} items-center`}>
-                  <div className="flex items-center justify-center gap-2 py-4">
-                    <button
-                      type="button"
-                      onClick={handleShare}
-                      title="Share comparison"
-                      className="flex items-center justify-center hover:opacity-80 transition-opacity cursor-pointer"
-                    >
-                      <Image src="/images/compare-icons/share-icon.svg" alt="Share" width={36} height={36} className="w-9 h-9" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handlePrint}
-                      title="Print comparison"
-                      className="flex items-center justify-center hover:opacity-80 transition-opacity cursor-pointer"
-                    >
-                      <Image src="/images/compare-icons/download-icon.svg" alt="Print" width={36} height={36} className="w-9 h-9" />
-                    </button>
-                  </div>
-                  {visibleIndexes.map((i) => {
-                    const product = slots[i]
-                    return (
-                      <div key={i} className="px-4 py-4 border-l border-gray-50 flex items-center justify-center">
-                        <button
-                          type="button"
-                          disabled={!product}
-                          onClick={() => product && handleBuyNow(product)}
-                          className="bg-white text-[#c3272b] border-2 border-[#c3272b] rounded-full py-2 px-6 text-[13px] font-bold hover:bg-[#c3272b] hover:text-white transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:text-[#c3272b]"
-                        >
-                          Buy now
-                        </button>
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
-            </div>
-
-            {/* Mobile comparison (2 products only) */}
-            <div className="md:hidden bg-white border border-gray-100 rounded-2xl shadow-[0_2px_16px_rgba(0,0,0,0.05)] overflow-hidden">
-              {/* Top bar: reset + share/download */}
-              <div className="flex items-center justify-between px-3 py-2 border-b border-gray-100">
-                <button
-                  type="button"
-                  onClick={resetAll}
-                  title="Reset comparison"
-                  className="flex items-center justify-center hover:opacity-80 transition-opacity cursor-pointer"
-                >
-                  <Image src="/images/compare-icons/refresh-icon.svg" alt="Reset" width={32} height={32} className="w-8 h-8" />
-                </button>
-                <div className="flex items-center gap-1.5">
+          <div className="bg-white border border-gray-100 rounded-2xl shadow-[0_2px_16px_rgba(0,0,0,0.05)] overflow-x-auto no-scrollbar">
+            <div className={cols.minW}>
+              {/* Search row */}
+              <div className={`grid ${cols.grid} items-center border-b bg-gray-100 border-gray-100`}>
+                <div className={`${STICKY_LABEL} self-stretch bg-gray-100 flex items-center justify-center gap-1 py-4`}>
+                  <button
+                    type="button"
+                    onClick={resetAll}
+                    title="Reset comparison"
+                    className="flex items-center justify-center hover:opacity-80 transition-opacity cursor-pointer"
+                  >
+                    <Image src="/images/compare-icons/refresh-icon.svg" alt="Reset" width={36} height={36} className="w-8 h-8 md:w-9 md:h-9" />
+                  </button>
+                  {/* On phones the actions ride up here — the bottom row is
+                      too far to reach past a long spec list. */}
                   <button
                     type="button"
                     onClick={handleShare}
                     title="Share comparison"
-                    className="flex items-center justify-center hover:opacity-80 transition-opacity cursor-pointer"
+                    className="md:hidden flex items-center justify-center hover:opacity-80 transition-opacity cursor-pointer"
                   >
                     <Image src="/images/compare-icons/share-icon.svg" alt="Share" width={32} height={32} className="w-8 h-8" />
                   </button>
@@ -561,25 +475,23 @@ function ComparePageInner() {
                     type="button"
                     onClick={handlePrint}
                     title="Print comparison"
-                    className="flex items-center justify-center hover:opacity-80 transition-opacity cursor-pointer"
+                    className="md:hidden flex items-center justify-center hover:opacity-80 transition-opacity cursor-pointer"
                   >
                     <Image src="/images/compare-icons/download-icon.svg" alt="Print" width={32} height={32} className="w-8 h-8" />
                   </button>
                 </div>
-              </div>
-
-              {/* Search row */}
-              <div className="grid grid-cols-2 items-center border-b border-gray-100">
                 {renderSearchCell(0, { hideRemove: true, hideName: true })}
                 {renderSearchCell(1, { hideName: true })}
+                {showThirdColumn && renderSearchCell(2, { hideName: true })}
               </div>
 
               {/* Product card row */}
-              <div className="grid grid-cols-2 border-b border-gray-100">
-                {[0, 1].map((i) => {
+              <div className={`grid ${cols.grid} border-b border-gray-100`}>
+                <div className={`${STICKY_LABEL} bg-white`} />
+                {visibleIndexes.map((i) => {
                   const product = slots[i]
                   return (
-                    <div key={i} className={`px-2.5 py-4 flex flex-col items-center text-center min-h-[190px] justify-center ${i === 1 ? 'border-l border-gray-50' : ''}`}>
+                    <div key={i} className={`px-2.5 md:px-4 py-4 md:py-5 ${DIVIDER(i)} flex flex-col items-center text-center min-h-[190px] md:min-h-[210px] justify-center`}>
                       {product ? <ProductSummary product={product} /> : <EmptySlot />}
                     </div>
                   )
@@ -587,46 +499,55 @@ function ComparePageInner() {
               </div>
 
               {/* Model row */}
-              <div className="border-b border-gray-100">
-                <div className="px-4 py-2 text-[12px] font-semibold text-gray-500 text-center bg-gray-50">Model</div>
-                <div className="grid grid-cols-2">
-                  <div className="px-3 py-3 text-[13px] text-gray-700 text-center border-r border-gray-100">
-                    {slots[0]?.model ?? '—'}
-                  </div>
-                  <div className="px-3 py-3 text-[13px] text-gray-700 text-center">{slots[1]?.model ?? '—'}</div>
+              <div className={`grid ${cols.grid} border-b border-gray-100`}>
+                <div className={`${STICKY_LABEL} bg-white px-3 md:px-4 py-3.5 text-[12px] md:text-[13px] font-semibold text-gray-700 flex items-center`}>
+                  Model
                 </div>
+                {visibleIndexes.map((i) => (
+                  <div key={i} className={`px-3 md:px-4 py-3.5 ${DIVIDER(i)} text-[12.5px] md:text-[13px] text-gray-600 flex items-center justify-center text-center`}>
+                    {slots[i]?.model ?? '—'}
+                  </div>
+                ))}
               </div>
 
-              {/* Spec sections, stacked label/value layout */}
+              {/* Spec sections */}
               {reference?.sections.map((section, si) => {
                 const isOpen = openSections[section.title]
                 return (
                   <div key={section.title}>
-                    <button
-                      type="button"
-                      onClick={() => toggleSection(section.title)}
-                      className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer border-b border-gray-100"
-                    >
-                      <span className="text-[14px] font-bold text-[#d32f2f]">{section.title}</span>
-                      <span className={`mi text-[20px] text-[#d32f2f] transition-transform ${!isOpen ? 'rotate-180' : ''}`}>
-                        expand_more
-                      </span>
-                    </button>
+                    {/* A grid row, not a full-width bar, so the section name
+                        rides along in the frozen column. */}
+                    <div className={`group grid ${cols.grid} bg-gray-50 border-b border-gray-100`}>
+                      <button
+                        type="button"
+                        onClick={() => toggleSection(section.title)}
+                        aria-expanded={isOpen}
+                        className={`${STICKY_LABEL} bg-gray-50 group-hover:bg-gray-100 transition-colors cursor-pointer flex items-center justify-between gap-1.5 px-3 md:px-4 py-3 text-left`}
+                      >
+                        <span className="text-[12.5px] md:text-[14px] font-bold text-[#d32f2f] leading-tight">{section.title}</span>
+                        <span className={`mi shrink-0 text-[18px] md:text-[20px] text-[#d32f2f] transition-transform ${!isOpen ? 'rotate-180' : ''}`}>
+                          expand_more
+                        </span>
+                      </button>
+                      {visibleIndexes.map((i) => (
+                        <div key={i} className={`${DIVIDER(i)} transition-colors group-hover:bg-gray-100`} />
+                      ))}
+                    </div>
 
                     {isOpen &&
                       section.rows.map(([label], ri) => (
-                        <div key={label} className="border-b border-gray-100">
-                          <div className="px-4 py-2 text-[12px] font-semibold text-gray-500 text-center bg-gray-50">
+                        <div key={label} className={`grid ${cols.grid} border-b border-gray-100`}>
+                          <div className={`${STICKY_LABEL} bg-white px-3 md:px-4 py-3 text-[12px] md:text-[13px] text-gray-700 flex items-center`}>
                             {label}
                           </div>
-                          <div className="grid grid-cols-2">
-                            <div className="px-3 py-3 text-[13px] text-gray-700 text-center border-r border-gray-100">
-                              {slots[0]?.sections[si]?.rows[ri]?.[1] ?? '—'}
+                          {visibleIndexes.map((i) => (
+                            <div
+                              key={i}
+                              className={`px-3 md:px-4 py-3 ${DIVIDER(i)} text-[12.5px] md:text-[13px] text-gray-600 flex items-center justify-center text-center`}
+                            >
+                              {slots[i]?.sections[si]?.rows[ri]?.[1] ?? '—'}
                             </div>
-                            <div className="px-3 py-3 text-[13px] text-gray-700 text-center">
-                              {slots[1]?.sections[si]?.rows[ri]?.[1] ?? '—'}
-                            </div>
-                          </div>
+                          ))}
                         </div>
                       ))}
                   </div>
@@ -634,16 +555,34 @@ function ComparePageInner() {
               })}
 
               {/* Actions row */}
-              <div className="grid grid-cols-2 items-center">
-                {[0, 1].map((i) => {
+              <div className={`grid ${cols.grid} items-center`}>
+                <div className={`${STICKY_LABEL} self-stretch bg-white flex items-center justify-center gap-2 py-4`}>
+                  <button
+                    type="button"
+                    onClick={handleShare}
+                    title="Share comparison"
+                    className="hidden md:flex items-center justify-center hover:opacity-80 transition-opacity cursor-pointer"
+                  >
+                    <Image src="/images/compare-icons/share-icon.svg" alt="Share" width={36} height={36} className="w-9 h-9" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handlePrint}
+                    title="Print comparison"
+                    className="hidden md:flex items-center justify-center hover:opacity-80 transition-opacity cursor-pointer"
+                  >
+                    <Image src="/images/compare-icons/download-icon.svg" alt="Print" width={36} height={36} className="w-9 h-9" />
+                  </button>
+                </div>
+                {visibleIndexes.map((i) => {
                   const product = slots[i]
                   return (
-                    <div key={i} className={`px-2.5 py-4 flex items-center justify-center ${i === 1 ? 'border-l border-gray-50' : ''}`}>
+                    <div key={i} className={`px-2.5 md:px-4 py-4 ${DIVIDER(i)} flex items-center justify-center`}>
                       <button
                         type="button"
                         disabled={!product}
                         onClick={() => product && handleBuyNow(product)}
-                        className="bg-white text-[#c3272b] border-2 border-[#c3272b] rounded-full py-2 px-4 text-[12.5px] font-bold hover:bg-[#c3272b] hover:text-white transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:text-[#c3272b]"
+                        className="bg-white text-[#c3272b] border-2 border-[#c3272b] rounded-full py-2 px-6 text-[13px] font-bold hover:bg-[#c3272b] hover:text-white transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:text-[#c3272b]"
                       >
                         Buy now
                       </button>
@@ -652,7 +591,7 @@ function ComparePageInner() {
                 })}
               </div>
             </div>
-          </>
+          </div>
         )}
 
         {openSlot !== null && <div className="fixed inset-0 z-10" onClick={() => setOpenSlot(null)} />}
