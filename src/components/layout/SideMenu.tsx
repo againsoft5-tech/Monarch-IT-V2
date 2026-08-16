@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -102,6 +102,52 @@ export default function SideMenu({ data, embedded = false }: Props) {
   const { toast, showToast } = useToast()
   const [chatOpen, setChatOpen] = useState(false)
 
+  // Spring-like scroll reaction: dip down on scroll-down, lift up on
+  // scroll-up, then settle back to rest with a bouncy ease.
+  const [railOffset, setRailOffset] = useState(0)
+  const [isSettled, setIsSettled] = useState(true)
+
+  useEffect(() => {
+    let lastY = window.scrollY
+    let ticking = false
+    let settleTimer: ReturnType<typeof setTimeout> | undefined
+
+    const handleScroll = () => {
+      if (ticking) return
+      ticking = true
+      requestAnimationFrame(() => {
+        const currentY = window.scrollY
+        const delta = currentY - lastY
+        lastY = currentY
+
+        if (delta !== 0) {
+          setIsSettled(false)
+          setRailOffset(delta > 0 ? 10 : -10)
+
+          if (settleTimer) clearTimeout(settleTimer)
+          settleTimer = setTimeout(() => {
+            setIsSettled(true)
+            setRailOffset(0)
+          }, 120)
+        }
+        ticking = false
+      })
+    }
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+      if (settleTimer) clearTimeout(settleTimer)
+    }
+  }, [])
+
+  const railSpringStyle = {
+    transform: `translateY(${railOffset}px)`,
+    transition: isSettled
+      ? 'transform 600ms cubic-bezier(0.34, 1.56, 0.64, 1)'
+      : 'transform 140ms cubic-bezier(0.22, 1, 0.36, 1)',
+  }
+
   const handleChatClick = () => {
     if (!isLoggedIn) {
       showToast('Please login to start chatting')
@@ -112,7 +158,10 @@ export default function SideMenu({ data, embedded = false }: Props) {
   }
 
   const rail = (
-    <div className="ml-0 flex w-[72px] shrink-0 flex-col items-center gap-3 rounded-[40px] border border-[#eee] bg-[#F5F5F7]/70 px-3 py-3 shadow-[5px_5px_15px_rgba(0,0,0,0.05)] pointer-events-auto backdrop-blur-md">
+    <div
+      className="ml-0 flex w-[72px] shrink-0 flex-col items-center gap-3 rounded-[40px] border border-[#eee] bg-[#F5F5F7]/70 px-3 py-3 shadow-[5px_5px_15px_rgba(0,0,0,0.05)] pointer-events-auto backdrop-blur-md"
+      style={railSpringStyle}
+    >
       <Link
         href={cfg.logoHref || '/'}
         className="shrink-0 transition-transform duration-200 hover:scale-105"

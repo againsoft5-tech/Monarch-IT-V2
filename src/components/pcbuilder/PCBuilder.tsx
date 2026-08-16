@@ -550,54 +550,46 @@ export default function PCBuilder() {
 
       <h2 className="text-center text-lg font-bold text-gray-900 mb-5 shrink-0">{activeCat.label}</h2>
 
-      <div className="@container flex-1 min-h-0 overflow-y-auto pr-1.5 thin-scroll-gray">
+      <div className="flex-1 min-h-0 overflow-y-auto pr-1.5 thin-scroll-gray">
         {products.length === 0 ? (
           <div className="text-center py-16">
             <span className="mi text-[48px] text-gray-300 block mb-3">search_off</span>
             <p className="text-gray-500 text-[14px]">No products match your search.</p>
           </div>
         ) : (
-          // Three across is the target; container queries drop that to two or
-          // one when the panel itself is too narrow, since the panel shrinks
-          // with the sidebar rather than tracking the viewport
-          <div className="grid gap-3 grid-cols-1 @[420px]:grid-cols-2 @[600px]:grid-cols-3">
+          <div className="flex flex-col gap-3">
             {products.map((p) => {
               const isPicked = (builds[activeCategory] ?? []).some((s) => s.product.id === p.id)
               const qty = getQty(p.id)
               return (
                 <div
                   key={p.id}
-                  className={`bg-white rounded-2xl p-3 flex flex-col shadow-[0_2px_10px_rgba(0,0,0,0.06)] border-2 transition-colors ${
+                  className={`bg-white rounded-2xl p-3 flex items-center gap-4 shadow-[0_2px_10px_rgba(0,0,0,0.06)] border-2 transition-colors ${
                     isPicked ? 'border-[#c3272b]' : 'border-transparent'
                   }`}
                 >
-                  <PartThumb
-                    icon={activeCat.icon}
-                    iconSvg={activeCat.iconSvgActive ?? activeCat.iconSvg}
-                    image={p.image}
-                    accent={activeCat.accent}
-                  />
-
-                  <div className="flex-1 min-w-0 mt-3">
-                    <div
-                      title={p.name}
-                      className="text-[13.5px] font-semibold text-gray-800 leading-[1.35] line-clamp-2"
-                    >
-                      {p.name}
-                    </div>
+                  <div className="w-[120px] shrink-0">
+                    <PartThumb
+                      icon={activeCat.icon}
+                      iconSvg={activeCat.iconSvgActive ?? activeCat.iconSvg}
+                      image={p.image}
+                      accent={activeCat.accent}
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[14px] font-semibold text-gray-800 leading-[1.3] mb-1.5">{p.name}</div>
                     {p.specs && p.specs.length > 0 && (
-                      <ul className="list-disc pl-4 mt-1.5 space-y-0.5">
+                      <ul className="list-disc pl-4 space-y-0.5">
                         {p.specs.map((spec) => (
-                          <li key={spec} className="text-[11.5px] text-gray-500 leading-snug">
+                          <li key={spec} className="text-[12px] text-gray-500">
                             {spec}
                           </li>
                         ))}
                       </ul>
                     )}
                   </div>
-
-                  <div className="mt-3">
-                    <div className="flex items-baseline gap-1.5 flex-wrap mb-2">
+                  <div className="shrink-0 flex flex-col items-end gap-2">
+                    <div className="flex items-center gap-1.5 flex-wrap justify-end">
                       <span className="text-[15px] font-bold text-[#c3272b]">
                         ৳{p.priceNew.toLocaleString()}
                       </span>
@@ -614,7 +606,7 @@ export default function PCBuilder() {
                       <button
                         type="button"
                         onClick={() => selectProduct(activeCategory, p)}
-                        className={`flex-1 min-w-0 rounded-full px-3 py-1.5 text-[12.5px] font-bold border-2 whitespace-nowrap transition-colors cursor-pointer ${
+                        className={`rounded-full px-5 py-1.5 text-[12.5px] font-bold border-2 whitespace-nowrap transition-colors cursor-pointer ${
                           isPicked
                             ? 'bg-[#c3272b] text-white border-[#c3272b]'
                             : 'bg-white text-[#c3272b] border-[#c3272b] hover:bg-[#c3272b] hover:text-white'
@@ -1069,7 +1061,7 @@ export default function PCBuilder() {
                 </div>
               </div>
 
-              <div className="flex flex-col gap-2.5 bg-white rounded-[50px] p-4">
+              <div className="flex flex-col gap-2.5 bg-white rounded-[35px] p-4">
                 {buildCategories.map((cat) => {
                   const items = builds[cat.key] ?? []
                   const isActive = activeCategory === cat.key

@@ -98,8 +98,15 @@ function MobileCarousel({
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/images/promo-banner/left-arrow.svg" alt="" className="w-2.5" />
         </button>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/images/promo-banner/fire-icon-with-bg-mobile.svg" alt="" className="w-[130px]" />
+        <div className="relative w-[130px] shrink-0">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/images/promo-banner/fire-icon-with-bg-mobile.svg" alt="" className="w-[130px]" />
+          <Link
+            href="/offers"
+            aria-label="Hot products"
+            className="absolute left-1/2 top-1/2 w-[46%] aspect-square -translate-x-1/2 -translate-y-1/2 rounded-full cursor-pointer"
+          />
+        </div>
         <button
           type="button"
           onClick={() => go(1)}
@@ -255,8 +262,15 @@ export default function PromoBanner({ data }: Props) {
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/images/promo-banner/top-arrow.svg" alt="" className="w-5" />
             </button>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/images/promo-banner/fire-icon-with-bg.svg" alt="" className="w-[170px]" />
+            <div className="relative w-[130px] shrink-0">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/images/promo-banner/fire-icon-with-bg.svg" alt="" className="w-[130px]" />
+              <Link
+                href="/offers"
+                aria-label="Hot products"
+                className="absolute left-1/2 top-1/2 w-[64%] aspect-square -translate-x-1/2 -translate-y-1/2 rounded-full cursor-pointer"
+              />
+            </div>
             <button
               type="button"
               onClick={() => go(1)}

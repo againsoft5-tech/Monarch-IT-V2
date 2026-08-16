@@ -7,7 +7,7 @@ import { shopCategories, type ShopSub } from '@/data/categories'
 
 export default function ShopMenu({ headerBottom }: { headerBottom: number }) {
   const [open, setOpen] = useState(false)
-  const [activeIndex, setActiveIndex] = useState(1)
+  const [activeIndex, setActiveIndex] = useState(0)
   const [mounted, setMounted] = useState(false)
   const [triggerPos, setTriggerPos] = useState({ left: 0, top: 0 })
   const wrapperRef = useRef<HTMLDivElement>(null)
@@ -15,6 +15,10 @@ export default function ShopMenu({ headerBottom }: { headerBottom: number }) {
   const panelRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => setMounted(true), [])
+
+  useEffect(() => {
+    if (open) setActiveIndex(0)
+  }, [open])
 
   useEffect(() => {
     if (!open || !triggerRef.current) return
