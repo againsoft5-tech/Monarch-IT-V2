@@ -10,8 +10,14 @@ export default function ProductGallery({ images, name }: { images: ProductImage[
   const [active, setActive] = useState(0)
   const [zoomed, setZoomed] = useState(false)
   const [origin, setOrigin] = useState('50% 50%')
+  const [supportsHover, setSupportsHover] = useState(false)
   const trackRef = useRef<HTMLDivElement>(null)
   const boxRef = useRef<HTMLDivElement>(null)
+
+  // Touch devices don't get real hover, so they keep tap-to-zoom instead.
+  useEffect(() => {
+    setSupportsHover(window.matchMedia('(hover: hover)').matches)
+  }, [])
 
   const scrollThumbs = (dir: number) => {
     trackRef.current?.scrollBy({ left: dir * 100, behavior: 'smooth' })
@@ -50,7 +56,15 @@ export default function ProductGallery({ images, name }: { images: ProductImage[
     <div className="p-4">
       <div
         ref={boxRef}
-        onClick={() => setZoomed((v) => !v)}
+        onClick={() => {
+          if (!supportsHover) setZoomed((v) => !v)
+        }}
+        onMouseEnter={(e) => {
+          if (supportsHover) {
+            setZoomed(true)
+            setOriginFromPoint(e.clientX, e.clientY)
+          }
+        }}
         onMouseMove={(e) => {
           if (zoomed) setOriginFromPoint(e.clientX, e.clientY)
         }}
@@ -63,8 +77,8 @@ export default function ProductGallery({ images, name }: { images: ProductImage[
           if (touch) setOriginFromPoint(touch.clientX, touch.clientY)
         }}
         className={`relative rounded-[35px] h-[320px] md:h-[400px] flex items-center justify-center bg-[#f5f5f7] border border-gray-100 overflow-hidden select-none ${
-          zoomed ? 'cursor-zoom-out touch-none' : 'cursor-zoom-in'
-        }`}
+          zoomed ? 'touch-none' : ''
+        } ${supportsHover ? 'cursor-zoom-in' : zoomed ? 'cursor-zoom-out' : 'cursor-zoom-in'}`}
       >
         <Image
           src={images[active].large}
@@ -77,7 +91,7 @@ export default function ProductGallery({ images, name }: { images: ProductImage[
         />
       </div>
 
-      <div className="flex items-center gap-1.5 mt-3">
+      <div className="flex items-center justify-center gap-1.5 mt-3">
         <button
           type="button"
           onClick={() => scrollThumbs(-1)}
@@ -87,12 +101,27 @@ export default function ProductGallery({ images, name }: { images: ProductImage[
           <Image src="/images/promo-banner/left-arrow.svg" alt="" width={9} height={16} className="w-[9px] h-4" />
         </button>
 
-        <div ref={trackRef} className="flex gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div ref={trackRef} className="flex [justify-content:safe_center] gap-2 min-w-0 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {images.map((img, i) => (
             <button
               key={i}
               type="button"
-              onClick={() => setActive(i)}
+              onClick={(e) => {
+                setActive(i)
+                // Clicking the edge-most visible thumbnail slides the strip one
+                // item further in that direction, so the next one is reachable.
+                const track = trackRef.current
+                const btn = e.currentTarget
+                if (!track) return
+                const trackRect = track.getBoundingClientRect()
+                const btnRect = btn.getBoundingClientRect()
+                const step = btn.offsetWidth + 8
+                if (btnRect.right > trackRect.right - 1) {
+                  track.scrollBy({ left: step, behavior: 'smooth' })
+                } else if (btnRect.left < trackRect.left + 1) {
+                  track.scrollBy({ left: -step, behavior: 'smooth' })
+                }
+              }}
               className={`w-16 h-16 shrink-0 rounded-lg border bg-[#fafbfe] flex items-center justify-center overflow-hidden transition-colors cursor-pointer ${
                 i === active ? 'border-[#d92128]' : 'border-gray-200 hover:border-[#d92128]'
               }`}
