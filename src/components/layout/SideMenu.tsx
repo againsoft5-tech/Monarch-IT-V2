@@ -112,7 +112,7 @@ export default function SideMenu({ data, embedded = false }: Props) {
   }
 
   const rail = (
-    <div className="ml-0 flex flex-col items-center gap-3 rounded-[40px] border border-[#eee] bg-[#F5F5F7]/70 px-3 py-3 shadow-[5px_5px_15px_rgba(0,0,0,0.05)] pointer-events-auto backdrop-blur-md">
+    <div className="ml-0 flex w-[72px] shrink-0 flex-col items-center gap-3 rounded-[40px] border border-[#eee] bg-[#F5F5F7]/70 px-3 py-3 shadow-[5px_5px_15px_rgba(0,0,0,0.05)] pointer-events-auto backdrop-blur-md">
       <Link
         href={cfg.logoHref || '/'}
         className="shrink-0 transition-transform duration-200 hover:scale-105"
@@ -128,35 +128,42 @@ export default function SideMenu({ data, embedded = false }: Props) {
 
       {desktopItems.map((item) => {
         const content = (
-          <>
+          <div className="flex items-center">
             <div
-              className={`flex h-12 w-12 items-center justify-center rounded-full shadow-[0_2px_5px_rgba(0,0,0,0.05)] transition-all duration-200 ${
-                item.active
-                  ? 'bg-[#d92128] shadow-[0_4px_10px_rgba(217,33,40,0.3)]'
-                  : 'bg-white group-hover:bg-[#d92128] group-hover:shadow-[0_4px_10px_rgba(217,33,40,0.3)]'
+              className={`relative z-10 flex h-12 w-12 shrink-0 items-center justify-center rounded-full transition-all duration-200 ${
+                item.active ? 'bg-[#d92128] group-hover:bg-white' : 'bg-white'
               }`}
             >
-              <Image
-                src={item.icon}
-                alt={item.label}
-                width={22}
-                height={22}
-                className={`h-[22px] w-[22px] object-contain transition-all ${
-                  item.active
-                    ? 'brightness-0 invert'
-                    : 'group-hover:brightness-0 group-hover:invert'
+              <span
+                aria-hidden="true"
+                className={`block h-[22px] w-[22px] shrink-0 transition-colors duration-200 ${
+                  item.active ? 'bg-white group-hover:bg-[#d92128]' : 'bg-[#4D4D4D] group-hover:bg-[#d92128]'
                 }`}
+                style={{
+                  WebkitMaskImage: `url(${item.icon})`,
+                  maskImage: `url(${item.icon})`,
+                  WebkitMaskRepeat: 'no-repeat',
+                  maskRepeat: 'no-repeat',
+                  WebkitMaskSize: 'contain',
+                  maskSize: 'contain',
+                  WebkitMaskPosition: 'center',
+                  maskPosition: 'center',
+                }}
               />
+              <span className="sr-only">{item.label}</span>
+              {item.label === 'Compare' &&
+                (count > 0 ? (
+                  <span className="absolute -top-1.5 right-0 flex h-[18px] min-w-[18px] items-center justify-center rounded-full border-2 border-white bg-[#d92128] px-1 text-[10px] font-bold leading-none text-white">
+                    {count}
+                  </span>
+                ) : (
+                  <span className="absolute -top-0.5 right-0 h-4 w-4 rounded-full border-2 border-white bg-[#d92128]" />
+                ))}
             </div>
-            {item.label === 'Compare' &&
-              (count > 0 ? (
-                <span className="absolute -top-1.5 right-0 flex h-[18px] min-w-[18px] items-center justify-center rounded-full border-2 border-white bg-[#d92128] px-1 text-[10px] font-bold leading-none text-white">
-                  {count}
-                </span>
-              ) : (
-                <span className="absolute -top-0.5 right-0 h-4 w-4 rounded-full border-2 border-white bg-[#d92128]" />
-              ))}
-          </>
+            <span className="pointer-events-none -ml-[52px] flex h-14 max-w-0 items-center overflow-hidden whitespace-nowrap rounded-full bg-[#d92128] pl-[60px] pr-0 text-sm font-semibold text-white opacity-0 shadow-[0_4px_10px_rgba(217,33,40,0.3)] transition-all duration-300 ease-out group-hover:max-w-[200px] group-hover:pr-4 group-hover:opacity-100">
+              {item.label}
+            </span>
+          </div>
         )
 
         if (item.action === 'chat') {
@@ -165,7 +172,7 @@ export default function SideMenu({ data, embedded = false }: Props) {
               key={item.id}
               type="button"
               onClick={handleChatClick}
-              className="group relative shrink-0 cursor-pointer transition-transform duration-200 hover:scale-105"
+              className="group relative shrink-0 self-start cursor-pointer"
             >
               {content}
             </button>
@@ -178,7 +185,7 @@ export default function SideMenu({ data, embedded = false }: Props) {
           <LinkTag
             key={item.id}
             href={item.href || '#'}
-            className="group relative shrink-0 transition-transform duration-200 hover:scale-105"
+            className="group relative shrink-0 self-start"
           >
             {content}
           </LinkTag>
