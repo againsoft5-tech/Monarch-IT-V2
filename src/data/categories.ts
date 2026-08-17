@@ -3,7 +3,7 @@ export const featuredCategories = [
   { name: 'Laptop',          img: '/images/image/cache/catalog/website/featured-category/laptop-3d.png',               href: '/laptop' },
   { name: 'Components',      img: '/images/image/cache/catalog/website/featured-category/graphics-card-3d.png',        href: '/component' },
   { name: 'Monitor',         img: '/images/image/cache/catalog/website/featured-category/monitor-500x400.png',         href: '/monitor' },
-  { name: 'Mobile Accessories', img: '/images/image/cache/catalog/website/featured-category/smartphone-500x400.png',   href: '/mobile-accessories' },
+  { name: 'Mobile',           img: '/images/image/cache/catalog/website/featured-category/smartphone-500x400.png',   href: '/mobile-accessories' },
   { name: 'Security',        img: '/images/image/cache/catalog/website/featured-category/camera-icon-images-500x400.png', href: '/security' },
   { name: 'Gadget',          img: '/images/image/cache/catalog/website/featured-category/drone-icon-500x400.png',      href: '/gadget' },
 ]

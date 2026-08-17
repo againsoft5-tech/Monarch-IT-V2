@@ -273,7 +273,7 @@ export default function AccountPaymentDrawer({ open, orders, onClose, onPaid }: 
                     Payment Amount
                   </label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[12px] font-bold text-gray-400">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[12px] font-medium text-gray-400">
                       ৳
                     </span>
                     <input

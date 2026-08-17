@@ -93,7 +93,7 @@ export default function ProductTabs({
             key={t.id}
             type="button"
             onClick={() => onTabChange(t.id)}
-            className={`flex-1 md:flex-none md:shrink-0 px-2.5 py-1.5 md:px-4 md:py-2 rounded-full text-[12px] md:text-[13px] font-semibold whitespace-nowrap transition-colors cursor-pointer ${
+            className={`flex-1 md:flex-none md:shrink-0 px-2.5 py-1.5 md:px-4 md:py-2 rounded-full text-[12px] md:text-[13px] font-semibold tracking-wider whitespace-nowrap transition-colors cursor-pointer ${
               tab === t.id ? 'bg-[#d92128] text-white' : 'text-gray-600 hover:bg-[#d92128]/10 hover:text-[#d92128]'
             }`}
           >
@@ -105,7 +105,7 @@ export default function ProductTabs({
       <div className="flex-1 bg-white border-[1.5px] border-gray-100 rounded-[35px] p-5 md:p-6">
         {tab === 'spec' && (
           <div>
-            <h3 className="text-[16px] font-normal text-gray-900 mb-2.5">
+            <h3 className="text-[16px] font-normal text-gray-900 mb-2.5 tracking-wider">
               Product <strong className="font-bold">Specifications</strong>
             </h3>
             <span className="block text-[13px] font-bold text-[#d92128] pt-4 pb-1.5">{product.brand} Specification</span>

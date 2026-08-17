@@ -383,7 +383,7 @@ export default function CheckoutPage() {
 
                         <div className="flex items-center gap-1.5 flex-wrap">
                           <span className="text-[13.5px] font-bold text-[#d32f2f]">
-                            ৳{item.price.toLocaleString()}
+                            <span className="font-medium">৳</span>{item.price.toLocaleString()}
                           </span>
                           {!!item.priceOld && item.priceOld > item.price && (
                             <span className="text-[11px] text-gray-400 line-through">
@@ -442,24 +442,24 @@ export default function CheckoutPage() {
                 <div className="flex flex-col gap-3 text-[13.5px] font-medium text-gray-600 pt-5 border-t-2 border-gray-100">
                   <div className="flex justify-between">
                     <span>Sub-Total</span>
-                    <span className="text-[#10b981] font-semibold">৳{subtotal.toLocaleString()}</span>
+                    <span className="text-[#10b981] font-semibold"><span className="font-medium">৳</span>{subtotal.toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>{shipping === 0 ? 'Inside Dhaka City' : `Delivery to ${upazila}, ${district}`}</span>
                     <span className="text-[#10b981] font-semibold">
-                      {shipping === 0 ? '৳0' : `৳${shipping.toLocaleString()}`}
+                      <span className="font-medium">৳</span>{shipping === 0 ? '0' : shipping.toLocaleString()}
                     </span>
                   </div>
                   {discount > 0 && (
                     <div className="flex justify-between">
                       <span>Discount</span>
-                      <span className="text-green-600 font-semibold">-৳{discount.toLocaleString()}</span>
+                      <span className="text-green-600 font-semibold">-<span className="font-medium">৳</span>{discount.toLocaleString()}</span>
                     </div>
                   )}
                   <hr className="border-t border-dashed border-gray-200 my-1" />
                   <div className="flex justify-between text-[15px] font-bold text-gray-800">
                     <span>Total</span>
-                    <span className="text-[#d32f2f]">৳{total.toLocaleString()}</span>
+                    <span className="text-[#d32f2f]"><span className="font-medium">৳</span>{total.toLocaleString()}</span>
                   </div>
                 </div>
 

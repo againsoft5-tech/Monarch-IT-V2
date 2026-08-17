@@ -32,7 +32,7 @@
   --ac-primary: #ef4a23;
   --ac-primary-dark: #D51E0B;
   --ac-secondary: #3749bb;
-  --brand-color: #BE1E2D;
+  --brand-color: #be1e2d;
   --brand-red: #d32f2f;
   --brand-red-dark: #b71c1c;
   --text-main: #333333;
@@ -42,7 +42,7 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-poppins), Arial, Helvetica, sans-serif;
+  font-family: var(--font-taka), var(--font-gilroy), var(--font-kalpurush), Arial, Helvetica, sans-serif;
   overflow-x: hidden;
 }
 

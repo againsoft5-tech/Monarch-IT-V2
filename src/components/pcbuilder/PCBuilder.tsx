@@ -231,10 +231,11 @@ export default function PCBuilder() {
       })
       .join('')
 
+    const taka = '<span style="font-weight:500">৳</span>'
     const totalCell =
       regularTotal > total
-        ? `<span class="strike-wrap">৳${regularTotal.toLocaleString()}</span><br/>৳${total.toLocaleString()}`
-        : `৳${total.toLocaleString()}`
+        ? `<span class="strike-wrap">${taka}${regularTotal.toLocaleString()}</span><br/>${taka}${total.toLocaleString()}`
+        : `${taka}${total.toLocaleString()}`
 
     return `
   <div class="header">
@@ -591,7 +592,7 @@ export default function PCBuilder() {
                   <div className="shrink-0 flex flex-col items-end gap-2">
                     <div className="flex items-center gap-1.5 flex-wrap justify-end">
                       <span className="text-[15px] font-bold text-[#c3272b]">
-                        ৳{p.priceNew.toLocaleString()}
+                        <span className="font-medium">৳</span>{p.priceNew.toLocaleString()}
                       </span>
                       {p.discountPct > 0 && (
                         <>
@@ -687,7 +688,7 @@ export default function PCBuilder() {
                       {p.name}
                     </div>
                     <div className="flex items-center gap-1.5 flex-wrap mb-2">
-                      <span className="text-[14px] font-bold text-[#c3272b]">৳{p.priceNew.toLocaleString()}</span>
+                      <span className="text-[14px] font-bold text-[#c3272b]"><span className="font-medium">৳</span>{p.priceNew.toLocaleString()}</span>
                       {p.discountPct > 0 && (
                         <>
                           <span className="text-[11px] text-gray-400 line-through">
@@ -873,7 +874,7 @@ export default function PCBuilder() {
             </div>
             <div className="flex items-center justify-between gap-2.5 mt-4">
               <div className="flex-1 flex items-center gap-1 bg-white border border-gray-200 rounded-full px-3 h-10">
-                <span className="text-[#c3272b] text-[13px] font-bold">৳</span>
+                <span className="text-[#c3272b] text-[13px] font-medium">৳</span>
                 <input
                   type="text"
                   value={priceMin}
@@ -883,7 +884,7 @@ export default function PCBuilder() {
               </div>
               <span className="text-gray-300 shrink-0">—</span>
               <div className="flex-1 flex items-center gap-1 bg-white border border-gray-200 rounded-full px-3 h-10">
-                <span className="text-[#c3272b] text-[13px] font-bold">৳</span>
+                <span className="text-[#c3272b] text-[13px] font-medium">৳</span>
                 <input
                   type="text"
                   value={priceMax}
@@ -960,7 +961,7 @@ export default function PCBuilder() {
               ))}
             </div>
             <div className="bg-[#c3272b] text-white rounded-full px-5 py-2.5 font-bold text-[14px] whitespace-nowrap">
-              Total: ৳{total.toLocaleString()}
+              Total: <span className="font-medium">৳</span>{total.toLocaleString()}
             </div>
           </div>
         </div>
@@ -1096,7 +1097,7 @@ export default function PCBuilder() {
                           </button>
                           <div className="shrink-0 flex items-center gap-1.5 border-r border-gray-400 pr-[6px]">
                             <span className="text-[12px] font-bold text-gray-700 whitespace-nowrap">
-                              ৳{(sel.product.priceNew * sel.qty).toLocaleString()}
+                              <span className="font-medium">৳</span>{(sel.product.priceNew * sel.qty).toLocaleString()}
                             </span>
                             <div className="shrink-0 flex items-center gap-0.5 bg-[#f5f6fa] rounded-full px-1 py-0.5">
                               <button
@@ -1313,7 +1314,7 @@ export default function PCBuilder() {
                             </div>
                           </div>
                           <span className="shrink-0 text-[13px] font-bold text-[#c3272b] whitespace-nowrap">
-                            ৳{(sel.product.priceNew * sel.qty).toLocaleString()}
+                            <span className="font-medium">৳</span>{(sel.product.priceNew * sel.qty).toLocaleString()}
                           </span>
                           <button
                             type="button"
@@ -1333,7 +1334,7 @@ export default function PCBuilder() {
 
           <div className="shrink-0 mt-4 pt-3 border-t border-gray-100 flex items-center justify-between gap-3">
             <span className="text-[13px] font-semibold text-gray-600">Total</span>
-            <span className="text-[17px] font-bold text-[#c3272b]">৳{total.toLocaleString()}</span>
+            <span className="text-[17px] font-bold text-[#c3272b]"><span className="font-medium">৳</span>{total.toLocaleString()}</span>
           </div>
         </div>
       </div>

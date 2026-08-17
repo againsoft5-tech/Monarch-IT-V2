@@ -283,7 +283,7 @@ export default function CategoryPage({ categoryName, products, priceMinDefault, 
               </div>
               <div className="flex items-center justify-between gap-2.5 mt-4">
                 <div className="flex-1 flex items-center gap-1 bg-white border border-gray-200 rounded-full px-3 h-10">
-                  <span className="text-[#c3272b] text-[13px] font-bold">৳</span>
+                  <span className="text-[#c3272b] text-[13px] font-medium">৳</span>
                   <input
                     type="text"
                     value={priceMin}
@@ -296,7 +296,7 @@ export default function CategoryPage({ categoryName, products, priceMinDefault, 
                 </div>
                 <span className="text-gray-300 shrink-0">—</span>
                 <div className="flex-1 flex items-center gap-1 bg-white border border-gray-200 rounded-full px-3 h-10">
-                  <span className="text-[#c3272b] text-[13px] font-bold">৳</span>
+                  <span className="text-[#c3272b] text-[13px] font-medium">৳</span>
                   <input
                     type="text"
                     value={priceMax}

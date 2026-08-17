@@ -40,7 +40,7 @@ export default function SuccessModal({ open, message, onClose }: Props) {
             <Link
               href="/checkout"
               onClick={onClose}
-              className="bg-[#E8262F] text-white font-bold text-[14px] px-10 py-2.5 rounded-full shadow-md hover:bg-[#c81f27] transition-colors cursor-pointer no-underline"
+              className="bg-[#e8262f] text-white font-bold text-[14px] px-10 py-2.5 rounded-full shadow-md hover:bg-[#c81f27] transition-colors cursor-pointer no-underline"
             >
               Checkout
             </Link>

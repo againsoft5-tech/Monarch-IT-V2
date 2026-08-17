@@ -1,3 +1,6 @@
+'use client'
+
+import { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 
 const IMG_BASE = '/images/image/cache/catalog/website/custom'
@@ -24,9 +27,29 @@ export default function SupportSection({
   const phoneTel = phone.replace(/[^\d+]/g, '')
   const wa = whatsapp.replace(/[^\d]/g, '')
 
+  const phoneRef = useRef<HTMLDivElement>(null)
+  const storeRef = useRef<HTMLAnchorElement>(null)
+  const [pillHeight, setPillHeight] = useState<number>()
+
+  // The two pills sit either side of a taller decorative icon, so a plain
+  // flex `items-stretch` would inflate them to the icon's height instead of
+  // just matching each other. Measure both directly and sync to the taller.
+  useEffect(() => {
+    const phoneEl = phoneRef.current
+    const storeEl = storeRef.current
+    if (!phoneEl || !storeEl) return
+    const measure = () => {
+      setPillHeight(Math.max(phoneEl.getBoundingClientRect().height, storeEl.getBoundingClientRect().height))
+    }
+    const observer = new ResizeObserver(measure)
+    observer.observe(phoneEl)
+    observer.observe(storeEl)
+    return () => observer.disconnect()
+  }, [])
+
   return (
     <section className="py-5">
-      <div className="container mx-auto text-center mb-10">
+      <div className="container mx-auto text-center mb-6 md:mb-10">
         <h2 className="m-0 text-3xl md:text-5xl font-bold leading-none text-[#3b3b3b]">{title}</h2>
         <p className="mt-2 text-[15px] md:text-lg text-[#6f6f6f]">{subtitle}</p>
       </div>
@@ -44,7 +67,11 @@ export default function SupportSection({
           </div>
         </div>
 
-        <div className="order-2 md:order-none flex-1 max-w-[420px] w-full border-2 border-[#e53935] rounded-full md:rounded-[60px] px-6 md:px-[30px] py-3 md:py-5 flex items-center gap-3 md:gap-5 bg-white">
+        <div
+          ref={phoneRef}
+          style={pillHeight ? { minHeight: pillHeight } : undefined}
+          className="order-2 md:order-none flex-1 max-w-[325px] max-[361px]:max-w-[260px]! md:max-w-[420px] w-full border border-[#e53935] rounded-full md:rounded-[60px] px-4 md:px-[30px] py-2 md:py-5 flex items-center gap-3 md:gap-5 bg-white"
+        >
           <Image
             src={`${IMG_BASE}/support-phone-image-60x60.png`}
             alt="Phone"
@@ -78,8 +105,10 @@ export default function SupportSection({
         </div>
 
         <a
+          ref={storeRef}
           href={storeHref}
-          className="order-3 md:order-none flex-1 max-w-[420px] w-full border-2 border-[#e53935] rounded-full md:rounded-[60px] px-6 md:px-[30px] py-5 flex items-center gap-3 md:gap-5 bg-white no-underline text-inherit"
+          style={pillHeight ? { minHeight: pillHeight } : undefined}
+          className="order-3 md:order-none flex-1 max-w-[325px] max-[361px]:max-w-[260px]! md:max-w-[420px] w-full border border-[#e53935] rounded-full md:rounded-[60px] px-4 md:px-[30px] py-2 md:py-5 flex items-center gap-3 md:gap-5 bg-white no-underline text-inherit"
         >
           <Image
             src={`${IMG_BASE}/support-location-60x60.png`}

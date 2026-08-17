@@ -14,7 +14,7 @@ type Props = {
 
 export default function FeaturedProducts({
   title = 'Most Wanted',
-  subtitle = 'Explore Our Best-Selling Deal',
+  subtitle = 'Explore Our Best-Selling Deals',
   categoryIds,
 }: Props) {
   const tabs = resolveFeaturedTabs(categoryIds)
@@ -69,7 +69,7 @@ export default function FeaturedProducts({
                   type="button"
                   onClick={() => setActiveTab(i)}
                   className={`px-7 py-2 rounded-full font-medium text-[15px] whitespace-nowrap transition-colors cursor-pointer ${
-                    i === safeIndex ? 'bg-[#BE1E2D] text-white' : 'hidden'
+                    i === safeIndex ? 'bg-[#D92128] text-white' : 'hidden'
                   }`}
                 >
                   {tab.label}
@@ -145,13 +145,13 @@ export default function FeaturedProducts({
                       </span>
                     </div>
 
-                    <h4 className="text-[15px] font-medium text-[#333] mb-2.5 line-clamp-2 min-h-[2.6em] leading-[1.3em]">
+                    <h4 className="text-[15px] font-bold text-[#333] mb-2.5 line-clamp-2 min-h-[2.6em] leading-[1.3em]">
                       {p.name}
                     </h4>
 
                     <div className="mt-auto flex items-center gap-2 flex-wrap">
-                      <span className="font-semibold text-[#BE1E2D] text-base">
-                        ৳{p.priceNew.toLocaleString()}
+                      <span className="font-semibold text-[#be1e2d] text-base">
+                        <span className="font-medium">৳</span>{p.priceNew.toLocaleString()}
                       </span>
                       {p.priceOld ? (
                         <span className="line-through text-[#b5b5b5] text-[13px]">

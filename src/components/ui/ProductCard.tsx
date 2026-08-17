@@ -45,7 +45,7 @@ export default function ProductCard({
           </Link>
         </div>
         <div className="flex items-center gap-1.5 flex-wrap mb-3.5">
-          <span className="text-[13px] md:text-base font-bold text-[#c3272b]">৳{p.priceNew.toLocaleString()}</span>
+          <span className="text-[13px] md:text-base font-bold text-[#c3272b]"><span className="font-medium">৳</span>{p.priceNew.toLocaleString()}</span>
           {p.priceOld > p.priceNew && (
             <span className="text-[10px] md:text-[11px] text-gray-400 line-through">৳{p.priceOld.toLocaleString()}</span>
           )}
@@ -57,7 +57,7 @@ export default function ProductCard({
           <button
             type="button"
             onClick={() => onBuyNow(p)}
-            className="flex-1 h-9 md:h-10 bg-white text-[#c3272b] border-2 border-[#c3272b] rounded-full px-1 md:px-2 text-[11px] md:text-[13px] font-bold hover:bg-[#c3272b] hover:text-white transition-colors cursor-pointer whitespace-nowrap"
+            className="flex-1 h-9 md:h-10 bg-white text-[#c3272b] border border-[#c3272b] rounded-full px-1 md:px-2 text-[11px] md:text-[13px] font-bold hover:bg-[#c3272b] hover:text-white transition-colors cursor-pointer whitespace-nowrap"
           >
             Buy now
           </button>

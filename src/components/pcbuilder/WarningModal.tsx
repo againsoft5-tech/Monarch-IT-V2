@@ -23,7 +23,7 @@ export default function WarningModal({ open, message, onClose }: Props) {
           </button>
 
           <div className="absolute left-1/2 -top-10 -translate-x-1/2 w-20 h-20 rounded-full bg-white flex items-center justify-center shadow-lg">
-            <div className="w-16 h-16 rounded-full bg-[#E8262F] flex items-center justify-center">
+            <div className="w-16 h-16 rounded-full bg-[#e8262f] flex items-center justify-center">
               <span className="text-white text-[34px] font-black leading-none">!</span>
             </div>
           </div>
@@ -38,7 +38,7 @@ export default function WarningModal({ open, message, onClose }: Props) {
             <button
               type="button"
               onClick={onClose}
-              className="bg-[#E8262F] text-white font-bold text-[14px] px-10 py-2.5 rounded-full shadow-md hover:bg-[#c81f27] transition-colors cursor-pointer"
+              className="bg-[#e8262f] text-white font-bold text-[14px] px-10 py-2.5 rounded-full shadow-md hover:bg-[#c81f27] transition-colors cursor-pointer"
             >
               OK
             </button>

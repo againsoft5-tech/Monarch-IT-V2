@@ -269,7 +269,7 @@ export default function ChatWidget({ open, onClose }: Props) {
                             <p className="text-[13px] font-semibold text-gray-800 truncate m-0 mb-1">{product.name}</p>
                             <div className="flex items-center gap-1.5 flex-wrap">
                               <span className="text-[13px] font-bold" style={{ color: RED }}>
-                                ৳{product.priceNew.toLocaleString()}
+                                <span className="font-medium">৳</span>{product.priceNew.toLocaleString()}
                               </span>
                               <span className="text-[11px] text-gray-400 line-through">
                                 ৳{product.priceOld.toLocaleString()}
@@ -468,7 +468,7 @@ export default function ChatWidget({ open, onClose }: Props) {
                           {p.name}
                         </p>
                         <p className="text-[12px] font-bold m-0 mb-2 flex items-center gap-1 flex-wrap" style={{ color: RED }}>
-                          ৳{p.priceNew.toLocaleString()}
+                          <span className="font-medium">৳</span>{p.priceNew.toLocaleString()}
                           <span className="text-[10px] text-gray-400 line-through font-normal">
                             ৳{p.priceOld.toLocaleString()}
                           </span>

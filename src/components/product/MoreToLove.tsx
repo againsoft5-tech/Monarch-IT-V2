@@ -67,12 +67,12 @@ export default function MoreToLove({ products }: { products: RelatedProduct[] })
                     </span>
                   </div>
 
-                  <h4 className="text-[15px] font-medium text-[#333] mb-2.5 line-clamp-2 min-h-[2.6em] leading-[1.3em]">
+                  <h4 className="text-[15px] font-bold text-[#333] mb-2.5 line-clamp-2 min-h-[2.6em] leading-[1.3em]">
                     {p.name}
                   </h4>
 
                   <div className="mt-auto flex items-center gap-2 flex-wrap">
-                    <span className="font-semibold text-[#BE1E2D] text-base">৳{p.priceNew.toLocaleString()}</span>
+                    <span className="font-semibold text-[#BE1E2D] text-base"><span className="font-medium">৳</span>{p.priceNew.toLocaleString()}</span>
                     {p.priceOld > p.priceNew && (
                       <span className="line-through text-[#b5b5b5] text-[13px]">৳{p.priceOld.toLocaleString()}</span>
                     )}

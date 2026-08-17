@@ -108,7 +108,7 @@ export default function OrderTrackPage() {
                 <div className="border-t border-gray-100 mt-4 pt-4 flex items-center justify-between">
                   <div>
                     <p className="text-[13px] text-gray-500 m-0">Payment Details</p>
-                    <p className="text-[15px] font-bold text-gray-900 mt-1 mb-0">৳ 2,360</p>
+                    <p className="text-[15px] font-bold text-gray-900 mt-1 mb-0"><span className="font-medium">৳</span> 2,360</p>
                   </div>
                   <span className="flex items-center gap-1.5 text-[13px] font-semibold text-[#00a76a]">
                     <span className="mi text-[18px]">payments</span>

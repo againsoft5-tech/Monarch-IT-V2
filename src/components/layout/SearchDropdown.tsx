@@ -75,7 +75,7 @@ export default function SearchDropdown({
                 <div className="min-w-0 flex-1">
                   <p className="text-[13px] text-gray-800 m-0 truncate">{p.name}</p>
                   <p className="text-[13px] font-bold text-[#d32f2f] m-0 mt-0.5">
-                    ৳{p.priceNew.toLocaleString()}
+                    <span className="font-medium">৳</span>{p.priceNew.toLocaleString()}
                     {p.priceOld > p.priceNew && (
                       <span className="text-gray-400 font-normal line-through ml-1.5 text-[11.5px]">
                         ৳{p.priceOld.toLocaleString()}

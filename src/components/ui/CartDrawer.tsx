@@ -66,7 +66,7 @@ export default function CartDrawer() {
                     <span className="mi text-[18px] text-gray-400">close</span>
                     <span>{item.qty}</span>
                     <span className="text-gray-400">=</span>
-                    <span className="font-semibold text-gray-900">৳{(item.price * item.qty).toLocaleString()}</span>
+                    <span className="font-semibold text-gray-900"><span className="font-medium">৳</span>{(item.price * item.qty).toLocaleString()}</span>
                   </div>
                 </div>
 
@@ -125,7 +125,7 @@ export default function CartDrawer() {
             )}
             <div className="flex items-center justify-between text-[15px] font-semibold text-gray-900 mb-4">
               <span>Total</span>
-              <span>৳{total.toLocaleString()}</span>
+              <span><span className="font-medium">৳</span>{total.toLocaleString()}</span>
             </div>
 
             <div className="flex gap-3">
