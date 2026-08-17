@@ -53,7 +53,7 @@ export default function Footer({ data }: Props) {
   const linksCol2 = (cfg.linksCol2 ?? []).filter((l) => !l.hidden)
 
   return (
-    <footer className="bg-[#1d1d1d] text-white">
+    <footer className="bg-[#1d1d1d] text-white pb-[76px] desk:pb-0">
       <div className="hidden md:grid container mx-auto py-[70px] grid-cols-1 md:grid-cols-2 lg:grid-cols-[1.4fr_1.5fr_1fr] gap-10 lg:gap-[60px] text-center md:text-left">
         <div>
           <Image

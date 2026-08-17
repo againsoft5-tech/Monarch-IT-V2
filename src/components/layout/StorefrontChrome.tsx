@@ -28,7 +28,7 @@ export default function StorefrontChrome({ children, header, footer, sideMenu }:
   return (
     <>
       <SideMenu data={sideMenu} />
-      <div className="flex-1 flex flex-col pb-[76px] desk:pb-0 relative">
+      <div className="flex-1 flex flex-col desk:pb-0 relative">
         <Header data={header} />
         <MobileHeader data={header} />
         <main className={`flex-1 ${isHome ? '' : 'desk:pt-[72px]'}`}>{children}</main>

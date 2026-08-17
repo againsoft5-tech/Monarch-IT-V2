@@ -452,7 +452,7 @@ function ComparePageInner() {
             <div className={cols.minW}>
               {/* Search row */}
               <div className={`grid ${cols.grid} items-center border-b bg-gray-100 border-gray-100`}>
-                <div className={`${STICKY_LABEL} self-stretch bg-gray-100 flex items-center justify-center gap-1 py-4`}>
+                <div className={`${STICKY_LABEL} self-stretch bg-gray-100 flex items-center justify-center gap-3 md:gap-1 py-4`}>
                   <button
                     type="button"
                     onClick={resetAll}

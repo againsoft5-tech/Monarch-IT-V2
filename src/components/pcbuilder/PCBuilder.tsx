@@ -966,7 +966,7 @@ export default function PCBuilder() {
           </div>
         </div>
 
-        <div className="bg-[#f3f4f6] rounded-[50px] p-3 md:p-6">
+        <div className="bg-[#f3f4f6] rounded-[30px] md:rounded-[50px] p-3 md:p-6">
           <div className="flex flex-col lg:flex-row gap-4 md:gap-6 items-start">
             {/* Left panel: build list */}
             <div ref={leftPanelRef} className="w-full lg:w-[400px] shrink-0">
@@ -1201,7 +1201,7 @@ export default function PCBuilder() {
 
             {/* Right panel: product browser (desktop, inline) */}
             <div
-              className="hidden lg:flex flex-1 w-full min-w-0 bg-white rounded-[50px] p-4 md:p-6 flex-col"
+              className="hidden lg:flex flex-1 w-full min-w-0 bg-white rounded-[35px] p-4 md:p-6 flex-col"
               style={rightPanelHeight ? { height: rightPanelHeight } : undefined}
             >
               {renderBrowserContent()}
