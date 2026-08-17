@@ -39,14 +39,11 @@ function renderMobileItem(
           className={`object-contain ${item.active ? 'w-9 h-9 brightness-0 invert' : 'w-[22px] h-[22px]'}`}
         />
       </div>
-      {item.label === 'Compare' &&
-        (count > 0 ? (
-          <span className="absolute -top-1 right-0.5 min-w-[19px] h-[19px] px-1 bg-[#e0272e] text-white text-[11px] font-bold rounded-full flex items-center justify-center border-2 border-[#F0F0F2] leading-none">
-            {count}
-          </span>
-        ) : (
-          <span className="absolute top-0 right-0.5 w-3.5 h-3.5 bg-[#e0272e] rounded-full border-2 border-[#F0F0F2]" />
-        ))}
+      {item.label === 'Compare' && count > 0 && (
+        <span className="absolute -top-1 right-0.5 min-w-[19px] h-[19px] px-1 bg-[#e0272e] text-white text-[11px] font-bold rounded-full flex items-center justify-center border-2 border-[#F0F0F2] leading-none">
+          {count}
+        </span>
+      )}
     </>
   )
 
@@ -200,14 +197,11 @@ export default function SideMenu({ data, embedded = false }: Props) {
                 }}
               />
               <span className="sr-only">{item.label}</span>
-              {item.label === 'Compare' &&
-                (count > 0 ? (
-                  <span className="absolute -top-1.5 right-0 flex h-[18px] min-w-[18px] items-center justify-center rounded-full border-2 border-white bg-[#d92128] px-1 text-[10px] font-bold leading-none text-white">
-                    {count}
-                  </span>
-                ) : (
-                  <span className="absolute -top-0.5 right-0 h-4 w-4 rounded-full border-2 border-white bg-[#d92128]" />
-                ))}
+              {item.label === 'Compare' && count > 0 && (
+                <span className="absolute -top-1.5 right-0 flex h-[18px] min-w-[18px] items-center justify-center rounded-full border-2 border-white bg-[#d92128] px-1 text-[10px] font-bold leading-none text-white">
+                  {count}
+                </span>
+              )}
             </div>
             <span className="pointer-events-none -ml-[52px] flex h-14 max-w-0 items-center overflow-hidden whitespace-nowrap rounded-full bg-[#d92128] pl-[60px] pr-0 text-sm font-semibold text-white opacity-0 shadow-[0_4px_10px_rgba(217,33,40,0.3)] transition-all duration-300 ease-out group-hover:max-w-[200px] group-hover:pr-4 group-hover:opacity-100">
               {item.label}

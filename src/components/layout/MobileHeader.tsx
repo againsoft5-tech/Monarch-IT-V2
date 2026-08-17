@@ -106,12 +106,10 @@ export default function MobileHeader({ data }: Props) {
               height={20}
               className="w-[20px] h-[20px]"
             />
-            {itemCount > 0 ? (
+            {itemCount > 0 && (
               <span className="absolute -top-1 right-0 bg-[#d32f2f] text-white text-[11px] font-bold min-w-[19px] h-[19px] px-[3px] rounded-full flex items-center justify-center border border-white leading-none">
                 {itemCount}
               </span>
-            ) : (
-              <span className="absolute -top-1 right-0.5 w-3.5 h-3.5 bg-[#d32f2f] rounded-full border-2 border-white" />
             )}
           </button>
 

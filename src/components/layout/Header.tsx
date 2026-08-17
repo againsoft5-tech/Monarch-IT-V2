@@ -167,12 +167,10 @@ export default function Header({ data }: Props) {
                   height={22}
                   className="w-1/2"
                 />
-                {itemCount > 0 ? (
+                {itemCount > 0 && (
                   <span className="absolute -top-1.5 right-0 bg-[#d32f2f] text-white text-[10px] font-bold min-w-[18px] h-[18px] rounded-full flex items-center justify-center border-2 border-white leading-none">
                     {itemCount}
                   </span>
-                ) : (
-                  <span className="absolute -top-0.5 right-0 w-4 h-4 bg-[#d32f2f] rounded-full border-2 border-white" />
                 )}
               </button>
 
