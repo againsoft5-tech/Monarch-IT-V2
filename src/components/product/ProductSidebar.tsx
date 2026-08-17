@@ -28,7 +28,7 @@ function PairedCard({ product, className = '' }: { product: RelatedProduct; clas
           </Link>
         </div>
         <div className="flex items-center gap-1.5 flex-wrap">
-          <span className="text-base font-bold text-[#c3272b]"><span className="font-medium">৳</span>{product.priceNew.toLocaleString()}</span>
+          <span className="text-base font-bold text-[#c3272b]"><span className="font-medium">৳</span><span className="font-price">{product.priceNew.toLocaleString()}</span></span>
           <span className="text-[11px] text-gray-400 line-through">৳{product.priceOld.toLocaleString()}</span>
           <span className="text-[10.5px] font-bold text-[#00c68b]">{product.discountPct}% OFF</span>
         </div>

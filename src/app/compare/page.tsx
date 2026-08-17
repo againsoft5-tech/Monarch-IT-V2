@@ -86,7 +86,7 @@ function ProductSummary({ product }: { product: CompareProduct }) {
         </span>
       </div>
       <div className="flex items-center justify-center gap-1.5 flex-wrap">
-        <span className="text-[15px] font-bold text-[#c3272b]"><span className="font-medium">৳</span>{product.priceNew.toLocaleString()}</span>
+        <span className="text-[15px] font-bold text-[#c3272b]"><span className="font-medium">৳</span><span className="font-price">{product.priceNew.toLocaleString()}</span></span>
         {product.priceOld && (
           <span className="text-[11px] text-gray-400 line-through">৳{product.priceOld.toLocaleString()}</span>
         )}

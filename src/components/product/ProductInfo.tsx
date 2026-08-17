@@ -127,7 +127,7 @@ export default function ProductInfo({
               className="sr-only peer"
             />
             <div className="flex items-center justify-start gap-2 px-3.5 py-2 md:px-5 md:py-2.5 rounded-full border-[1.5px] border-gray-200 peer-checked:border-[#d92128] transition-colors">
-              <span className="text-[18px] md:text-[22px] font-bold text-[#d32f2f]"><span className="font-medium">৳</span>{price.toLocaleString()}</span>
+              <span className="text-[18px] md:text-[22px] font-bold text-[#d32f2f]"><span className="font-medium">৳</span><span className="font-price">{price.toLocaleString()}</span></span>
               {priceOld > price && <del className="text-[13px] text-gray-400">৳{priceOld.toLocaleString()}</del>}
               {discountPct > 0 && <span className="text-[12px] font-bold text-[#00b87a]">{discountPct}% OFF</span>}
             </div>
@@ -143,7 +143,7 @@ export default function ProductInfo({
                 className="sr-only peer"
               />
               <div className="flex items-center justify-start gap-2 px-3.5 py-2 md:px-5 md:py-2.5 rounded-full border-[1.5px] border-gray-200 peer-checked:border-[#d92128] transition-colors">
-                <span className="text-[18px] md:text-[22px] font-bold text-gray-700"><span className="font-medium">৳</span>{emiMonthly.toLocaleString()}/</span>
+                <span className="text-[18px] md:text-[22px] font-bold text-gray-700"><span className="font-medium">৳</span><span className="font-price">{emiMonthly.toLocaleString()}</span>/</span>
                 <div className="flex flex-col leading-tight">
                   <span className="flex items-center gap-1.5 text-[13px] font-semibold text-gray-700">
                     month

@@ -45,7 +45,7 @@ export default function ProductCard({
           </Link>
         </div>
         <div className="flex items-center gap-1.5 flex-wrap mb-3.5">
-          <span className="text-[13px] md:text-base font-bold text-[#c3272b]"><span className="font-medium">৳</span>{p.priceNew.toLocaleString()}</span>
+          <span className="text-[13px] md:text-base font-bold text-[#c3272b]"><span className="font-medium">৳</span><span className="font-price">{p.priceNew.toLocaleString()}</span></span>
           {p.priceOld > p.priceNew && (
             <span className="text-[10px] md:text-[11px] text-gray-400 line-through">৳{p.priceOld.toLocaleString()}</span>
           )}

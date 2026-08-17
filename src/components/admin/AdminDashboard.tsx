@@ -411,7 +411,7 @@ export default function AdminDashboard() {
                             <div className="min-w-0 flex flex-col justify-center">
                               <p className="text-[13px] font-semibold text-gray-800 truncate m-0 mb-1">{product.name}</p>
                               <span className="text-[13px] font-bold" style={{ color: RED }}>
-                                <span className="font-medium">৳</span>{product.priceNew.toLocaleString()}
+                                <span className="font-medium">৳</span><span className="font-price">{product.priceNew.toLocaleString()}</span>
                               </span>
                             </div>
                           </div>
@@ -594,7 +594,7 @@ export default function AdminDashboard() {
                       <div className="min-w-0">
                         <p className="text-[11.5px] font-semibold text-gray-800 truncate m-0">{product.name}</p>
                         <p className="text-[11.5px] font-bold m-0" style={{ color: RED }}>
-                          <span className="font-medium">৳</span>{product.priceNew.toLocaleString()}
+                          <span className="font-medium">৳</span><span className="font-price">{product.priceNew.toLocaleString()}</span>
                         </p>
                       </div>
                     </div>
@@ -653,7 +653,7 @@ export default function AdminDashboard() {
                   <div className="min-w-0 flex-1">
                     <p className="text-[12px] font-semibold text-gray-800 leading-[1.4] m-0 mb-1 line-clamp-2">{p.name}</p>
                     <p className="text-[12px] font-bold m-0 mb-2" style={{ color: RED }}>
-                      <span className="font-medium">৳</span>{p.priceNew.toLocaleString()}
+                      <span className="font-medium">৳</span><span className="font-price">{p.priceNew.toLocaleString()}</span>
                     </p>
                     <button
                       type="button"

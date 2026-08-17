@@ -16,6 +16,10 @@ export default function ProductGallery({
   videoId?: string
 }) {
   const hasVideo = Boolean(videoId)
+  const slideCount = images.length + (hasVideo ? 1 : 0)
+  // A single photo (and no video) has nothing to switch between, so the
+  // thumbnail strip would just be an empty-feeling row of arrows.
+  const showThumbnails = slideCount > 1
   // Slide 0 is the video (when present); image i lives at slide i + (hasVideo ? 1 : 0).
   const [active, setActive] = useState(0)
   const isVideoActive = hasVideo && active === 0
@@ -149,64 +153,66 @@ export default function ProductGallery({
         )}
       </div>
 
-      <div className="flex items-center justify-center gap-1.5 mt-3">
-        <button
-          type="button"
-          onClick={() => scrollThumbs(-1)}
-          aria-label="Previous thumbnail"
-          className="w-[38px] h-[38px] shrink-0 rounded-full bg-[#f5f5f7] flex items-center justify-center cursor-pointer"
-        >
-          <Image src="/images/promo-banner/left-arrow.svg" alt="" width={9} height={16} className="w-[9px] h-4" />
-        </button>
+      {showThumbnails && (
+        <div className="flex items-center justify-center gap-1.5 mt-3">
+          <button
+            type="button"
+            onClick={() => scrollThumbs(-1)}
+            aria-label="Previous thumbnail"
+            className="w-[38px] h-[38px] shrink-0 rounded-full bg-[#f5f5f7] flex items-center justify-center cursor-pointer"
+          >
+            <Image src="/images/promo-banner/left-arrow.svg" alt="" width={9} height={16} className="w-[9px] h-4" />
+          </button>
 
-        <div ref={trackRef} className="flex [justify-content:safe_center] gap-2 min-w-0 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {hasVideo && (
-            <button
-              type="button"
-              onClick={(e) => selectSlide(0, e)}
-              aria-label="Play video"
-              className={`relative w-16 h-16 shrink-0 rounded-lg border bg-[#fafbfe] flex items-center justify-center overflow-hidden transition-colors cursor-pointer ${
-                active === 0 ? 'border-[#d92128]' : 'border-gray-200 hover:border-[#d92128]'
-              }`}
-            >
-              <Image
-                src={`https://img.youtube.com/vi/${videoId}/mqdefault.jpg`}
-                alt=""
-                width={64}
-                height={64}
-                className="w-full h-full object-cover"
-              />
-              <span className="absolute inset-0 flex items-center justify-center bg-black/25">
-                <span className="mi text-white text-[26px] drop-shadow">play_circle</span>
-              </span>
-            </button>
-          )}
-          {images.map((img, i) => {
-            const slideIndex = hasVideo ? i + 1 : i
-            return (
+          <div ref={trackRef} className="flex [justify-content:safe_center] gap-2 min-w-0 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {hasVideo && (
               <button
-                key={i}
                 type="button"
-                onClick={(e) => selectSlide(slideIndex, e)}
-                className={`w-16 h-16 shrink-0 rounded-lg border bg-[#fafbfe] flex items-center justify-center overflow-hidden transition-colors cursor-pointer ${
-                  slideIndex === active ? 'border-[#d92128]' : 'border-gray-200 hover:border-[#d92128]'
+                onClick={(e) => selectSlide(0, e)}
+                aria-label="Play video"
+                className={`relative w-16 h-16 shrink-0 rounded-lg border bg-[#fafbfe] flex items-center justify-center overflow-hidden transition-colors cursor-pointer ${
+                  active === 0 ? 'border-[#d92128]' : 'border-gray-200 hover:border-[#d92128]'
                 }`}
               >
-                <Image src={img.thumb} alt={name} width={64} height={64} className="w-full h-full object-contain p-1" />
+                <Image
+                  src={`https://img.youtube.com/vi/${videoId}/mqdefault.jpg`}
+                  alt=""
+                  width={64}
+                  height={64}
+                  className="w-full h-full object-cover"
+                />
+                <span className="absolute inset-0 flex items-center justify-center bg-black/25">
+                  <span className="mi text-white text-[26px] drop-shadow">play_circle</span>
+                </span>
               </button>
-            )
-          })}
-        </div>
+            )}
+            {images.map((img, i) => {
+              const slideIndex = hasVideo ? i + 1 : i
+              return (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={(e) => selectSlide(slideIndex, e)}
+                  className={`w-16 h-16 shrink-0 rounded-lg border bg-[#fafbfe] flex items-center justify-center overflow-hidden transition-colors cursor-pointer ${
+                    slideIndex === active ? 'border-[#d92128]' : 'border-gray-200 hover:border-[#d92128]'
+                  }`}
+                >
+                  <Image src={img.thumb} alt={name} width={64} height={64} className="w-full h-full object-contain p-1" />
+                </button>
+              )
+            })}
+          </div>
 
-        <button
-          type="button"
-          onClick={() => scrollThumbs(1)}
-          aria-label="Next thumbnail"
-          className="w-[38px] h-[38px] shrink-0 rounded-full bg-[#f5f5f7] flex items-center justify-center cursor-pointer"
-        >
-          <Image src="/images/promo-banner/right-arrow.svg" alt="" width={9} height={16} className="w-[9px] h-4" />
-        </button>
-      </div>
+          <button
+            type="button"
+            onClick={() => scrollThumbs(1)}
+            aria-label="Next thumbnail"
+            className="w-[38px] h-[38px] shrink-0 rounded-full bg-[#f5f5f7] flex items-center justify-center cursor-pointer"
+          >
+            <Image src="/images/promo-banner/right-arrow.svg" alt="" width={9} height={16} className="w-[9px] h-4" />
+          </button>
+        </div>
+      )}
     </div>
   )
 }

@@ -150,8 +150,8 @@ export default function FeaturedProducts({
                     </h4>
 
                     <div className="mt-auto flex items-center gap-2 flex-wrap">
-                      <span className="font-semibold text-[#be1e2d] text-base">
-                        <span className="font-medium">৳</span>{p.priceNew.toLocaleString()}
+                      <span className="font-bold text-[#be1e2d] text-base">
+                        <span className="font-medium">৳</span><span className="font-price">{p.priceNew.toLocaleString()}</span>
                       </span>
                       {p.priceOld ? (
                         <span className="line-through text-[#b5b5b5] text-[13px]">

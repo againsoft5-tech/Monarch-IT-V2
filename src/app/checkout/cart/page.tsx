@@ -86,9 +86,9 @@ export default function CartPage() {
                         <div className="flex items-center gap-3.5">
                           <div className="text-right">
                             <div className="text-[16px] font-bold text-[#d32f2f]">
-                              <span className="font-medium">৳</span>{(item.price * item.qty).toLocaleString()}
+                              <span className="font-medium">৳</span><span className="font-price">{(item.price * item.qty).toLocaleString()}</span>
                             </div>
-                            <div className="text-[11px] text-gray-500">৳{item.price.toLocaleString()}/unit</div>
+                            <div className="text-[11px] text-gray-500">৳<span className="font-price">{item.price.toLocaleString()}</span>/unit</div>
                           </div>
                           <button
                             type="button"
@@ -149,18 +149,18 @@ export default function CartPage() {
                 <div className="flex flex-col gap-3 mt-3">
                   <div className="flex justify-between text-[13.5px] font-medium text-gray-500">
                     <span>Sub-Total</span>
-                    <span className="text-gray-800 font-semibold"><span className="font-medium">৳</span>{subtotal.toLocaleString()}</span>
+                    <span className="text-gray-800 font-bold"><span className="font-medium">৳</span><span className="font-price">{subtotal.toLocaleString()}</span></span>
                   </div>
                   {discount > 0 && (
                     <div className="flex justify-between text-[13.5px] font-medium text-gray-500">
                       <span>Discount</span>
-                      <span className="text-green-600 font-semibold">-<span className="font-medium">৳</span>{discount.toLocaleString()}</span>
+                      <span className="text-green-600 font-bold">-<span className="font-medium">৳</span><span className="font-price">{discount.toLocaleString()}</span></span>
                     </div>
                   )}
                   <hr className="border-t-[1.5px] border-dashed border-gray-200 my-1" />
                   <div className="flex justify-between items-center text-[16px] font-bold text-gray-800">
                     <span>Total</span>
-                    <span className="text-[#d32f2f] text-[19px]"><span className="font-medium">৳</span>{total.toLocaleString()}</span>
+                    <span className="text-[#d32f2f] text-[19px]"><span className="font-medium">৳</span><span className="font-price">{total.toLocaleString()}</span></span>
                   </div>
                 </div>
 

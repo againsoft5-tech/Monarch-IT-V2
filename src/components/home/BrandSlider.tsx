@@ -66,8 +66,8 @@ export default function BrandSlider({
   return (
     <div className="relative py-10 bg-white">
       <div className="text-center mb-[15px]">
-        <h2 className="m-0 mb-1 font-bold text-3xl md:text-5xl text-[#333]">{title}</h2>
-        <p className="m-0 text-sm text-[#777]">{subtitle}</p>
+        <h2 className="m-0 mb-1 font-bold text-2xl md:text-[28px] text-[#333]">{title}</h2>
+        <p className="m-0 text-[15px] text-[#777]">{subtitle}</p>
       </div>
 
       <div className="relative w-full mx-auto py-5 bg-[#f5f5f7]">

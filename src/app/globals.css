@@ -46,6 +46,12 @@ body {
   overflow-x: hidden;
 }
 
+/* Pins price digits to Poppins explicitly, so they never fall through to
+   Kalpurush/Arial regardless of what surrounds them. */
+.font-price {
+  font-family: var(--font-poppins), Arial, Helvetica, sans-serif;
+}
+
 /* Material Icons */
 @layer base {
   .mi {
