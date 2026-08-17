@@ -318,9 +318,10 @@ export default function ChatWidget({ open, onClose, product }: Props) {
                           )
                           const cardClass =
                             'bg-white border border-gray-200 rounded-[22px] p-4 flex gap-3.5 w-[300px] sm:w-[340px] shadow-[0_2px_8px_rgba(0,0,0,0.03)]'
-                          return product.href ? (
+                          const href = 'href' in product ? product.href : undefined
+                          return href ? (
                             <Link
-                              href={product.href}
+                              href={href}
                               onClick={onClose}
                               className={`${cardClass} no-underline text-inherit hover:border-[#d92128] transition-colors`}
                             >
