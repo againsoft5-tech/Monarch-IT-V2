@@ -26,6 +26,22 @@ export default function ProductGallery({
   const [supportsHover, setSupportsHover] = useState(false)
   const trackRef = useRef<HTMLDivElement>(null)
   const boxRef = useRef<HTMLDivElement>(null)
+  const isFirstRender = useRef(true)
+
+  // `images` only changes reference when the selected option itself carries its
+  // own image set (e.g. a color swatch) — picking an option with no images of
+  // its own (like a size button) leaves it untouched. So this only fires for
+  // options that actually have images, jumping off the video/whatever slide
+  // was active onto that option's first photo. Skipped on mount so the video
+  // still opens first.
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false
+      return
+    }
+    setActive(hasVideo ? 1 : 0)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [images])
 
   // Touch devices don't get real hover, so they keep tap-to-zoom instead.
   useEffect(() => {
