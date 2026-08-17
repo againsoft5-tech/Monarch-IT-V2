@@ -50,8 +50,8 @@ export default function SupportSection({
   return (
     <section className="py-5">
       <div className="container mx-auto text-center mb-6 md:mb-10">
-        <h2 className="m-0 text-3xl md:text-5xl font-bold leading-none text-[#3b3b3b]">{title}</h2>
-        <p className="mt-2 text-[15px] md:text-lg text-[#6f6f6f]">{subtitle}</p>
+        <h2 className="m-0 text-2xl md:text-[28px] font-bold leading-none text-[#3b3b3b]">{title}</h2>
+        <p className="mt-2 text-[15px] text-[#6f6f6f]">{subtitle}</p>
       </div>
 
       <div className="container mx-auto flex flex-col md:flex-row items-center justify-center gap-6 md:gap-10 flex-wrap">

@@ -29,8 +29,8 @@ export default function AboutBox({
   return (
     <div className="container mx-auto my-10">
     <div className="bg-white border border-[#e5e5e5] rounded-[25px] px-[25px] pt-[25px] pb-[30px] relative shadow-[0_2px_10px_rgba(0,0,0,0.03)]">
-      <h2 className="text-center text-[#d52b2b] text-[22px] md:text-[34px] font-bold mb-[5px]">{title}</h2>
-      <div className="text-center text-[#666] text-[13px] md:text-xl mb-[15px]">
+      <h2 className="text-center text-[#d52b2b] text-2xl md:text-[28px] font-bold mb-[5px]">{title}</h2>
+      <div className="text-center text-[#666] text-[15px] mb-[15px]">
         {subtitle}
       </div>
       <div className="h-px bg-[#e7e7e7] mb-5" />
