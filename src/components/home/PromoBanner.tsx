@@ -12,13 +12,13 @@ function SlideContent({ slide, linkWholeCard = false }: { slide: PromoSlide; lin
 
   const inner = (
     <>
-      <p className="text-[13px] text-gray-500 m-0 text-center max-[640px]:text-[11px] max-[480px]:text-[9px]">
+      <p className="text-[16px] text-gray-500 m-0 text-center max-[640px]:text-[11px] max-[480px]:text-[12px]">
         {slide.label}
       </p>
-      <h3 className="text-[40px] max-[640px]:text-[26px] max-[480px]:text-[23px] font-extrabold text-[#4d4d4d] m-0 mt-0.5 text-center tracking-tight leading-tight">
+      <h3 className="text-[40px] max-[640px]:text-[26px] max-[480px]:text-[31px] font-extrabold text-[#4d4d4d] m-0 mt-0.5 text-center tracking-tight leading-tight">
         {slide.title}
       </h3>
-      <p className="text-[18px] text-[#4d4d4d] m-0 mt-0.5 text-center max-[640px]:text-[14px] max-[480px]:text-[11px]">
+      <p className="text-[24px] text-[#4d4d4d] m-0 mt-0.5 text-center max-[640px]:text-[14px] max-[480px]:text-[15px]">
         {slide.subtitle}
       </p>
       {!linkWholeCard && (

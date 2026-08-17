@@ -52,7 +52,7 @@ export default function CategoryCarousel({ items }: Props = {}) {
               <Link
                 key={cat.name}
                 href={cat.href}
-                className="flex-none w-[calc((100%-30px)/4)] md:w-[calc((100%-45px)/4)] min-[1400px]:w-[calc((100%-75px)/6)] flex flex-col items-center p-3 md:p-5 rounded-[20px] md:rounded-[35px] border border-[#f0f0f0] bg-white no-underline"
+                className="flex-none w-[calc((100%-30px)/4)] md:w-[calc((100%-60px)/5)] min-[1400px]:w-[calc((100%-75px)/6)] flex flex-col items-center p-3 md:p-5 rounded-[20px] md:rounded-[35px] border border-[#f0f0f0] bg-white no-underline"
               >
                 <Image src={cat.img} alt={cat.name} width={200} height={160} className="object-contain w-full h-auto" />
                 <span className="text-[10px] md:text-xl font-semibold text-[#4d4d4d] mt-0 md:mt-2 text-center">{cat.name}</span>
