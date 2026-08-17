@@ -47,6 +47,7 @@ export default function CategoryPage({ categoryName, products, priceMinDefault, 
   const [fiveCol, setFiveCol] = useState(false)
   const [descOpen, setDescOpen] = useState(false)
   const [chatOpen, setChatOpen] = useState(false)
+  const [chatProduct, setChatProduct] = useState<CategoryProduct | null>(null)
   const { toast, showToast } = useToast()
 
   useEffect(() => {
@@ -75,12 +76,13 @@ export default function CategoryPage({ categoryName, products, priceMinDefault, 
     'price-desc': 'High To Low',
   }
 
-  const handleChatClick = () => {
+  const handleChatClick = (product?: CategoryProduct) => {
     if (!isLoggedIn) {
       showToast('Please login to start chatting')
       router.push('/login')
       return
     }
+    setChatProduct(product ?? null)
     setChatOpen(true)
   }
 
@@ -450,7 +452,7 @@ export default function CategoryPage({ categoryName, products, priceMinDefault, 
                   product={p}
                   onBuyNow={handleBuyNow}
                   onCompare={handleCompareClick}
-                  onChat={handleChatClick}
+                  onChat={() => handleChatClick(p)}
                 />
               ))}
 
@@ -512,7 +514,22 @@ export default function CategoryPage({ categoryName, products, priceMinDefault, 
             </div>
         </div>
       </div>
-      <ChatWidget open={chatOpen} onClose={() => setChatOpen(false)} />
+      <ChatWidget
+        open={chatOpen}
+        onClose={() => setChatOpen(false)}
+        product={
+          chatProduct
+            ? {
+                name: chatProduct.name,
+                image: chatProduct.image,
+                priceNew: chatProduct.priceNew,
+                priceOld: chatProduct.priceOld,
+                discountPct: chatProduct.discountPct,
+                href: `/${chatProduct.slug}`,
+              }
+            : undefined
+        }
+      />
     </div>
   )
 }

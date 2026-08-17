@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import Image from 'next/image'
+import Link from 'next/link'
 import { productsByCategory } from '@/data/pcBuilderData'
 import { useToast, Toast } from '@/components/ui/Toast'
 import { useAuth } from '@/context/AuthContext'
@@ -23,6 +24,7 @@ import {
   MAX_ATTACHMENT_SIZE,
   formatFileSize,
   type FileKind,
+  type ProductSnapshot,
 } from '@/lib/chatStore'
 
 const IMG_BASE = '/images'
@@ -31,6 +33,8 @@ const RED = '#bd2026'
 type Props = {
   open: boolean
   onClose: () => void
+  /** When set, opening the widget immediately sends this product as a message. */
+  product?: ProductSnapshot
 }
 
 const railIcons = [
@@ -40,7 +44,7 @@ const railIcons = [
   { icon: `${IMG_BASE}/catalog/view/theme/default/image/svg/order-track-icon.svg`, label: 'Order Track' },
 ]
 
-export default function ChatWidget({ open, onClose }: Props) {
+export default function ChatWidget({ open, onClose, product }: Props) {
   const [activeTab, setActiveTab] = useState<'products' | 'orders'>('products')
   const [search, setSearch] = useState('')
   const [mounted, setMounted] = useState(false)
@@ -51,6 +55,7 @@ export default function ChatWidget({ open, onClose }: Props) {
   const { customerEmail, customerName } = useAuth()
   const scrollRef = useRef<HTMLDivElement>(null)
   const lastTypingPing = useRef(0)
+  const sentProductForRef = useRef<string | null>(null)
 
   const db = useChatStore()
   const conversationId = customerEmail ? customerEmail.toLowerCase() : ''
@@ -68,6 +73,22 @@ export default function ChatWidget({ open, onClose }: Props) {
     }
   }, [open, mounted, customerEmail, customerName])
 
+  // Opening the chat for a specific product sends it as the first message —
+  // once per open, so re-renders while the widget stays open don't resend it.
+  useEffect(() => {
+    if (!open) {
+      sentProductForRef.current = null
+      return
+    }
+    if (mounted && customerEmail && conversationId && product) {
+      const key = `${conversationId}:${product.image}:${product.name}`
+      if (sentProductForRef.current !== key) {
+        sendMessage(conversationId, 'customer', '', 'product', { productSnapshot: product })
+        sentProductForRef.current = key
+      }
+    }
+  }, [open, mounted, customerEmail, conversationId, product])
+
   const conversation = conversationId ? db[conversationId] : undefined
   const messages = conversation?.messages ?? []
 
@@ -81,6 +102,18 @@ export default function ChatWidget({ open, onClose }: Props) {
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
   }, [messages.length, isAdminTyping])
+
+  // Land at the bottom immediately on open, instead of an animated scroll-in
+  // from the top — the rAF lets the message list (and its images) lay out
+  // first so scrollHeight is accurate.
+  useEffect(() => {
+    if (!open) return
+    const raf = requestAnimationFrame(() => {
+      const el = scrollRef.current
+      if (el) el.scrollTop = el.scrollHeight
+    })
+    return () => cancelAnimationFrame(raf)
+  }, [open])
 
   const handleVoiceSend = (blob: Blob, mimeType: string, durationSec: number) => {
     if (!conversationId) return
@@ -245,7 +278,7 @@ export default function ChatWidget({ open, onClose }: Props) {
               const prevTime = i > 0 ? formatChatTime(messages[i - 1].time) : null
               const showDivider = i === 0 || prevTime !== time
               const isCustomer = msg.sender === 'customer'
-              const product = msg.type === 'product' ? findProduct(msg.productId) : undefined
+              const product = msg.type === 'product' ? (msg.productSnapshot ?? findProduct(msg.productId)) : undefined
 
               return (
                 <div key={msg.id} className="flex flex-col">
@@ -261,25 +294,42 @@ export default function ChatWidget({ open, onClose }: Props) {
                         }`}
                       >
                         {msg.text && <p className="text-[14px] font-medium text-gray-800 mb-2.5">{msg.text}</p>}
-                        <div className="bg-white border border-gray-200 rounded-[22px] p-4 flex gap-3.5 w-[300px] sm:w-[340px] shadow-[0_2px_8px_rgba(0,0,0,0.03)]">
-                          <div className="w-16 h-16 shrink-0 rounded-xl bg-white border border-gray-100 overflow-hidden relative">
-                            {product.image && <Image src={product.image} alt="" fill className="object-contain p-1" />}
-                          </div>
-                          <div className="min-w-0 flex flex-col justify-center">
-                            <p className="text-[13px] font-semibold text-gray-800 truncate m-0 mb-1">{product.name}</p>
-                            <div className="flex items-center gap-1.5 flex-wrap">
-                              <span className="text-[13px] font-bold" style={{ color: RED }}>
-                                <span className="font-medium">৳</span>{product.priceNew.toLocaleString()}
-                              </span>
-                              <span className="text-[11px] text-gray-400 line-through">
-                                ৳{product.priceOld.toLocaleString()}
-                              </span>
-                              <span className="text-[10px] font-semibold text-[#10b981] bg-[#ecfdf5] px-1.5 py-0.5 rounded-md">
-                                {product.discountPct}% OFF
-                              </span>
-                            </div>
-                          </div>
-                        </div>
+                        {(() => {
+                          const cardInner = (
+                            <>
+                              <div className="w-16 h-16 shrink-0 rounded-xl bg-white border border-gray-100 overflow-hidden relative">
+                                {product.image && <Image src={product.image} alt="" fill className="object-contain p-1" />}
+                              </div>
+                              <div className="min-w-0 flex flex-col justify-center">
+                                <p className="text-[13px] font-semibold text-gray-800 truncate m-0 mb-1">{product.name}</p>
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  <span className="text-[13px] font-bold" style={{ color: RED }}>
+                                    <span className="font-medium">৳</span>{product.priceNew.toLocaleString()}
+                                  </span>
+                                  <span className="text-[11px] text-gray-400 line-through">
+                                    ৳{product.priceOld.toLocaleString()}
+                                  </span>
+                                  <span className="text-[10px] font-semibold text-[#10b981] bg-[#ecfdf5] px-1.5 py-0.5 rounded-md">
+                                    {product.discountPct}% OFF
+                                  </span>
+                                </div>
+                              </div>
+                            </>
+                          )
+                          const cardClass =
+                            'bg-white border border-gray-200 rounded-[22px] p-4 flex gap-3.5 w-[300px] sm:w-[340px] shadow-[0_2px_8px_rgba(0,0,0,0.03)]'
+                          return product.href ? (
+                            <Link
+                              href={product.href}
+                              onClick={onClose}
+                              className={`${cardClass} no-underline text-inherit hover:border-[#d92128] transition-colors`}
+                            >
+                              {cardInner}
+                            </Link>
+                          ) : (
+                            <div className={cardClass}>{cardInner}</div>
+                          )
+                        })()}
                       </div>
                       {isCustomer && <ReadReceipt read={msg.read} />}
                     </div>

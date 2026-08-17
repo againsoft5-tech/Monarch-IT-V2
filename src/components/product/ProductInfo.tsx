@@ -73,6 +73,15 @@ export default function ProductInfo({
     qty,
   }
 
+  const chatProductSnapshot = {
+    name: product.name,
+    image: product.images[0]?.large ?? '',
+    priceNew: price,
+    priceOld,
+    discountPct,
+    href: `/${product.slug}`,
+  }
+
   const handleBuyNow = () => {
     addItems([cartItem])
     router.push('/checkout')
@@ -256,7 +265,7 @@ export default function ProductInfo({
         </div>
       </div>
 
-      <ChatWidget open={chatOpen} onClose={() => setChatOpen(false)} />
+      <ChatWidget open={chatOpen} onClose={() => setChatOpen(false)} product={chatProductSnapshot} />
     </div>
   )
 }

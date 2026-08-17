@@ -388,7 +388,7 @@ export default function AdminDashboard() {
                 const prevTime = i > 0 ? formatChatTime(messages[i - 1].time) : null
                 const showDivider = i === 0 || prevTime !== time
                 const isAdmin = msg.sender === 'admin'
-                const product = msg.type === 'product' ? findProduct(msg.productId) : undefined
+                const product = msg.type === 'product' ? (msg.productSnapshot ?? findProduct(msg.productId)) : undefined
 
                 return (
                   <div key={msg.id} className="flex flex-col">

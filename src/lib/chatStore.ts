@@ -6,12 +6,22 @@ export type ChatSender = 'customer' | 'admin'
 export type ChatMessageType = 'text' | 'product' | 'file'
 export type FileKind = 'image' | 'video' | 'document' | 'audio'
 
+export type ProductSnapshot = {
+  name: string
+  image: string
+  priceNew: number
+  priceOld: number
+  discountPct: number
+  href?: string
+}
+
 export type StoredMessage = {
   id: string
   sender: ChatSender
   type: ChatMessageType
   text: string
   productId?: string
+  productSnapshot?: ProductSnapshot
   fileName?: string
   fileUrl?: string
   fileMime?: string
@@ -166,6 +176,7 @@ export function getOrCreateConversation(email: string, name: string): Conversati
 
 type SendMessageOptions = {
   productId?: string
+  productSnapshot?: ProductSnapshot
   fileName?: string
   fileUrl?: string
   fileMime?: string
