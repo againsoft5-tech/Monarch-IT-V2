@@ -27,7 +27,7 @@ export default function AboutBox({
   }, [bodyHtml, open])
 
   return (
-    <div className="container mx-auto my-10">
+    <div className="container mx-auto mt-10">
     <div className="bg-white border border-[#e5e5e5] rounded-[25px] px-[25px] pt-[25px] pb-[30px] relative shadow-[0_2px_10px_rgba(0,0,0,0.03)]">
       <h2 className="text-center text-[#d52b2b] text-2xl md:text-[28px] font-bold mb-[5px]">{title}</h2>
       <div className="text-center text-[#666] text-[15px] mb-[15px]">
