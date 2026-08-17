@@ -64,6 +64,8 @@ export type ProductDetail = {
   model?: string
   breadcrumb: { label: string; href: string }[]
   images: ProductImage[]
+  /** YouTube video ID — shown as the first gallery slide, autoplaying. */
+  videoId?: string
   rating: number
   reviewCount: number
   priceNew: number

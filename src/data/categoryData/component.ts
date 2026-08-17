@@ -404,6 +404,7 @@ export const details: ProductDetail[] = [
       { large: 'https://www.startech.com.bd/image/cache/catalog/casing/monarch/mystery-box-x5/mystery-box-x5-03-500x500.webp', thumb: 'https://www.startech.com.bd/image/cache/catalog/casing/monarch/mystery-box-x5/mystery-box-x5-03-500x500.webp' },
       { large: 'https://www.startech.com.bd/image/cache/catalog/casing/monarch/mystery-box-x5/mystery-box-x5-04-500x500.webp', thumb: 'https://www.startech.com.bd/image/cache/catalog/casing/monarch/mystery-box-x5/mystery-box-x5-04-500x500.webp' },
     ],
+    videoId: 'yXlYpc_JGOU',
     rating: 0,
     reviewCount: 0,
     priceNew: 10000,

@@ -1,13 +1,26 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type MouseEvent } from 'react'
 import Image from 'next/image'
 import type { ProductImage } from '@/data/productDetail'
 
 const ZOOM_SCALE = 2
 
-export default function ProductGallery({ images, name }: { images: ProductImage[]; name: string }) {
+export default function ProductGallery({
+  images,
+  name,
+  videoId,
+}: {
+  images: ProductImage[]
+  name: string
+  videoId?: string
+}) {
+  const hasVideo = Boolean(videoId)
+  // Slide 0 is the video (when present); image i lives at slide i + (hasVideo ? 1 : 0).
   const [active, setActive] = useState(0)
+  const isVideoActive = hasVideo && active === 0
+  const activeImage = images[hasVideo ? active - 1 : active]
+
   const [zoomed, setZoomed] = useState(false)
   const [origin, setOrigin] = useState('50% 50%')
   const [supportsHover, setSupportsHover] = useState(false)
@@ -23,7 +36,7 @@ export default function ProductGallery({ images, name }: { images: ProductImage[
     trackRef.current?.scrollBy({ left: dir * 100, behavior: 'smooth' })
   }
 
-  // Switching thumbnails always starts the new image un-zoomed.
+  // Switching slides always starts the new one un-zoomed.
   useEffect(() => {
     setZoomed(false)
     setOrigin('50% 50%')
@@ -52,43 +65,72 @@ export default function ProductGallery({ images, name }: { images: ProductImage[
     return () => el.removeEventListener('touchmove', onTouchMove)
   }, [zoomed])
 
+  const selectSlide = (index: number, e: MouseEvent<HTMLButtonElement>) => {
+    setActive(index)
+    // Clicking the edge-most visible thumbnail slides the strip one
+    // item further in that direction, so the next one is reachable.
+    const track = trackRef.current
+    const btn = e.currentTarget
+    if (!track) return
+    const trackRect = track.getBoundingClientRect()
+    const btnRect = btn.getBoundingClientRect()
+    const step = btn.offsetWidth + 8
+    if (btnRect.right > trackRect.right - 1) {
+      track.scrollBy({ left: step, behavior: 'smooth' })
+    } else if (btnRect.left < trackRect.left + 1) {
+      track.scrollBy({ left: -step, behavior: 'smooth' })
+    }
+  }
+
   return (
     <div className="p-4">
       <div
         ref={boxRef}
         onClick={() => {
-          if (!supportsHover) setZoomed((v) => !v)
+          if (!isVideoActive && !supportsHover) setZoomed((v) => !v)
         }}
         onMouseEnter={(e) => {
-          if (supportsHover) {
+          if (!isVideoActive && supportsHover) {
             setZoomed(true)
             setOriginFromPoint(e.clientX, e.clientY)
           }
         }}
         onMouseMove={(e) => {
-          if (zoomed) setOriginFromPoint(e.clientX, e.clientY)
+          if (!isVideoActive && zoomed) setOriginFromPoint(e.clientX, e.clientY)
         }}
         onMouseLeave={() => {
           setZoomed(false)
           setOrigin('50% 50%')
         }}
         onTouchStart={(e) => {
+          if (isVideoActive) return
           const touch = e.touches[0]
           if (touch) setOriginFromPoint(touch.clientX, touch.clientY)
         }}
         className={`relative rounded-[35px] h-[320px] md:h-[400px] flex items-center justify-center bg-[#f5f5f7] border border-gray-100 overflow-hidden select-none ${
           zoomed ? 'touch-none' : ''
-        } ${supportsHover ? 'cursor-zoom-in' : zoomed ? 'cursor-zoom-out' : 'cursor-zoom-in'}`}
+        } ${isVideoActive ? 'cursor-default' : supportsHover ? 'cursor-zoom-in' : zoomed ? 'cursor-zoom-out' : 'cursor-zoom-in'}`}
       >
-        <Image
-          src={images[active].large}
-          alt={name}
-          width={500}
-          height={500}
-          className="max-w-full max-h-full object-contain p-2.5 transition-transform duration-300 ease-out"
-          style={{ transform: `scale(${zoomed ? ZOOM_SCALE : 1})`, transformOrigin: origin }}
-          priority
-        />
+        {isVideoActive ? (
+          <iframe
+            key={videoId}
+            src={`https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&playsinline=1&rel=0`}
+            title={`${name} video`}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+            className="w-full h-full"
+          />
+        ) : (
+          <Image
+            src={activeImage.large}
+            alt={name}
+            width={500}
+            height={500}
+            className="max-w-full max-h-full object-contain p-2.5 transition-transform duration-300 ease-out"
+            style={{ transform: `scale(${zoomed ? ZOOM_SCALE : 1})`, transformOrigin: origin }}
+            priority
+          />
+        )}
       </div>
 
       <div className="flex items-center justify-center gap-1.5 mt-3">
@@ -102,33 +144,42 @@ export default function ProductGallery({ images, name }: { images: ProductImage[
         </button>
 
         <div ref={trackRef} className="flex [justify-content:safe_center] gap-2 min-w-0 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {images.map((img, i) => (
+          {hasVideo && (
             <button
-              key={i}
               type="button"
-              onClick={(e) => {
-                setActive(i)
-                // Clicking the edge-most visible thumbnail slides the strip one
-                // item further in that direction, so the next one is reachable.
-                const track = trackRef.current
-                const btn = e.currentTarget
-                if (!track) return
-                const trackRect = track.getBoundingClientRect()
-                const btnRect = btn.getBoundingClientRect()
-                const step = btn.offsetWidth + 8
-                if (btnRect.right > trackRect.right - 1) {
-                  track.scrollBy({ left: step, behavior: 'smooth' })
-                } else if (btnRect.left < trackRect.left + 1) {
-                  track.scrollBy({ left: -step, behavior: 'smooth' })
-                }
-              }}
-              className={`w-16 h-16 shrink-0 rounded-lg border bg-[#fafbfe] flex items-center justify-center overflow-hidden transition-colors cursor-pointer ${
-                i === active ? 'border-[#d92128]' : 'border-gray-200 hover:border-[#d92128]'
+              onClick={(e) => selectSlide(0, e)}
+              aria-label="Play video"
+              className={`relative w-16 h-16 shrink-0 rounded-lg border bg-[#fafbfe] flex items-center justify-center overflow-hidden transition-colors cursor-pointer ${
+                active === 0 ? 'border-[#d92128]' : 'border-gray-200 hover:border-[#d92128]'
               }`}
             >
-              <Image src={img.thumb} alt={name} width={64} height={64} className="w-full h-full object-contain p-1" />
+              <Image
+                src={`https://img.youtube.com/vi/${videoId}/mqdefault.jpg`}
+                alt=""
+                width={64}
+                height={64}
+                className="w-full h-full object-cover"
+              />
+              <span className="absolute inset-0 flex items-center justify-center bg-black/25">
+                <span className="mi text-white text-[26px] drop-shadow">play_circle</span>
+              </span>
             </button>
-          ))}
+          )}
+          {images.map((img, i) => {
+            const slideIndex = hasVideo ? i + 1 : i
+            return (
+              <button
+                key={i}
+                type="button"
+                onClick={(e) => selectSlide(slideIndex, e)}
+                className={`w-16 h-16 shrink-0 rounded-lg border bg-[#fafbfe] flex items-center justify-center overflow-hidden transition-colors cursor-pointer ${
+                  slideIndex === active ? 'border-[#d92128]' : 'border-gray-200 hover:border-[#d92128]'
+                }`}
+              >
+                <Image src={img.thumb} alt={name} width={64} height={64} className="w-full h-full object-contain p-1" />
+              </button>
+            )
+          })}
         </div>
 
         <button

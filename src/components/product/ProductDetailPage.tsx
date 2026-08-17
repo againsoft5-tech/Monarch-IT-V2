@@ -42,7 +42,7 @@ export default function ProductDetailPage({ product }: { product: ProductDetail 
               <ProductMeta product={product} onShowReviews={() => goToTab('rev')} />
             </div>
             <div className="order-2 md:order-1 md:col-start-1 md:row-start-1 md:row-span-2">
-              <ProductGallery images={galleryImages} name={product.name} />
+              <ProductGallery images={galleryImages} name={product.name} videoId={product.videoId} />
             </div>
             <div className="order-3 md:order-3 md:col-start-2 md:row-start-2">
               <ProductInfo
