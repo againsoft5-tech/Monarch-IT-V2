@@ -80,7 +80,7 @@ export const DEFAULT_CAMPAIGNS: ComboCampaign[] = [
             id: 'nas-asustor-drivestor-2-lite',
             name: 'Asustor DRIVESTOR 2 Lite AS1102T 2-Bays NAS Storage',
             image:
-              'https://www.startech.com.bd/image/cache/catalog/storage/asustor/drivestor-2-lite/drivestor-2-lite-01-228x228.webp',
+              '/images/products/storage/drivestor-2-lite.webp',
             brand: 'Asustor',
             priceOld: 30500,
             discountType: 'percent',
@@ -91,7 +91,7 @@ export const DEFAULT_CAMPAIGNS: ComboCampaign[] = [
             id: 'nas-synology-ds223j',
             name: 'Synology DiskStation DS223j 2-Bays NAS Enclosure',
             image:
-              'https://www.startech.com.bd/image/cache/catalog/storage/synology/diskstation-ds223j/diskstation-ds223j-01-228x228.webp',
+              '/images/products/storage/diskstation-ds223j.webp',
             brand: 'Synology',
             priceOld: 39000,
             discountType: 'percent',
@@ -101,7 +101,7 @@ export const DEFAULT_CAMPAIGNS: ComboCampaign[] = [
           {
             id: 'nas-qnap-ts-233',
             name: 'QNAP TS-233 2 Bays NAS Storage',
-            image: 'https://www.startech.com.bd/image/cache/catalog/nas%20storage/qnap/ts-233/ts-233-01-228x228.webp',
+            image: '/images/products/storage/qnap-ts-233.webp',
             brand: 'QNAP',
             priceOld: 44000,
             discountType: 'percent',
@@ -112,7 +112,7 @@ export const DEFAULT_CAMPAIGNS: ComboCampaign[] = [
             id: 'nas-asustor-drivestor-4-pro',
             name: 'Asustor DRIVESTOR 4 Pro AS3304T 4-Bays NAS Storage',
             image:
-              'https://www.startech.com.bd/image/cache/catalog/storage/asustor/drivestor-4-pro/drivestor-4-pro-01-228x228.jpg',
+              '/images/products/storage/drivestor-4-pro.jpg',
             brand: 'Asustor',
             priceOld: 48500,
             discountType: 'percent',
@@ -122,7 +122,7 @@ export const DEFAULT_CAMPAIGNS: ComboCampaign[] = [
           {
             id: 'nas-orico-metabox-pro',
             name: 'ORICO MetaBox Pro 2 Bay NAS Storage',
-            image: 'https://www.startech.com.bd/image/cache/catalog/nas-storage/metabox-pro/metabox-pro-01-228x228.webp',
+            image: '/images/products/storage/metabox-pro.webp',
             brand: 'ORICO',
             priceOld: 52000,
             discountType: 'percent',
@@ -141,7 +141,7 @@ export const DEFAULT_CAMPAIGNS: ComboCampaign[] = [
             id: 'hdd-seagate-ironwolf-4tb',
             name: 'Seagate IronWolf 4TB 5400RPM SATA NAS HDD',
             image:
-              'https://www.startech.com.bd/image/cache/catalog/hdd/seagate/ironwolf-4tb-5400rpm/ironwolf-4tb-5400rpm-04-228x228.webp',
+              '/images/products/storage/ironwolf-4tb-5400rpm.webp',
             brand: 'Seagate',
             priceOld: 28500,
             discountType: 'percent',
@@ -152,7 +152,7 @@ export const DEFAULT_CAMPAIGNS: ComboCampaign[] = [
             id: 'hdd-wd-purple-8tb',
             name: 'Western Digital 8TB PURPLE Surveillance HDD',
             image:
-              'https://www.startech.com.bd/image/cache/catalog/HDD/Western%20Digital/Western%20Digital%208TB%20PURPLE%20WD80PUZX/Western%20Digital%208TB%20PURPLE%20WD80PUZX-1-228x228.jpeg',
+              '/images/products/storage/western-digital-8tb-purple-wd80puzx.jpeg',
             brand: 'WD',
             priceOld: 40000,
             discountType: 'percent',
@@ -162,7 +162,7 @@ export const DEFAULT_CAMPAIGNS: ComboCampaign[] = [
           {
             id: 'hdd-seagate-ironwolf-pro-8tb',
             name: 'Seagate IronWolf Pro 8TB 3.5 Inch SATA 7200RPM NAS HDD',
-            image: 'https://www.startech.com.bd/image/cache/catalog/hdd/seagate/ironwolf-pro/8tb/ironwolf-pro-01-228x228.webp',
+            image: '/images/products/storage/ironwolf-pro-8tb.webp',
             brand: 'Seagate',
             priceOld: 51200,
             discountType: 'fixed',
