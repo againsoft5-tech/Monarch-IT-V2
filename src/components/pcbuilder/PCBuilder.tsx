@@ -491,8 +491,8 @@ export default function PCBuilder() {
           onClick={() => setFilterOpen(true)}
           className={`group shrink-0 inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-[13px] font-semibold transition-colors cursor-pointer ${
             filtersActive
-              ? 'bg-[#fdf1f1] text-[#c3272b] border-2 border-[#c3272b]'
-              : 'bg-[#f5f5f7] text-gray-600 border-2 border-transparent hover:text-[#c3272b]'
+              ? 'bg-[#fdf1f1] text-[#c3272b] border border-[#c3272b]'
+              : 'bg-[#f5f5f7] text-gray-600 border border-transparent hover:text-[#c3272b]'
           }`}
         >
           <span className="relative w-[22px] h-[16px] shrink-0">
@@ -565,7 +565,7 @@ export default function PCBuilder() {
               return (
                 <div
                   key={p.id}
-                  className={`bg-white rounded-2xl p-3 flex items-center gap-4 shadow-[0_2px_10px_rgba(0,0,0,0.06)] border-2 transition-colors ${
+                  className={`bg-white rounded-2xl p-3 flex items-center gap-4 shadow-[0_2px_10px_rgba(0,0,0,0.06)] border transition-colors ${
                     isPicked ? 'border-[#c3272b]' : 'border-transparent'
                   }`}
                 >
@@ -607,7 +607,7 @@ export default function PCBuilder() {
                       <button
                         type="button"
                         onClick={() => selectProduct(activeCategory, p)}
-                        className={`rounded-full px-5 py-1.5 text-[12.5px] font-bold border-2 whitespace-nowrap transition-colors cursor-pointer ${
+                        className={`rounded-full px-5 py-1.5 text-[12.5px] font-bold border whitespace-nowrap transition-colors cursor-pointer ${
                           isPicked
                             ? 'bg-[#c3272b] text-white border-[#c3272b]'
                             : 'bg-white text-[#c3272b] border-[#c3272b] hover:bg-[#c3272b] hover:text-white'
@@ -705,7 +705,7 @@ export default function PCBuilder() {
                           selectProduct(activeCategory, p)
                           setMobileBuilderOpen(false)
                         }}
-                        className={`rounded-full px-5 py-1.5 text-[12.5px] font-bold border-2 whitespace-nowrap transition-colors cursor-pointer ${
+                        className={`rounded-full px-5 py-1.5 text-[12.5px] font-bold border whitespace-nowrap transition-colors cursor-pointer ${
                           isPicked
                             ? 'bg-[#c3272b] text-white border-[#c3272b]'
                             : 'bg-white text-[#c3272b] border-[#c3272b] hover:bg-[#c3272b] hover:text-white'
@@ -745,8 +745,8 @@ export default function PCBuilder() {
           onClick={() => setFilterOpen(true)}
           className={`flex-1 inline-flex items-center justify-center gap-1.5 rounded-full px-3.5 py-2.5 text-[13px] font-semibold transition-colors cursor-pointer ${
             filtersActive
-              ? 'bg-[#fdf1f1] text-[#c3272b] border-2 border-[#c3272b]'
-              : 'bg-[#f5f5f7] text-gray-600 border-2 border-transparent'
+              ? 'bg-[#fdf1f1] text-[#c3272b] border border-[#c3272b]'
+              : 'bg-[#f5f5f7] text-gray-600 border border-transparent'
           }`}
         >
           <Image src="/images/pc-builder/icons/filter-icon.svg" alt="" width={22} height={16} className="shrink-0" />
@@ -977,7 +977,7 @@ export default function PCBuilder() {
                     type="button"
                     onClick={() => setChipset('AMD')}
                     className={`group flex items-center px-2 py-1.5 sm:px-3.5 sm:py-2 rounded-full bg-white transition-colors cursor-pointer ${
-                      chipset === 'AMD' ? 'border-2 border-[#c3272b]' : 'border border-gray-200 hover:border-[#c3272b]'
+                      chipset === 'AMD' ? 'border border-[#c3272b]' : 'border border-gray-200 hover:border-[#c3272b]'
                     }`}
                   >
                     <span className="relative w-[52px] h-[12px]">
@@ -1005,7 +1005,7 @@ export default function PCBuilder() {
                     type="button"
                     onClick={() => setChipset('Intel')}
                     className={`group flex items-center px-2 py-1.5 sm:px-3.5 sm:py-2 rounded-full bg-white transition-colors cursor-pointer ${
-                      chipset === 'Intel' ? 'border-2 border-[#c3272b]' : 'border border-gray-200 hover:border-[#c3272b]'
+                      chipset === 'Intel' ? 'border border-[#c3272b]' : 'border border-gray-200 hover:border-[#c3272b]'
                     }`}
                   >
                     <span className="relative w-[32px] h-[13px]">
@@ -1073,7 +1073,7 @@ export default function PCBuilder() {
                       {items.map((sel) => (
                         <div
                           key={sel.product.id}
-                          className="flex items-center gap-2 border-2 border-[#c3272b] bg-white rounded-full px-2 py-1"
+                          className="flex items-center gap-2 border border-[#c3272b] bg-white rounded-full px-2 py-1"
                         >
                           <PartThumb
                             icon={cat.icon}
@@ -1144,7 +1144,7 @@ export default function PCBuilder() {
                         <button
                           type="button"
                           onClick={() => openCategory(cat.key)}
-                          className={`group flex items-center gap-3 rounded-full border-2 bg-white px-4 py-2 transition-colors cursor-pointer ${
+                          className={`group flex items-center gap-3 rounded-full border bg-white px-4 py-2 transition-colors cursor-pointer ${
                             isActive
                               ? 'border-[#c3272b] text-[#c3272b]'
                               : 'border-gray-200 text-gray-600 hover:border-[#c3272b] hover:text-[#c3272b]'
@@ -1217,7 +1217,7 @@ export default function PCBuilder() {
           }`}
         />
         <div
-          className={`fixed inset-x-3 top-16 bottom-3 z-[10003] lg:hidden bg-white rounded-[28px] border-2 border-[#c3272b] shadow-2xl flex flex-col p-4 transition-all duration-200 ${
+          className={`fixed inset-x-3 top-16 bottom-3 z-[10003] lg:hidden bg-white rounded-[28px] border border-[#c3272b] shadow-2xl flex flex-col p-4 transition-all duration-200 ${
             mobileBuilderOpen ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 translate-y-3 pointer-events-none'
           }`}
         >

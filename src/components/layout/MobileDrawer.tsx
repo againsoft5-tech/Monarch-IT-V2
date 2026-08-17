@@ -73,7 +73,7 @@ export default function MobileDrawer({ open, onClose }: { open: boolean; onClose
                       setExpanded(null)
                       onClose()
                     }}
-                    className="flex-1 text-[15px] text-gray-800 no-underline"
+                    className="text-[15px] text-gray-800 no-underline"
                   >
                     {cat.name}
                   </Link>
