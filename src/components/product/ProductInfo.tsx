@@ -115,7 +115,7 @@ export default function ProductInfo({
     <div className="px-4 py-2 md:px-6 md:pt-0">
       <Toast message={toast} />
       <div className="flex flex-wrap items-start gap-x-3 gap-y-4">
-        <h1 className="w-full order-2 text-xl md:text-[30px] font-bold text-[#4d4d4d] leading-snug">{product.name}</h1>
+        <h1 className="w-full order-2 text-xl font-bold text-gray-900 leading-snug">{product.name}</h1>
 
         <div className="order-3 grid grid-cols-1 gap-y-2 md:contents">
           <label className="cursor-pointer md:order-3">
@@ -126,10 +126,10 @@ export default function ProductInfo({
               onChange={() => setPriceOption('full')}
               className="sr-only peer"
             />
-            <div className="flex items-center justify-start gap-2 px-[15px] py-[5px] rounded-full border-[1.5px] border-gray-200 peer-checked:border-[#d92128] transition-colors">
-              <span className="text-[18px] md:text-[30px] font-bold text-[#d32f2f]"><span className="font-medium">৳</span>{price.toLocaleString()}</span>
-              {priceOld > price && <del className="text-[13px] text-gray-400 mt-[10px]">৳{priceOld.toLocaleString()}</del>}
-              {discountPct > 0 && <span className="text-[12px] font-bold text-[#00b87a] mt-[10px]">{discountPct}% OFF</span>}
+            <div className="flex items-center justify-start gap-2 px-3.5 py-2 md:px-5 md:py-2.5 rounded-full border-[1.5px] border-gray-200 peer-checked:border-[#d92128] transition-colors">
+              <span className="text-[18px] md:text-[22px] font-bold text-[#d32f2f]"><span className="font-medium">৳</span>{price.toLocaleString()}</span>
+              {priceOld > price && <del className="text-[13px] text-gray-400">৳{priceOld.toLocaleString()}</del>}
+              {discountPct > 0 && <span className="text-[12px] font-bold text-[#00b87a]">{discountPct}% OFF</span>}
             </div>
           </label>
 
@@ -142,8 +142,8 @@ export default function ProductInfo({
                 onChange={() => setPriceOption('emi')}
                 className="sr-only peer"
               />
-              <div className="flex items-center justify-start gap-2 px-[15px] py-[5px] rounded-full border-[1.5px] border-gray-200 peer-checked:border-[#d92128] transition-colors">
-                <span className="text-[18px] md:text-[30px] font-bold text-gray-700"><span className="font-medium">৳</span>{emiMonthly.toLocaleString()}/</span>
+              <div className="flex items-center justify-start gap-2 px-3.5 py-2 md:px-5 md:py-2.5 rounded-full border-[1.5px] border-gray-200 peer-checked:border-[#d92128] transition-colors">
+                <span className="text-[18px] md:text-[22px] font-bold text-gray-700"><span className="font-medium">৳</span>{emiMonthly.toLocaleString()}/</span>
                 <div className="flex flex-col leading-tight">
                   <span className="flex items-center gap-1.5 text-[13px] font-semibold text-gray-700">
                     month

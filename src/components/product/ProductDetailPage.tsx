@@ -37,25 +37,38 @@ export default function ProductDetailPage({ product }: { product: ProductDetail 
     <div className="bg-[#f6f7f9]">
       <div className="bg-white">
         <div className="container mx-auto px-4 min-[992px]:px-14 py-6">
-          <div className="grid grid-cols-1 md:grid-cols-[40%_60%] gap-5 md:gap-y-2 items-start">
-            <div className="order-1 md:order-2 md:col-start-2 md:row-start-1 md:pt-4">
-              <ProductMeta product={product} onShowReviews={() => goToTab('rev')} />
+          <div className="grid grid-cols-1 md:grid-cols-[40%_60%] gap-5 items-start">
+            {/*
+              Meta and Info used to sit in separate grid rows beside a
+              row-spanning gallery. CSS Grid sizes a row-spanning item's
+              tracks off their *combined* height, so on short products
+              (no variants) it inflated the meta row to make up the
+              difference — a visible gap between the meta line and the
+              title. Grouping them into one flex column removes that:
+              they're always tight against each other regardless of the
+              gallery's height. `contents` on mobile lets the gallery
+              still land between them in source order.
+            */}
+            <div className="contents md:flex md:flex-col md:gap-2 md:col-start-2 md:row-start-1 md:pt-4">
+              <div className="order-1 md:order-none">
+                <ProductMeta product={product} onShowReviews={() => goToTab('rev')} />
+              </div>
+              <div className="order-3 md:order-none">
+                <ProductInfo
+                  product={product}
+                  onShowSpecs={() => goToTab('spec')}
+                  variantGroups={variantGroups}
+                  variantCombos={variantCombos}
+                  selection={selection}
+                  onSelectVariant={(groupKey, optionId) =>
+                    setSelection((prev) => applySelection(variantGroups, variantCombos, prev, groupKey, optionId))
+                  }
+                  activeCombo={activeCombo}
+                />
+              </div>
             </div>
-            <div className="order-2 md:order-1 md:col-start-1 md:row-start-1 md:row-span-2">
+            <div className="order-2 md:order-none md:col-start-1 md:row-start-1">
               <ProductGallery images={galleryImages} name={product.name} videoId={product.videoId} />
-            </div>
-            <div className="order-3 md:order-3 md:col-start-2 md:row-start-2">
-              <ProductInfo
-                product={product}
-                onShowSpecs={() => goToTab('spec')}
-                variantGroups={variantGroups}
-                variantCombos={variantCombos}
-                selection={selection}
-                onSelectVariant={(groupKey, optionId) =>
-                  setSelection((prev) => applySelection(variantGroups, variantCombos, prev, groupKey, optionId))
-                }
-                activeCombo={activeCombo}
-              />
             </div>
           </div>
         </div>
