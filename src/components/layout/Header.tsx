@@ -100,8 +100,8 @@ export default function Header({ data }: Props) {
               className="relative flex-1 min-w-0 pl-[15%] min-[1400px]:absolute min-[1400px]:left-1/2 min-[1400px]:top-1/2 min-[1400px]:-translate-x-1/2 min-[1400px]:-translate-y-1/2 min-[1400px]:w-[340px] min-[1400px]:flex-none min-[1400px]:pl-0"
             >
               <div
-                className={`flex items-center rounded-[30px] px-5 py-2.5 transition-colors ${
-                  scrolled ? "bg-transparent border border-[#333333]" : "bg-[#f4f5f7] border border-[#F4F5F7]"
+                className={`flex items-center rounded-[30px] px-5 py-2.5 outline outline-1 -outline-offset-1 transition-colors ${
+                  scrolled ? "bg-transparent outline-[#D9D9DE]" : "bg-[#f4f5f7] outline-[#F4F5F7]"
                 }`}
               >
                 <button
@@ -154,9 +154,7 @@ export default function Header({ data }: Props) {
 
               <Link
                 href={cfg.pcBuilderHref || "/pc-builder"}
-                className={`border-[1.8px] border-[#d32f2f] text-[#d32f2f] px-5 py-[9px] rounded-[30px] font-bold text-[13px] hover:bg-[#d32f2f] hover:text-white transition-all whitespace-nowrap ${
-                  scrolled ? "bg-transparent" : "bg-white"
-                }`}
+                className="border-[1.8px] border-[#d32f2f] text-[#d32f2f] bg-transparent px-5 py-[9px] rounded-[30px] font-bold text-[13px] hover:bg-[#d32f2f] hover:text-white transition-all whitespace-nowrap"
               >
                 {cfg.pcBuilderLabel}
               </Link>

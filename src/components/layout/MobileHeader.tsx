@@ -61,7 +61,7 @@ export default function MobileHeader({ data }: Props) {
     <>
       <div
         ref={searchRef}
-        className={`desk:hidden sticky top-0 z-40 flex items-center gap-2.5 px-4 py-3 md:justify-between transition-all duration-300 ${
+        className={`desk:hidden sticky top-0 z-40 flex items-center gap-2.5 px-4 py-3 md:justify-between transition-colors duration-300 ${
           scrolled ? 'bg-[#f4f5f7]/70 backdrop-blur-md shadow-[0_2px_20px_rgba(0,0,0,0.06)]' : 'bg-[#f4f5f7]'
         }`}
       >
@@ -77,7 +77,11 @@ export default function MobileHeader({ data }: Props) {
 
         {/* Tablet: 340px pinned to the header's centre, same as the desktop header does above 1400px. */}
         <div className="flex-1 min-w-0 md:absolute md:left-1/2 md:top-1/2 md:w-[340px] md:flex-none md:-translate-x-1/2 md:-translate-y-1/2">
-          <div className="flex items-center bg-white rounded-full px-4 py-2.5">
+          <div
+            className={`flex items-center rounded-full px-4 py-2.5 outline outline-1 -outline-offset-1 ${
+              scrolled ? 'bg-transparent outline-[#D9D9DE]' : 'bg-white outline-[#F4F5F7]'
+            }`}
+          >
             <Image src="/images/compare-icons/search-icon.svg" alt="" width={18} height={18} className="w-[18px] h-[18px] mr-2.5 shrink-0" />
             <input
               type="text"
@@ -87,7 +91,7 @@ export default function MobileHeader({ data }: Props) {
               onKeyDown={handleSearchKeyDown}
               placeholder={cfg.searchPlaceholder}
               autoComplete="off"
-              className="flex-1 min-w-0 border-none bg-transparent outline-none text-[14px] text-gray-700 placeholder-gray-400"
+              className="flex-1 min-w-0 border-none bg-transparent outline-none text-[14px] text-gray-700 placeholder-[#333333]"
             />
           </div>
         </div>
