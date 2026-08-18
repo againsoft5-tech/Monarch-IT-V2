@@ -79,7 +79,7 @@ export default function MobileHeader({ data }: Props) {
         <div className="flex-1 min-w-0 md:absolute md:left-1/2 md:top-1/2 md:w-[340px] md:flex-none md:-translate-x-1/2 md:-translate-y-1/2">
           <div
             className={`flex items-center rounded-full px-4 py-2.5 outline outline-1 -outline-offset-1 ${
-              scrolled ? 'bg-transparent outline-[#D9D9DE]' : 'bg-white outline-[#F4F5F7]'
+              scrolled ? 'bg-white outline-[#D9D9DE]' : 'bg-white outline-[#F4F5F7]'
             }`}
           >
             <Image src="/images/compare-icons/search-icon.svg" alt="" width={18} height={18} className="w-[18px] h-[18px] mr-2.5 shrink-0" />
@@ -91,7 +91,7 @@ export default function MobileHeader({ data }: Props) {
               onKeyDown={handleSearchKeyDown}
               placeholder={cfg.searchPlaceholder}
               autoComplete="off"
-              className="flex-1 min-w-0 border-none bg-transparent outline-none text-[14px] text-gray-700 placeholder-[#333333]"
+              className="flex-1 min-w-0 border-none bg-transparent outline-none text-[14px] text-[#99A1AF] placeholder-[#99A1AF]"
             />
           </div>
         </div>

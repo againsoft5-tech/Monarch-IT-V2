@@ -101,7 +101,7 @@ export default function Header({ data }: Props) {
             >
               <div
                 className={`flex items-center rounded-[30px] px-5 py-2.5 outline outline-1 -outline-offset-1 transition-colors ${
-                  scrolled ? "bg-transparent outline-[#D9D9DE]" : "bg-[#f4f5f7] outline-[#F4F5F7]"
+                  scrolled ? "bg-white outline-[#D9D9DE]" : "bg-[#f4f5f7] outline-[#F4F5F7]"
                 }`}
               >
                 <button
@@ -124,7 +124,7 @@ export default function Header({ data }: Props) {
                   onKeyDown={handleSearchKeyDown}
                   placeholder={cfg.searchPlaceholder}
                   autoComplete="off"
-                  className="border-none bg-transparent outline-none flex-1 text-[15px] text-[#333333] placeholder-[#333333]"
+                  className="border-none bg-transparent outline-none flex-1 text-[15px] text-[#99A1AF] placeholder-[#99A1AF]"
                 />
               </div>
               {searchFocused && (
