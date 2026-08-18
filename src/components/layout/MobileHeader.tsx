@@ -91,7 +91,7 @@ export default function MobileHeader({ data }: Props) {
               onKeyDown={handleSearchKeyDown}
               placeholder={cfg.searchPlaceholder}
               autoComplete="off"
-              className="flex-1 min-w-0 border-none bg-transparent outline-none text-[14px] text-[#99A1AF] placeholder-[#99A1AF]"
+              className="flex-1 min-w-0 border-none bg-transparent outline-none text-[14px] text-[#99A1AF] placeholder-[#99A1AF] [font-family:var(--font-poppins),Arial,Helvetica,sans-serif]"
             />
           </div>
         </div>

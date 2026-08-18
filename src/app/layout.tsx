@@ -25,10 +25,15 @@ const kalpurush = localFont({
 // would shadow the Kalpurush fallback. Scoping a second face to just that
 // codepoint via unicode-range forces every ৳ on the site onto Kalpurush
 // without having to touch each of the many places that render it.
+// adjustFontFallback is off because next/font's auto-generated fallback face
+// doesn't inherit the unicode-range restriction above — left on, that
+// fallback matched every character (not just ৳) and shadowed Poppins
+// everywhere in the site's normal text.
 const taka = localFont({
   src: "../fonts/Kalpurush.ttf",
   variable: "--font-taka",
   display: "swap",
+  adjustFontFallback: false,
   declarations: [{ prop: "unicode-range", value: "U+09F3" }],
 });
 

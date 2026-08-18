@@ -124,7 +124,7 @@ export default function Header({ data }: Props) {
                   onKeyDown={handleSearchKeyDown}
                   placeholder={cfg.searchPlaceholder}
                   autoComplete="off"
-                  className="border-none bg-transparent outline-none flex-1 text-[15px] text-[#99A1AF] placeholder-[#99A1AF]"
+                  className="border-none bg-transparent outline-none flex-1 text-[15px] text-[#99A1AF] placeholder-[#99A1AF] [font-family:var(--font-poppins),Arial,Helvetica,sans-serif]"
                 />
               </div>
               {searchFocused && (
