@@ -62,7 +62,7 @@ export const DEFAULT_SIDE_MENU: SideMenuSection = {
   items: [
     {
       id: 'sm-phone',
-      label: 'Phone',
+      label: 'Contact Us',
       icon: '/images/catalog/view/theme/default/image/svg/phone-black-icon.svg',
       href: '#',
       action: 'link',
@@ -92,9 +92,9 @@ export const DEFAULT_SIDE_MENU: SideMenuSection = {
     },
     {
       id: 'sm-gift',
-      label: 'Gift',
+      label: 'Offers & Deals',
       icon: '/images/catalog/view/theme/default/image/svg/gift-black-icon.svg',
-      href: '/offers',
+      href: '/offers-and-deals',
       action: 'link',
       active: false,
       hidden: false,

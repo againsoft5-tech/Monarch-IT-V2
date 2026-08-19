@@ -1,0 +1,80 @@
+{
+  "title": "Monarch Deals",
+  "subtitle": "Built for every beat, every space, and every moment.",
+  "tabs": [
+    {
+      "id": "all",
+      "label": "Shop All Deals",
+      "icon": "/images/offers/deal-types/shop-all-deals.svg",
+      "iconActive": "/images/offers/deal-types/shop-all-deals-active.svg",
+      "hidden": false,
+      "showAll": true,
+      "categorySlugs": [],
+      "productSlugs": []
+    },
+    {
+      "id": "flash-sale",
+      "label": "Flash Sale",
+      "icon": "/images/offers/deal-types/flash-sale.svg",
+      "iconActive": "/images/offers/deal-types/flash-sale-active.svg",
+      "hidden": false,
+      "showAll": false,
+      "categorySlugs": [
+        "component",
+        "gaming"
+      ],
+      "productSlugs": []
+    },
+    {
+      "id": "clearance",
+      "label": "Clearance",
+      "icon": "/images/offers/deal-types/clearance.svg",
+      "iconActive": "/images/offers/deal-types/clearance-active.svg",
+      "hidden": false,
+      "showAll": false,
+      "categorySlugs": [
+        "monitor"
+      ],
+      "productSlugs": []
+    },
+    {
+      "id": "study-hard-game-harder",
+      "label": "Study Hard-Game-Harder",
+      "icon": "/images/offers/deal-types/study-hard-game-harder.svg",
+      "iconActive": "/images/offers/deal-types/study-hard-game-harder-active.svg",
+      "hidden": false,
+      "showAll": false,
+      "categorySlugs": [
+        "laptop",
+        "desktops"
+      ],
+      "productSlugs": []
+    },
+    {
+      "id": "bundles",
+      "label": "Bundles",
+      "icon": "/images/offers/deal-types/bundles.svg",
+      "iconActive": "/images/offers/deal-types/bundles-active.svg",
+      "hidden": false,
+      "showAll": false,
+      "categorySlugs": [
+        "office-equipments",
+        "air-conditioner"
+      ],
+      "productSlugs": []
+    },
+    {
+      "id": "coupons",
+      "label": "Coupons",
+      "icon": "/images/offers/deal-types/coupons.svg",
+      "iconActive": "/images/offers/deal-types/coupons-active.svg",
+      "hidden": false,
+      "showAll": false,
+      "categorySlugs": [
+        "ups-ips",
+        "security"
+      ],
+      "productSlugs": []
+    }
+  ]
+}

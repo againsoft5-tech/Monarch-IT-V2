@@ -469,7 +469,7 @@ export default function CategoryPage({ categoryName, products, priceMinDefault, 
                 <button
                   type="button"
                   onClick={() => setPagesShown((p) => p + 1)}
-                  className="inline-flex items-center gap-2 bg-white text-[#c3272b] border-2 border-[#c3272b] font-bold text-[13px] px-6 py-2.5 rounded-full hover:bg-[#c3272b] hover:text-white transition-colors cursor-pointer"
+                  className="inline-flex items-center gap-2 bg-white text-[#c3272b] border border-[#c3272b] font-bold text-[13px] px-6 py-2.5 rounded-full hover:bg-[#c3272b] hover:text-white transition-colors cursor-pointer"
                 >
                   <i className="fa fa-chevron-down text-base" /> More
                 </button>

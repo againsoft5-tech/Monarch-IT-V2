@@ -5,7 +5,10 @@ import { LIVE_EDIT_COOKIE, isValidLiveEditToken } from '@/lib/live-edit/auth'
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
 
-  if (pathname.startsWith('/website/live-edit/home')) {
+  if (
+    pathname.startsWith('/website/live-edit/home') ||
+    pathname.startsWith('/website/live-edit/offers')
+  ) {
     const token = req.cookies.get(LIVE_EDIT_COOKIE)?.value
     if (!isValidLiveEditToken(token)) {
       const url = req.nextUrl.clone()
@@ -19,5 +22,10 @@ export function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/website/live-edit/home', '/website/live-edit/home/:path*'],
+  matcher: [
+    '/website/live-edit/home',
+    '/website/live-edit/home/:path*',
+    '/website/live-edit/offers',
+    '/website/live-edit/offers/:path*',
+  ],
 }

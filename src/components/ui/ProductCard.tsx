@@ -2,24 +2,51 @@ import Image from 'next/image'
 import Link from 'next/link'
 import type { CategoryProduct } from '@/data/categoryProducts'
 
+/** Ribbon captions are capped by character count so every band truncates at the same point. */
+const RIBBON_LABEL_MAX = 10
+
+function clipRibbonLabel(label: string) {
+  const text = label.trim()
+  return text.length > RIBBON_LABEL_MAX ? `${text.slice(0, RIBBON_LABEL_MAX)}...` : text
+}
+
 export default function ProductCard({
   product: p,
   onBuyNow,
   onCompare,
   onChat,
+  ribbonLabel,
+  ribbonEyebrow = 'Deals',
 }: {
   product: CategoryProduct
   onBuyNow: (product: CategoryProduct) => void
   onCompare: (product: CategoryProduct) => void
   onChat: () => void
+  /** Corner ribbon caption, e.g. the deal tab this product came from. Hidden when empty. */
+  ribbonLabel?: string
+  ribbonEyebrow?: string
 }) {
   return (
     <div className="flex flex-col">
       <Link
         href={`/${p.slug}`}
-        className="aspect-square bg-[#f5f6fa] rounded-2xl md:rounded-[35px] flex items-center justify-center"
+        className="relative overflow-hidden aspect-square bg-[#f5f6fa] rounded-2xl md:rounded-[35px] flex items-center justify-center"
       >
         <Image src={p.image} alt={p.name} width={228} height={228} className="w-[78%] h-[78%] object-contain" />
+        {ribbonLabel ? (
+          // Clip box is half the card; the band is rotated across its diagonal (classic corner ribbon).
+          <span className="pointer-events-none absolute top-0 right-0 h-1/2 w-1/2 overflow-hidden">
+            <span className="absolute top-[10%] left-[1%] w-[140%] rotate-45 text-center shadow-md">
+              {/* 18px on desktop; scaled down on mobile where the card is ~half the width. */}
+              <span className="block bg-white py-[2px] text-[11px] md:text-[18px] font-semibold leading-tight text-[#c3272b]">
+                {ribbonEyebrow}
+              </span>
+              <span className="block whitespace-nowrap bg-[#c3272b] px-2 py-[2px] text-[11px] md:text-[18px] font-semibold leading-tight text-white">
+                {clipRibbonLabel(ribbonLabel)}
+              </span>
+            </span>
+          </span>
+        ) : null}
       </Link>
       <div className="pt-3 flex flex-col flex-1">
         <div className="flex items-center gap-1 mb-2 flex-wrap">

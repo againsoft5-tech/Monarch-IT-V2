@@ -26,7 +26,18 @@ const CHROME_ITEMS: { id: 'header' | 'sideMenu' | 'footer'; label: string; hint:
 const DEFAULT_OPEN: Record<string, boolean> = {
   chrome: true,
   'page:home': true,
+  'page:offers': true,
 }
+
+/** Pages with their own editor route (own content blob + save endpoint). */
+const OTHER_PAGES: { href: string; title: string; meta: string; hint: string }[] = [
+  {
+    href: '/website/live-edit/offers',
+    title: 'Offers & Deals page',
+    meta: '/offers-and-deals · own editor',
+    hint: 'Title · subtitle · deal tabs · products',
+  },
+]
 
 function CollapsibleGroup({
   title,
@@ -161,6 +172,30 @@ export default function SectionsNavDrawer({ open, content, onClose, onOpen }: Pr
             ))
           )}
         </CollapsibleGroup>
+
+        {OTHER_PAGES.map((page) => (
+          <CollapsibleGroup
+            key={page.href}
+            title={page.title}
+            meta={page.meta}
+            open={isOpen(`page:${page.href}`)}
+            onToggle={() => toggle(`page:${page.href}`)}
+          >
+            <a
+              href={page.href}
+              className="flex w-full items-center gap-3 px-3 py-3 text-left no-underline hover:bg-[#f5f5f7]"
+            >
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-none border border-[#e5e5e5] bg-[#fafafa] text-[11px] font-bold text-[#888]">
+                1
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-[13px] font-semibold text-[#222]">Deals</span>
+                <span className="block text-[11px] text-[#888]">{page.hint}</span>
+              </span>
+              <span className="text-[12px] text-[#bd2026]">Open →</span>
+            </a>
+          </CollapsibleGroup>
+        ))}
       </div>
     </aside>
   )
