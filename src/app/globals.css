@@ -98,6 +98,18 @@ body {
   border-radius: 10px;
 }
 
+/* Attention blink for promo icons (header "Offers & Deals"). */
+@keyframes blink-soft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.15; }
+}
+.blink-soft {
+  animation: blink-soft 1.2s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .blink-soft { animation: none; }
+}
+
 /* Dot that travels along an element's border via offset-path, set inline per-use. */
 @keyframes orbit-move {
   from { offset-distance: 0%; }

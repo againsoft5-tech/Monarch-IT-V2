@@ -24,6 +24,10 @@ export default function Header({ data }: Props) {
   const pathname = usePathname();
   const headerRef = useRef<HTMLElement>(null);
   const [headerBottom, setHeaderBottom] = useState(0);
+  const rowRef = useRef<HTMLDivElement>(null);
+  const logoRef = useRef<HTMLDivElement>(null);
+  /** Logo's right edge relative to the header row — where the "Offers & Deals" gap starts. */
+  const [logoEnd, setLogoEnd] = useState(267);
   const searchRef = useRef<HTMLDivElement>(null);
   const [query, setQuery] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
@@ -50,6 +54,22 @@ export default function Header({ data }: Props) {
     updateHeaderBottom();
     window.addEventListener("resize", updateHeaderBottom);
     return () => window.removeEventListener("resize", updateHeaderBottom);
+  }, []);
+
+  // Tracks the logo's right edge so the header promo link can centre itself in the
+  // gap between the logo and the (absolutely centred) search bar. ResizeObserver so a
+  // late-loading or CMS-swapped logo re-measures instead of relying on a fixed width.
+  useEffect(() => {
+    const row = rowRef.current;
+    const logo = logoRef.current;
+    if (!row || !logo) return;
+    const update = () =>
+      setLogoEnd(Math.round(logo.getBoundingClientRect().right - row.getBoundingClientRect().left));
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(logo);
+    observer.observe(row);
+    return () => observer.disconnect();
   }, []);
 
   useEffect(() => {
@@ -79,8 +99,8 @@ export default function Header({ data }: Props) {
       }`}
     >
       <div className="container mx-auto">
-        <div className="flex items-center py-3.5 relative z-[100] gap-3">
-          <div className="flex-none flex items-center">
+        <div ref={rowRef} className="flex items-center py-3.5 relative z-[100] gap-10">
+          <div ref={logoRef} className="flex-none flex items-center">
             <Link href="/" className="flex items-center no-underline">
               <Image
                 src={cfg.logoDesktop}
@@ -94,10 +114,28 @@ export default function Header({ data }: Props) {
             </Link>
           </div>
 
+          {/*
+            Wide screens only (>= 1366px) — below that the header has no room beside the search bar.
+            1366–1400px: the search is still in flow, so this stays flex-none; giving it flex-1 here
+            steals half the row and collapses the search pill to ~40px.
+            >= 1400px: the search jumps to absolute-centre (w-[340px]), freeing the space beside the
+            logo — so this spans logo-right → search-left (50% - 170px) and centres itself in that gap.
+          */}
+          <Link
+            href="/offers-and-deals"
+            className="hidden min-[85.375rem]:flex flex-none justify-center items-center gap-1.5 font-semibold text-[15px] text-[#d32f2f] whitespace-nowrap hover:text-[#b71c1c] transition-colors no-underline min-[1400px]:absolute min-[1400px]:left-[var(--logo-end)] min-[1400px]:right-[calc(50%+170px)]"
+            style={{ ['--logo-end' as string]: `${logoEnd}px` }}
+          >
+            <span className="mi blink-soft text-[22px] leading-none">redeem</span>
+            Offers &amp; Deals
+          </Link>
+
           <div className="flex-1 flex items-center gap-0.5 min-w-0 min-[1400px]:justify-end">
             <div
               ref={searchRef}
-              className="relative flex-1 min-w-0 pl-[15%] min-[1400px]:absolute min-[1400px]:left-1/2 min-[1400px]:top-1/2 min-[1400px]:-translate-x-1/2 min-[1400px]:-translate-y-1/2 min-[1400px]:w-[340px] min-[1400px]:flex-none min-[1400px]:pl-0"
+              // pl-[15%] only below 1366px; from there the "Offers & Deals" link occupies that
+              // space, and keeping the padding squeezes the search pill down to ~40px.
+              className="relative flex-1 min-w-0 pl-[15%] min-[85.375rem]:pl-0 min-[1400px]:absolute min-[1400px]:left-1/2 min-[1400px]:top-1/2 min-[1400px]:-translate-x-1/2 min-[1400px]:-translate-y-1/2 min-[1400px]:w-[340px] min-[1400px]:flex-none"
             >
               <div
                 className={`flex items-center rounded-[30px] px-5 py-2.5 outline outline-1 -outline-offset-1 transition-colors ${
