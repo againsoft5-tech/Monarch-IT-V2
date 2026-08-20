@@ -126,7 +126,11 @@ export default function FeaturedProducts({
                   <Link
                     key={p.slug}
                     href={`/${p.slug}`}
-                    className="flex-none w-[47%] sm:w-[31%] lg:w-[calc(25%-15px)] min-[87.5rem]:w-[calc((100%-100px)/6)] bg-white p-3 md:p-5 rounded-2xl md:rounded-[35px] flex flex-col no-underline"
+                    // Per-row count matches the category grid (2 / md:3 / lg:4 / 5), so the
+                    // widths subtract this track's own gaps: gap-3 (12px), md:gap-5 (20px).
+                    // The 5-col breakpoint must stay in rem — Tailwind v4 emits px-based
+                    // media queries before rem ones, so min-[1400px] would lose to lg:.
+                    className="flex-none w-[calc((100%-12px)/2)] md:w-[calc((100%-40px)/3)] lg:w-[calc((100%-60px)/4)] min-[87.5rem]:w-[calc((100%-80px)/5)] bg-white p-3 md:p-5 rounded-2xl md:rounded-[35px] flex flex-col no-underline"
                   >
                     <div className="bg-white rounded-2xl flex items-center justify-center mb-3">
                       <Image
