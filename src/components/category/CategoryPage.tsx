@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -19,6 +19,10 @@ type Props = {
   products: CategoryProduct[]
   priceMinDefault: number
   priceMaxDefault: number
+  /** Replaces the default "<name> Price in Bangladesh" heading block (e.g. a banner hero). */
+  hero?: ReactNode
+  /** Overrides the trailing SEO copy when the default category wording doesn't fit. */
+  about?: { title: string; body: ReactNode }
 }
 
 // 4 columns and below -> 8 per page, 5 columns (>= 1400px) -> 10 per page.
@@ -29,7 +33,14 @@ const FIVE_COL_QUERY = '(min-width: 1400px)'
 const PAGE_SIZE = 8
 const PAGE_SIZE_5_COL = 10
 
-export default function CategoryPage({ categoryName, products, priceMinDefault, priceMaxDefault }: Props) {
+export default function CategoryPage({
+  categoryName,
+  products,
+  priceMinDefault,
+  priceMaxDefault,
+  hero,
+  about,
+}: Props) {
   const router = useRouter()
   const { isLoggedIn } = useAuth()
   const { addItems } = useCart()
@@ -375,17 +386,19 @@ export default function CategoryPage({ categoryName, products, priceMinDefault, 
 
         {/* Main content */}
         <div>
-            <div className="text-center mb-6">
-              <h1 className="text-3xl md:text-4xl font-bold text-[#4d4d4d]">
-                {categoryName} Price in Bangladesh {today.getFullYear()}
-              </h1>
-              <p className="mt-2.5 w-full text-[14px] md:text-[15px] text-gray-500 leading-[1.8]">
-                Monarch IT, the premier {categoryName} shop in Bangladesh, has updated its price list as of{' '}
-                {updatedDate}. With a range spanning from ৳{priceLow.toLocaleString()} to ৳
-                {priceHigh.toLocaleString()}, they offer {products.length} different products. Among these,{' '}
-                {inStockCount} items are currently in stock, {bestPriceCount} of them with the best discount price.
-              </p>
-            </div>
+            {hero ?? (
+              <div className="text-center mb-6">
+                <h1 className="text-3xl md:text-4xl font-bold text-[#4d4d4d]">
+                  {categoryName} Price in Bangladesh {today.getFullYear()}
+                </h1>
+                <p className="mt-2.5 w-full text-[14px] md:text-[15px] text-gray-500 leading-[1.8]">
+                  Monarch IT, the premier {categoryName} shop in Bangladesh, has updated its price list as of{' '}
+                  {updatedDate}. With a range spanning from ৳{priceLow.toLocaleString()} to ৳
+                  {priceHigh.toLocaleString()}, they offer {products.length} different products. Among these,{' '}
+                  {inStockCount} items are currently in stock, {bestPriceCount} of them with the best discount price.
+                </p>
+              </div>
+            )}
 
             <div className="flex items-center justify-between gap-3 mb-4">
               <button
@@ -482,16 +495,22 @@ export default function CategoryPage({ categoryName, products, priceMinDefault, 
                   descOpen ? 'max-h-none pb-4' : 'max-h-[170px]'
                 }`}
               >
-                <h2 className="text-[17px] font-bold text-gray-900 mb-2">About {categoryName}</h2>
-                <p className="text-[13px] text-gray-600 leading-[1.8] mb-3">
-                  Explore the full {categoryName} lineup available at Monarch IT, with options across different
-                  budgets and use cases. Every unit ships with official warranty and after-sales support across our
-                  service network in Bangladesh.
-                </p>
+                <h2 className="text-[17px] font-bold text-gray-900 mb-2">
+                  {about ? about.title : `About ${categoryName}`}
+                </h2>
+                {about ? (
+                  about.body
+                ) : (
+                  <p className="text-[13px] text-gray-600 leading-[1.8] mb-3">
+                    Explore the full {categoryName} lineup available at Monarch IT, with options across different
+                    budgets and use cases. Every unit ships with official warranty and after-sales support across
+                    our service network in Bangladesh.
+                  </p>
+                )}
                 <h3 className="text-[15px] font-semibold text-gray-900 mb-1.5">Why buy from Monarch IT</h3>
                 <p className="text-[13px] text-gray-600 leading-[1.8] mb-3">
-                  All {categoryName} products listed here are sourced directly from authorized distributors, backed
-                  by nationwide delivery and dedicated customer support.
+                  All products listed here are sourced directly from authorized distributors, backed by nationwide
+                  delivery and dedicated customer support.
                 </p>
                 {!descOpen && (
                   <div className="absolute bottom-0 left-0 right-0 h-[60px] bg-gradient-to-b from-white/0 to-white pointer-events-none" />

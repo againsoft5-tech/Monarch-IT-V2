@@ -104,7 +104,7 @@ export const DEFAULT_SIDE_MENU: SideMenuSection = {
       id: 'sm-hot',
       label: 'Hot Products',
       icon: '/images/catalog/view/theme/default/image/svg/fire-black-icon.svg',
-      href: '#',
+      href: '/hot-products',
       action: 'link',
       active: false,
       hidden: false,
