@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
@@ -15,6 +15,17 @@ type Props = {
   data?: Partial<HeaderSection> | null;
 };
 
+const OFFERS_LABEL = "Offers & Deals";
+
+/**
+ * Rendered width of the shipped desktop logo at `h-11`. Only a seed for the very first
+ * paint — the real width is measured on mount, so a CMS logo of another size self-corrects.
+ */
+const LOGO_WIDTH_FALLBACK = 155;
+
+/** useLayoutEffect on the client, useEffect on the server — avoids React's SSR warning. */
+const useIsomorphicLayoutEffect = typeof window !== "undefined" ? useLayoutEffect : useEffect;
+
 export default function Header({ data }: Props) {
   const cfg = { ...DEFAULT_HEADER, ...data };
   const [accountOpen, setAccountOpen] = useState(false);
@@ -26,8 +37,13 @@ export default function Header({ data }: Props) {
   const [headerBottom, setHeaderBottom] = useState(0);
   const rowRef = useRef<HTMLDivElement>(null);
   const logoRef = useRef<HTMLDivElement>(null);
-  /** Logo's right edge relative to the header row — where the "Offers & Deals" gap starts. */
-  const [logoEnd, setLogoEnd] = useState(267);
+  /**
+   * Logo's right edge measured *from the row's left edge* — where the "Offers & Deals"
+   * gap starts. It feeds an absolute `left`, which resolves against the row's padding
+   * box, so the seed value must be row-relative too (the logo's own width), otherwise
+   * the link paints in the wrong spot on load and visibly snaps once measured.
+   */
+  const [logoEnd, setLogoEnd] = useState(LOGO_WIDTH_FALLBACK);
   const searchRef = useRef<HTMLDivElement>(null);
   const [query, setQuery] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
@@ -59,7 +75,8 @@ export default function Header({ data }: Props) {
   // Tracks the logo's right edge so the header promo link can centre itself in the
   // gap between the logo and the (absolutely centred) search bar. ResizeObserver so a
   // late-loading or CMS-swapped logo re-measures instead of relying on a fixed width.
-  useEffect(() => {
+  // Layout effect (not plain effect) so any correction lands before the browser paints.
+  useIsomorphicLayoutEffect(() => {
     const row = rowRef.current;
     const logo = logoRef.current;
     if (!row || !logo) return;
@@ -121,14 +138,32 @@ export default function Header({ data }: Props) {
             >= 1400px: the search jumps to absolute-centre (w-[340px]), freeing the space beside the
             logo — so this spans logo-right → search-left (50% - 170px) and centres itself in that gap.
           */}
-          <Link
-            href="/offers-and-deals"
-            className="hidden min-[85.375rem]:flex flex-none justify-center items-center gap-1.5 font-semibold text-[15px] text-[#d32f2f] whitespace-nowrap hover:text-[#b71c1c] transition-colors no-underline min-[1400px]:absolute min-[1400px]:left-[var(--logo-end)] min-[1400px]:right-[calc(50%+170px)]"
+          {/* The wrapper only spans the gap so the link can centre in it — pointer-events-none
+              keeps that empty space unclickable; only the icon + text below are the link. */}
+          <div
+            className="pointer-events-none hidden min-[85.375rem]:flex flex-none justify-center items-center min-[1400px]:absolute min-[1400px]:left-[var(--logo-end)] min-[1400px]:right-[calc(50%+170px)]"
             style={{ ['--logo-end' as string]: `${logoEnd}px` }}
           >
-            <span className="mi blink-soft text-[22px] leading-none">redeem</span>
-            Offers &amp; Deals
-          </Link>
+            <Link
+              href="/offers-and-deals"
+              aria-label={OFFERS_LABEL}
+              className="pointer-events-auto inline-flex items-center gap-1.5 font-semibold text-[15px] text-[#d32f2f] whitespace-nowrap no-underline transition-colors hover:text-[#b71c1c]"
+            >
+              <span className="mi blink-soft text-[22px] leading-none">redeem</span>
+              {/* Split per letter so each can carry its own animation delay. */}
+              <span aria-hidden className="letter-wave">
+                {OFFERS_LABEL.split('').map((char, i) =>
+                  char === ' ' ? (
+                    <span key={i} className="w-[0.28em]" />
+                  ) : (
+                    <span key={i} style={{ ['--d' as string]: `${(i * 0.06).toFixed(2)}s` }}>
+                      {char}
+                    </span>
+                  ),
+                )}
+              </span>
+            </Link>
+          </div>
 
           <div className="flex-1 flex items-center gap-0.5 min-w-0 min-[1400px]:justify-end">
             <div

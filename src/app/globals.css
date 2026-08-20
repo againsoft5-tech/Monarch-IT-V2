@@ -110,6 +110,29 @@ body {
   .blink-soft { animation: none; }
 }
 
+/* Per-letter wave. Motion only — letters keep whatever colour they inherit.
+   Each letter sets its own --d stagger inline so the wave travels along the word.
+
+   4s cycle = a 1s bounce (0–25%) then held still for the remaining 3s. With the
+   longest letter delay at ~0.8s the wave finishes sweeping around 1.8s, leaving
+   roughly 2s where the whole word is at rest before it starts again. */
+@keyframes letter-wave {
+  0%      { transform: translateY(0); }
+  6.25%   { transform: translateY(-3px); }
+  12.5%   { transform: translateY(0); }
+  18.75%  { transform: translateY(3px); }
+  25%     { transform: translateY(0); }
+  100%    { transform: translateY(0); }
+}
+.letter-wave > span {
+  display: inline-block;
+  animation: letter-wave 4s ease-in-out infinite;
+  animation-delay: var(--d, 0s);
+}
+@media (prefers-reduced-motion: reduce) {
+  .letter-wave > span { animation: none; }
+}
+
 /* Dot that travels along an element's border via offset-path, set inline per-use. */
 @keyframes orbit-move {
   from { offset-distance: 0%; }
