@@ -65,7 +65,7 @@ export const DEFAULT_OFFERS_PAGE: OffersPageContent = {
     },
     {
       id: 'study-hard-game-harder',
-      label: 'Study Hard-Game-Harder',
+      label: 'Study Hard',
       icon: `${ICON_DIR}/study-hard-game-harder.svg`,
       iconActive: `${ICON_DIR}/study-hard-game-harder-active.svg`,
       categorySlugs: ['laptop', 'desktops'],

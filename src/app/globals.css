@@ -110,6 +110,22 @@ body {
   .blink-soft { animation: none; }
 }
 
+/*
+ * Bundles module: browsers default <button> to `cursor: default`, so every control in
+ * this module (tabs, cards, slots, links, icon buttons) gets a pointer from one rule
+ * instead of a cursor-pointer class per element that new controls would keep missing.
+ */
+.bundles-module a,
+.bundles-module label,
+.bundles-module select,
+.bundles-module [role='button'],
+.bundles-module button:not(:disabled) {
+  cursor: pointer;
+}
+.bundles-module button:disabled {
+  cursor: not-allowed;
+}
+
 /* Per-letter wave. Motion only — letters keep whatever colour they inherit.
    Each letter sets its own --d stagger inline so the wave travels along the word.
 

@@ -68,6 +68,24 @@ export default function CartDrawer() {
                     <span className="text-gray-400">=</span>
                     <span className="font-bold text-gray-900"><span className="font-medium">৳</span><span className="font-price">{(item.price * item.qty).toLocaleString()}</span></span>
                   </div>
+
+                  {/* Bundle lines list the products they contain, plus any free gift. */}
+                  {item.bundleItems?.length ? (
+                    <ul className="mt-1.5 flex list-none flex-col gap-0.5 border-l-2 border-gray-100 pl-2.5 m-0">
+                      {item.bundleItems.map((child) => (
+                        <li key={child.slug} className="text-[11.5px] text-gray-500 truncate">
+                          {child.name}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
+
+                  {item.giftLabel ? (
+                    <span className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-[#e8f6ee] px-2 py-0.5 text-[11px] font-bold text-[#0f7a43]">
+                      <span className="mi text-[13px] leading-none">redeem</span>
+                      Free: {item.giftLabel}
+                    </span>
+                  ) : null}
                 </div>
 
                 <button
