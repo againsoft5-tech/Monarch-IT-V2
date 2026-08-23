@@ -150,8 +150,7 @@ export default function BuildYourOwnBundle({ bundles }: { bundles: CustomBundle[
     [bundle, selected],
   )
 
-  const allFilled = selected.length === tierCount
-  const canAdd = allFilled
+  const canAdd = selected.length === tierCount
 
   const reset = (count: BundleTierCount) => {
     setTierCount(count)
@@ -334,21 +333,27 @@ export default function BuildYourOwnBundle({ bundles }: { bundles: CustomBundle[
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={addToCart}
-            disabled={!canAdd}
-            className="h-12 w-full bg-[#c3272b] text-[14px] font-bold uppercase tracking-wide text-white transition-colors hover:bg-[#a5121c] disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            Add bundle to cart
-          </button>
-          {!canAdd ? (
-            <p className="m-0 bg-white px-4 py-2 text-center text-[12px] text-gray-500">
-              {!allFilled
-                ? `Select ${tierCount - selected.length} more product${tierCount - selected.length === 1 ? '' : 's'}.`
-                : 'Choose your free product to continue.'}
-            </p>
-          ) : null}
+          {/* Footer: the hint sits above the CTA so the button keeps the panel's
+              bottom edge, and the pill matches the Add-to-cart on bundle cards. */}
+          <div className="px-4 pb-4">
+            {!canAdd ? (
+              <p className="m-0 mb-2 flex items-center justify-center gap-1 text-center text-[12px] text-gray-500">
+                <span className="mi text-[15px] leading-none text-gray-400">info</span>
+                {`Select ${tierCount - selected.length} more product${
+                  tierCount - selected.length === 1 ? '' : 's'
+                }.`}
+              </p>
+            ) : null}
+            <button
+              type="button"
+              onClick={addToCart}
+              disabled={!canAdd}
+              className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[#c3272b] text-[14px] font-bold uppercase tracking-wide text-white shadow-[0_6px_16px_rgba(195,39,43,0.28)] transition-colors hover:bg-[#a5121c] disabled:cursor-not-allowed disabled:bg-[#c8ccd6] disabled:shadow-none"
+            >
+              <span className="mi text-[20px] leading-none">shopping_cart</span>
+              Add bundle to cart
+            </button>
+          </div>
         </div>
       ) : null}
 
