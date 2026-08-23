@@ -48,7 +48,7 @@ function nowIso() {
  * seeds merged in once — stamping the version means a bundle the admin deleted stays
  * deleted instead of reappearing on every page load.
  */
-const SEED_VERSION = 4
+const SEED_VERSION = 5
 
 type StoredDB = BundleDB & { seedVersion?: number }
 

@@ -98,11 +98,15 @@ function ownProducts(tab: OffersTab): OffersTabProduct[] {
  * it falls back to every discounted product in the catalog.
  */
 export function productsForTab(tab: OffersTab, allTabs: OffersTab[]): OffersTabProduct[] {
+  // A bundles tab renders the bundle module, so it has no deal products of its own.
+  if (tab.panel === 'bundles') return []
   if (!tab.showAll) return ownProducts(tab)
 
   // Aggregated products keep their source tab's label, so the grid can badge each card.
   const aggregated = dedupeById(
-    allTabs.filter((t) => t.id !== tab.id && !t.showAll && !t.hidden).flatMap(ownProducts),
+    allTabs
+      .filter((t) => t.id !== tab.id && !t.showAll && !t.hidden && t.panel !== 'bundles')
+      .flatMap(ownProducts),
   )
   if (aggregated.length > 0) return aggregated
 

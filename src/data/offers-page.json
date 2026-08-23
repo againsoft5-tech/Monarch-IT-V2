@@ -10,7 +10,8 @@
       "hidden": false,
       "showAll": true,
       "categorySlugs": [],
-      "productSlugs": []
+      "productSlugs": [],
+      "panel": "grid"
     },
     {
       "id": "flash-sale",
@@ -23,7 +24,8 @@
         "component",
         "gaming"
       ],
-      "productSlugs": []
+      "productSlugs": [],
+      "panel": "grid"
     },
     {
       "id": "clearance",
@@ -35,7 +37,8 @@
       "categorySlugs": [
         "monitor"
       ],
-      "productSlugs": []
+      "productSlugs": [],
+      "panel": "grid"
     },
     {
       "id": "study-hard-game-harder",
@@ -48,7 +51,8 @@
         "laptop",
         "desktops"
       ],
-      "productSlugs": []
+      "productSlugs": [],
+      "panel": "grid"
     },
     {
       "id": "bundles",
@@ -57,11 +61,9 @@
       "iconActive": "/images/offers/deal-types/bundles-active.svg",
       "hidden": false,
       "showAll": false,
-      "categorySlugs": [
-        "office-equipments",
-        "air-conditioner"
-      ],
-      "productSlugs": []
+      "categorySlugs": [],
+      "productSlugs": [],
+      "panel": "bundles"
     },
     {
       "id": "coupons",
@@ -74,7 +76,8 @@
         "ups-ips",
         "security"
       ],
-      "productSlugs": []
+      "productSlugs": [],
+      "panel": "grid"
     }
   ]
 }

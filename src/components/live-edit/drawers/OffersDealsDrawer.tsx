@@ -109,8 +109,16 @@ function SortableTabRow({
               {isHidden ? <span className="ml-1.5 text-[10px] font-normal text-[#888]">(hidden)</span> : null}
             </p>
             <p className="truncate text-[10px] text-[#888]">
-              {tab.showAll ? 'All deals' : `${tab.categorySlugs.length} cat · ${tab.productSlugs.length} picked`}
-              {` · ${resolvedCount} products`}
+              {tab.panel === 'bundles' ? (
+                'Bundles module'
+              ) : (
+                <>
+                  {tab.showAll
+                    ? 'All deals'
+                    : `${tab.categorySlugs.length} cat · ${tab.productSlugs.length} picked`}
+                  {` · ${resolvedCount} products`}
+                </>
+              )}
             </p>
           </div>
           <ChevronDown
@@ -185,6 +193,40 @@ function SortableTabRow({
             onChange={(iconActive) => onUpdate({ iconActive })}
           />
 
+          <div>
+            <p className="m-0 mb-1 text-[11px] font-semibold uppercase tracking-wide text-[#666]">
+              Panel
+            </p>
+            <div className="flex gap-1.5">
+              {([
+                { key: 'grid', label: 'Product grid' },
+                { key: 'bundles', label: 'Bundles module' },
+              ] as const).map((opt) => (
+                <button
+                  key={opt.key}
+                  type="button"
+                  onClick={() => onUpdate({ panel: opt.key })}
+                  aria-pressed={(tab.panel ?? 'grid') === opt.key}
+                  className={cn(
+                    'flex-1 rounded-none border px-2 py-1.5 text-[12px] font-medium transition-colors',
+                    (tab.panel ?? 'grid') === opt.key
+                      ? 'border-[#c3272b] bg-[#c3272b] text-white'
+                      : 'border-[#e5e5e5] bg-white text-[#555] hover:border-[#c3272b]',
+                  )}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {tab.panel === 'bundles' ? (
+            <p className="m-0 text-[11px] leading-snug text-[#777]">
+              This tab shows the Bundles module — ready bundles and Build Your Own Bundle. Its
+              contents come from Admin → Bundles, so there is nothing to pick here.
+            </p>
+          ) : (
+            <>
           <label className="flex items-center gap-2 text-[13px] text-[#333]">
             <input
               type="checkbox"
@@ -336,6 +378,8 @@ function SortableTabRow({
                   </div>
                 ) : null}
               </div>
+            </>
+          )}
             </>
           )}
         </div>

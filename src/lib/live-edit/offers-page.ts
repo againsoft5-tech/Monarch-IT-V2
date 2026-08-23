@@ -6,6 +6,13 @@
  * file store can be swapped for an admin DB later.
  */
 
+/**
+ * What a tab renders below the chip strip.
+ * - `grid`    — the usual filter/sort row plus a product grid
+ * - `bundles` — the Bundles module (ready bundles + build-your-own)
+ */
+export type OffersTabPanel = 'grid' | 'bundles'
+
 export type OffersTab = {
   id: string
   /** Chip caption under the icon. */
@@ -15,6 +22,11 @@ export type OffersTab = {
   /** Active/hover (red) icon — the chips crossfade between the two. */
   iconActive: string
   hidden?: boolean
+  /**
+   * Which panel this tab shows. A `bundles` tab ignores every product setting
+   * below — its content comes from the bundle store (Admin → Bundles).
+   */
+  panel?: OffersTabPanel
   /**
    * "Shop All Deals" behaviour: show every product collected by the other tabs
    * instead of this tab's own selection.
@@ -76,7 +88,8 @@ export const DEFAULT_OFFERS_PAGE: OffersPageContent = {
       label: 'Bundles',
       icon: `${ICON_DIR}/bundles.svg`,
       iconActive: `${ICON_DIR}/bundles-active.svg`,
-      categorySlugs: ['office-equipments', 'air-conditioner'],
+      panel: 'bundles',
+      categorySlugs: [],
       productSlugs: [],
     },
     {
@@ -115,6 +128,7 @@ export function ensureOffersContent(content?: Partial<OffersPageContent> | null)
       icon: typeof tab?.icon === 'string' ? tab.icon : '',
       iconActive: typeof tab?.iconActive === 'string' ? tab.iconActive : '',
       hidden: tab?.hidden === true,
+      panel: tab?.panel === 'bundles' ? 'bundles' : 'grid',
       showAll: tab?.showAll === true,
       categorySlugs: asStringArray(tab?.categorySlugs),
       productSlugs: asStringArray(tab?.productSlugs),

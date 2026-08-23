@@ -19,9 +19,6 @@ import ProductCard from '@/components/ui/ProductCard'
 import ChatWidget from '@/components/chat/ChatWidget'
 import Breadcrumbs from '@/components/category/Breadcrumbs'
 
-/** Tab id whose panel is the bundles module rather than a product grid. */
-const BUNDLES_TAB_ID = 'bundles'
-
 // Keep in sync with the min-[87.5rem] (1400px) grid-cols-5 class on the grid below.
 const FIVE_COL_QUERY = '(min-width: 1400px)'
 const PAGE_SIZE = 8
@@ -118,11 +115,10 @@ export default function DealsPage({ content }: Props = {}) {
   const [activeDeal, setActiveDeal] = useState<string>(() => tabs[0]?.id ?? '')
 
   /**
-   * The Bundles chip shows the whole bundles module instead of a product grid.
-   * Keyed on the tab id, not its label, so renaming the chip in live-edit does
-   * not silently turn it back into an ordinary deal listing.
+   * Any tab can be switched to the bundles module from live-edit, so this reads
+   * the tab's own `panel` setting rather than assuming a particular tab id.
    */
-  const showBundles = activeDeal === BUNDLES_TAB_ID
+  const showBundles = (tabs.find((t) => t.id === activeDeal) ?? tabs[0])?.panel === 'bundles'
 
   // A tab the admin just hid/removed must not strand the grid on an empty selection.
   useEffect(() => {

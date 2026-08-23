@@ -122,8 +122,19 @@ function BundleCard({ bundle, onChat }: { bundle: ReadyBundle; onChat: () => voi
       </ul>
 
       {gifts.length === 1 && activeGift ? (
-        <span className="mt-2 inline-flex min-w-0 items-center gap-1 rounded-full bg-[#e8f6ee] px-2.5 py-1 text-[11px] font-bold text-[#0f7a43]">
-          <span className="mi shrink-0 text-[14px] leading-none">redeem</span>
+        <span className="mt-2 inline-flex min-w-0 items-center gap-1.5 rounded-full bg-[#e8f6ee] px-2.5 py-1 text-[11px] font-bold text-[#0f7a43]">
+          {/* Gifts with artwork show it; the glyph is the fallback. */}
+          {activeGift.image ? (
+            <Image
+              src={activeGift.image}
+              alt=""
+              width={20}
+              height={20}
+              className="h-4 w-4 shrink-0 object-contain"
+            />
+          ) : (
+            <span className="mi shrink-0 text-[14px] leading-none">redeem</span>
+          )}
           <span className="min-w-0 truncate">{activeGift.name}</span>
         </span>
       ) : null}
@@ -136,7 +147,17 @@ function BundleCard({ bundle, onChat }: { bundle: ReadyBundle; onChat: () => voi
             onClick={() => setGiftOpen(true)}
             className="mt-2 flex min-w-0 items-center gap-1.5 rounded-xl bg-[#e8f6ee] px-2.5 py-1.5 text-left transition-colors hover:bg-[#d8efe2]"
           >
-            <span className="mi shrink-0 text-[16px] leading-none text-[#0f7a43]">redeem</span>
+            {activeGift.image ? (
+              <Image
+                src={activeGift.image}
+                alt=""
+                width={22}
+                height={22}
+                className="h-[18px] w-[18px] shrink-0 object-contain"
+              />
+            ) : (
+              <span className="mi shrink-0 text-[16px] leading-none text-[#0f7a43]">redeem</span>
+            )}
             <span className="min-w-0 flex-1">
               <span className="block text-[10.5px] font-bold uppercase tracking-wide text-[#0f7a43]">
                 Free gift — pick one

@@ -296,9 +296,9 @@ function seedTiers(twoOff: number, gifts: BundleGiftItem[]): BundleTier[] {
 }
 
 const READY_SEEDS: { id: string; name: string; slugs: string[]; off: number; gifts: BundleGiftItem[] }[] = [
-  { id: 'am5-starter', name: 'AM5 Starter Combo', slugs: ['Gigabyte-b650m-k-micro-ATX-motherboard', 'oscoo-on901-256gb-ssd'], off: 1500, gifts: [] },
+  { id: 'am5-starter', name: 'AM5 Starter Combo', slugs: ['Gigabyte-b650m-k-micro-ATX-motherboard', 'oscoo-on901-256gb-ssd', 'oscoo-r500-rgb-16gb-ddr5-5600mhz-ram', 't-wolf--infinity-x10-atx-gaming-case-black'], off: 1500, gifts: seedTextGift('am5-starter', 'Free T-Shirt', TSHIRT_GIFT_IMAGE) },
   { id: 'am4-value', name: 'AM4 Value Combo', slugs: ['gigabyte-A520M-K-V2', 'oscoo-r500-rgb-16gb-ddr5-5600mhz-ram'], off: 2000, gifts: seedTextGift('am4-value', 'Free Mousepad') },
-  { id: 'case-psu', name: 'Case + Power Combo', slugs: ['t-wolf--infinity-x10-atx-gaming-case-black', 'k600-80plus-600w-power-supply'], off: 1200, gifts: [] },
+  { id: 'case-psu', name: 'Case + Power Combo', slugs: ['t-wolf--infinity-x10-atx-gaming-case-black', 'k600-80plus-600w-power-supply', 'oscoo-on901-256gb-ssd'], off: 1200, gifts: [] },
   { id: 'gpu-power', name: 'Graphics Power Combo', slugs: ['powercolor-fighter-amd-radeon-rx-7700-xt-12gb-gddr6-graphics-card', 'k600-80plus-600w-power-supply', 't-wolf--infinity-x10-atx-gaming-case-black'], off: 3500, gifts: seedTextGift('gpu-power', 'Free Cable Kit') },
   { id: 'play-station', name: 'Play Station Combo', slugs: ['koorui-g2421v-24-inch-qhd-180hz-gaming-monitor', 'aolion-al-ns2288pro-wh-gaming-controller'], off: 1800, gifts: [] },
   { id: 'stream-setup', name: 'Streamer Setup Combo', slugs: ['koorui-e2721h-120hz-gaming-monitor', 'RK-L98-mechanical-cream-keyboard'], off: 2500, gifts: seedTextGift('stream-setup', 'Free T-Shirt', TSHIRT_GIFT_IMAGE) },
