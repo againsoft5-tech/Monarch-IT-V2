@@ -1,26 +1,20 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useAdminAuth } from '@/context/AdminAuthContext'
 import TierEditor from '@/components/admin/bundles/TierEditor'
-import {
-  addProductToReadyBundle,
-  removeProductFromReadyBundle,
-  searchCatalog,
-  setReadyBundleActive,
-  updateReadyBundleMeta,
-  updateReadyBundleTiers,
-  useBundleStore,
-} from '@/lib/bundleStore'
+import SaveBar from '@/components/admin/bundles/SaveBar'
+import { saveReadyBundle, searchCatalog, toBundleProduct, useBundleStore } from '@/lib/bundleStore'
 import {
   BUNDLE_TIER_COUNTS,
   MAX_BUNDLE_PRODUCTS,
   MIN_BUNDLE_PRODUCTS,
   computeBundlePricing,
   giftLabel,
+  type ReadyBundle,
 } from '@/data/bundleData'
 
 const RED = '#bd2026'
@@ -30,10 +24,26 @@ export default function ReadyBundleEditor({ bundleId }: { bundleId: string }) {
   const router = useRouter()
   const db = useBundleStore()
   const [query, setQuery] = useState('')
+  /** Local working copy — nothing here is public until Save. */
+  const [draft, setDraft] = useState<ReadyBundle | null>(null)
+  const [saved, setSaved] = useState(false)
+
+  const stored = db.ready[bundleId]
+
+  // Seed the draft once the store has loaded. Deliberately not re-synced afterwards:
+  // overwriting the draft from the store would wipe whatever the admin is typing.
+  useEffect(() => {
+    if (stored && !draft) setDraft(stored)
+  }, [stored, draft])
 
   useEffect(() => {
     if (adminChecked && !isAdminLoggedIn) router.replace('/admin/login')
   }, [adminChecked, isAdminLoggedIn, router])
+
+  const dirty = useMemo(
+    () => Boolean(draft && stored && JSON.stringify(draft) !== JSON.stringify(stored)),
+    [draft, stored],
+  )
 
   if (!adminChecked || !isAdminLoggedIn) {
     return (
@@ -43,12 +53,13 @@ export default function ReadyBundleEditor({ bundleId }: { bundleId: string }) {
     )
   }
 
-  const bundle = db.ready[bundleId]
-  if (!bundle) {
+  if (!stored || !draft) {
     return (
       <div className="bundles-module min-h-full bg-[#eef0f3] px-4 py-8 lg:px-10">
         <div className="mx-auto max-w-3xl rounded-2xl bg-white p-10 text-center">
-          <p className="mb-4 text-[14px] text-gray-500">This bundle no longer exists.</p>
+          <p className="mb-4 text-[14px] text-gray-500">
+            {stored ? 'Loading…' : 'This bundle no longer exists.'}
+          </p>
           <Link href="/admin/bundles" className="font-semibold text-[#bd2026] no-underline">
             Back to bundles
           </Link>
@@ -57,16 +68,33 @@ export default function ReadyBundleEditor({ bundleId }: { bundleId: string }) {
     )
   }
 
+  const patch = (next: Partial<ReadyBundle>) => {
+    setDraft((d) => (d ? { ...d, ...next } : d))
+    setSaved(false)
+  }
+
+  const addProduct = (slug: string) => {
+    const found = searchCatalog(slug, 50).find((p) => p.slug === slug)
+    if (!found) return
+    setDraft((d) => {
+      if (!d) return d
+      if (d.products.length >= MAX_BUNDLE_PRODUCTS) return d
+      if (d.products.some((p) => p.slug === slug)) return d
+      return { ...d, products: [...d.products, toBundleProduct(found, d.id)] }
+    })
+    setSaved(false)
+  }
+
   // Only surface the tiers this bundle can actually reach: a 2-product bundle can never
   // hit the 3- or 4-product tier, so those boxes would just be dead controls.
   const tierCounts = BUNDLE_TIER_COUNTS.filter(
-    (c) => c <= Math.min(MAX_BUNDLE_PRODUCTS, Math.max(MIN_BUNDLE_PRODUCTS, bundle.products.length)),
+    (c) => c <= Math.min(MAX_BUNDLE_PRODUCTS, Math.max(MIN_BUNDLE_PRODUCTS, draft.products.length)),
   )
 
-  const pricing = computeBundlePricing(bundle.products, bundle.tiers)
-  const atMax = bundle.products.length >= MAX_BUNDLE_PRODUCTS
+  const pricing = computeBundlePricing(draft.products, draft.tiers)
+  const atMax = draft.products.length >= MAX_BUNDLE_PRODUCTS
   const results = query.trim() ? searchCatalog(query, 8) : []
-  const tooFew = bundle.products.length < MIN_BUNDLE_PRODUCTS
+  const tooFew = draft.products.length < MIN_BUNDLE_PRODUCTS
 
   return (
     <div className="bundles-module min-h-full bg-[#eef0f3] px-4 py-8 lg:px-10">
@@ -79,17 +107,17 @@ export default function ReadyBundleEditor({ bundleId }: { bundleId: string }) {
             >
               <span className="mi text-[16px]">arrow_back</span> Bundles
             </Link>
-            <h1 className="m-0 text-xl font-bold text-gray-900">{bundle.name}</h1>
+            <h1 className="m-0 text-xl font-bold text-gray-900">{draft.name}</h1>
           </div>
           <button
             type="button"
-            onClick={() => setReadyBundleActive(bundle.id, !bundle.active)}
-            disabled={tooFew && !bundle.active}
-            className="h-10 cursor-pointer rounded-full px-5 text-[13px] font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40"
-            style={{ backgroundColor: bundle.active ? '#6b7280' : RED }}
+            onClick={() => patch({ active: !draft.active })}
+            disabled={tooFew && !draft.active}
+            className="h-10 rounded-full px-5 text-[13px] font-semibold text-white disabled:opacity-40"
+            style={{ backgroundColor: draft.active ? '#6b7280' : RED }}
             title={tooFew ? `Add at least ${MIN_BUNDLE_PRODUCTS} products first` : undefined}
           >
-            {bundle.active ? 'Deactivate' : 'Publish'}
+            {draft.active ? 'Set to draft' : 'Set live'}
           </button>
         </div>
 
@@ -101,8 +129,8 @@ export default function ReadyBundleEditor({ bundleId }: { bundleId: string }) {
               <span className="mb-1 block text-[12px] font-semibold text-gray-600">Bundle name</span>
               <input
                 type="text"
-                value={bundle.name}
-                onChange={(e) => updateReadyBundleMeta(bundle.id, { name: e.target.value })}
+                value={draft.name}
+                onChange={(e) => patch({ name: e.target.value })}
                 className="h-10 w-full rounded-lg border border-gray-200 px-3 text-[13px] outline-none focus:border-gray-400"
               />
             </label>
@@ -110,8 +138,8 @@ export default function ReadyBundleEditor({ bundleId }: { bundleId: string }) {
               <span className="mb-1 block text-[12px] font-semibold text-gray-600">Cover image URL (optional)</span>
               <input
                 type="text"
-                value={bundle.image ?? ''}
-                onChange={(e) => updateReadyBundleMeta(bundle.id, { image: e.target.value })}
+                value={draft.image ?? ''}
+                onChange={(e) => patch({ image: e.target.value })}
                 placeholder="/images/..."
                 className="h-10 w-full rounded-lg border border-gray-200 px-3 text-[13px] outline-none focus:border-gray-400"
               />
@@ -119,8 +147,8 @@ export default function ReadyBundleEditor({ bundleId }: { bundleId: string }) {
             <label className="block md:col-span-2">
               <span className="mb-1 block text-[12px] font-semibold text-gray-600">Description</span>
               <textarea
-                value={bundle.description ?? ''}
-                onChange={(e) => updateReadyBundleMeta(bundle.id, { description: e.target.value })}
+                value={draft.description ?? ''}
+                onChange={(e) => patch({ description: e.target.value })}
                 rows={2}
                 className="w-full rounded-lg border border-gray-200 px-3 py-2 text-[13px] outline-none focus:border-gray-400"
               />
@@ -132,7 +160,7 @@ export default function ReadyBundleEditor({ bundleId }: { bundleId: string }) {
         <section className="mb-5 rounded-2xl bg-white p-5">
           <div className="mb-1 flex items-center justify-between">
             <h2 className="m-0 text-[15px] font-bold text-gray-900">
-              Products ({bundle.products.length}/{MAX_BUNDLE_PRODUCTS})
+              Products ({draft.products.length}/{MAX_BUNDLE_PRODUCTS})
             </h2>
             {tooFew ? (
               <span className="text-[12px] font-semibold text-[#bd2026]">
@@ -144,16 +172,16 @@ export default function ReadyBundleEditor({ bundleId }: { bundleId: string }) {
             Search the catalog and add {MIN_BUNDLE_PRODUCTS}–{MAX_BUNDLE_PRODUCTS} products.
           </p>
 
-          {bundle.products.length > 0 ? (
+          {draft.products.length > 0 ? (
             <ul className="mb-4 flex list-none flex-col gap-2 p-0">
-              {bundle.products.map((p) => (
+              {draft.products.map((p) => (
                 <li key={p.id} className="flex items-center gap-3 rounded-xl bg-gray-50 px-3 py-2">
                   <Image src={p.image} alt="" width={40} height={40} className="h-10 w-10 object-contain" />
                   <span className="min-w-0 flex-1 truncate text-[13px] text-gray-800">{p.name}</span>
                   <span className="text-[13px] font-bold text-[#c3272b]">৳{p.priceNew.toLocaleString()}</span>
                   <button
                     type="button"
-                    onClick={() => removeProductFromReadyBundle(bundle.id, p.id)}
+                    onClick={() => patch({ products: draft.products.filter((x) => x.id !== p.id) })}
                     className="text-gray-400 hover:text-[#bd2026]"
                     aria-label={`Remove ${p.name}`}
                   >
@@ -180,14 +208,14 @@ export default function ReadyBundleEditor({ bundleId }: { bundleId: string }) {
               {results.length > 0 ? (
                 <div className="mt-2 max-h-[220px] overflow-y-auto rounded-lg border border-gray-100">
                   {results.map((p) => {
-                    const already = bundle.products.some((x) => x.slug === p.slug)
+                    const already = draft.products.some((x) => x.slug === p.slug)
                     return (
                       <button
                         key={p.slug}
                         type="button"
                         disabled={already}
                         onClick={() => {
-                          addProductToReadyBundle(bundle.id, p)
+                          addProduct(p.slug)
                           setQuery('')
                         }}
                         className="flex w-full items-center gap-3 border-b border-gray-50 px-3 py-2 text-left last:border-b-0 hover:bg-gray-50 disabled:opacity-40"
@@ -208,12 +236,12 @@ export default function ReadyBundleEditor({ bundleId }: { bundleId: string }) {
         <section className="mb-5 rounded-2xl bg-white p-5">
           <h2 className="m-0 mb-1 text-[15px] font-bold text-gray-900">Discount &amp; Free Gift</h2>
           <TierEditor
-            tiers={bundle.tiers}
+            tiers={draft.tiers}
             counts={tierCounts}
-            onChange={(tiers) => updateReadyBundleTiers(bundle.id, tiers)}
-            hint={`This bundle holds ${bundle.products.length} product${
-              bundle.products.length === 1 ? '' : 's'
-            }, so the ${Math.max(MIN_BUNDLE_PRODUCTS, bundle.products.length)}-product tier below is the one that applies.`}
+            onChange={(tiers) => patch({ tiers })}
+            hint={`This bundle holds ${draft.products.length} product${
+              draft.products.length === 1 ? '' : 's'
+            }, so the ${Math.max(MIN_BUNDLE_PRODUCTS, draft.products.length)}-product tier below is the one that applies.`}
           />
         </section>
 
@@ -238,6 +266,20 @@ export default function ReadyBundleEditor({ bundleId }: { bundleId: string }) {
           </div>
         </section>
       </div>
+
+      <SaveBar
+        dirty={dirty}
+        saved={saved}
+        onSave={() => {
+          const committed = saveReadyBundle(draft)
+          if (committed) setDraft(committed)
+          setSaved(true)
+        }}
+        onDiscard={() => {
+          setDraft(stored)
+          setSaved(false)
+        }}
+      />
     </div>
   )
 }

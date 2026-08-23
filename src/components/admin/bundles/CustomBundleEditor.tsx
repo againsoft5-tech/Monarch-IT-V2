@@ -1,28 +1,30 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useAdminAuth } from '@/context/AdminAuthContext'
 import TierEditor from '@/components/admin/bundles/TierEditor'
+import SaveBar from '@/components/admin/bundles/SaveBar'
 import { categoryProductsMap } from '@/data/categoryProducts'
+import { saveCustomBundle, searchCatalog, toBundleProduct, useBundleStore } from '@/lib/bundleStore'
 import {
-  addCustomBundleTab,
-  addProductToCustomTab,
-  deleteCustomBundleTab,
-  importCategoryIntoCustomTab,
-  removeProductFromCustomTab,
-  searchCatalog,
-  setCustomBundleActive,
-  updateCustomBundleMeta,
-  updateCustomBundleTab,
-  updateCustomBundleTiers,
-  useBundleStore,
-} from '@/lib/bundleStore'
-import { MAX_BUNDLE_PRODUCTS, MIN_BUNDLE_PRODUCTS } from '@/data/bundleData'
+  MAX_BUNDLE_PRODUCTS,
+  MIN_BUNDLE_PRODUCTS,
+  type CustomBundle,
+  type CustomBundleTab,
+} from '@/data/bundleData'
 
 const RED = '#bd2026'
+
+function slugify(text: string) {
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+}
 
 export default function CustomBundleEditor({ bundleId }: { bundleId: string }) {
   const { isAdminLoggedIn, adminChecked } = useAdminAuth()
@@ -32,10 +34,25 @@ export default function CustomBundleEditor({ bundleId }: { bundleId: string }) {
   const [newTabLabel, setNewTabLabel] = useState('')
   const [query, setQuery] = useState('')
   const [importCategory, setImportCategory] = useState('')
+  /** Local working copy — nothing here is public until Save. */
+  const [draft, setDraft] = useState<CustomBundle | null>(null)
+  const [saved, setSaved] = useState(false)
+
+  const stored = db.custom[bundleId]
+
+  // Seed once; re-syncing from the store would wipe in-progress edits.
+  useEffect(() => {
+    if (stored && !draft) setDraft(stored)
+  }, [stored, draft])
 
   useEffect(() => {
     if (adminChecked && !isAdminLoggedIn) router.replace('/admin/login')
   }, [adminChecked, isAdminLoggedIn, router])
+
+  const dirty = useMemo(
+    () => Boolean(draft && stored && JSON.stringify(draft) !== JSON.stringify(stored)),
+    [draft, stored],
+  )
 
   if (!adminChecked || !isAdminLoggedIn) {
     return (
@@ -45,12 +62,13 @@ export default function CustomBundleEditor({ bundleId }: { bundleId: string }) {
     )
   }
 
-  const bundle = db.custom[bundleId]
-  if (!bundle) {
+  if (!stored || !draft) {
     return (
       <div className="bundles-module min-h-full bg-[#eef0f3] px-4 py-8 lg:px-10">
         <div className="mx-auto max-w-3xl rounded-2xl bg-white p-10 text-center">
-          <p className="mb-4 text-[14px] text-gray-500">This bundle no longer exists.</p>
+          <p className="mb-4 text-[14px] text-gray-500">
+            {stored ? 'Loading…' : 'This bundle no longer exists.'}
+          </p>
           <Link href="/admin/bundles" className="font-semibold text-[#bd2026] no-underline">
             Back to bundles
           </Link>
@@ -59,9 +77,28 @@ export default function CustomBundleEditor({ bundleId }: { bundleId: string }) {
     )
   }
 
-  const activeTab = bundle.tabs.find((t) => t.key === activeTabKey) ?? bundle.tabs[0]
+  const patch = (next: Partial<CustomBundle>) => {
+    setDraft((d) => (d ? { ...d, ...next } : d))
+    setSaved(false)
+  }
+
+  const patchTab = (tabKey: string, next: Partial<CustomBundleTab>) =>
+    patch({ tabs: draft.tabs.map((t) => (t.key === tabKey ? { ...t, ...next } : t)) })
+
+  const addTab = () => {
+    const label = newTabLabel.trim()
+    if (!label) return
+    const base = slugify(label) || `tab-${draft.tabs.length + 1}`
+    let key = base
+    let n = 2
+    while (draft.tabs.some((t) => t.key === key)) key = `${base}-${n++}`
+    patch({ tabs: [...draft.tabs, { key, label, products: [] }] })
+    setNewTabLabel('')
+  }
+
+  const activeTab = draft.tabs.find((t) => t.key === activeTabKey) ?? draft.tabs[0]
   const results = query.trim() ? searchCatalog(query, 8) : []
-  const noTabs = bundle.tabs.length === 0
+  const noTabs = draft.tabs.length === 0
 
   return (
     <div className="bundles-module min-h-full bg-[#eef0f3] px-4 py-8 lg:px-10">
@@ -74,17 +111,17 @@ export default function CustomBundleEditor({ bundleId }: { bundleId: string }) {
             >
               <span className="mi text-[16px]">arrow_back</span> Bundles
             </Link>
-            <h1 className="m-0 text-xl font-bold text-gray-900">{bundle.name}</h1>
+            <h1 className="m-0 text-xl font-bold text-gray-900">{draft.name}</h1>
           </div>
           <button
             type="button"
-            onClick={() => setCustomBundleActive(bundle.id, !bundle.active)}
-            disabled={noTabs && !bundle.active}
-            className="h-10 cursor-pointer rounded-full px-5 text-[13px] font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40"
-            style={{ backgroundColor: bundle.active ? '#6b7280' : RED }}
+            onClick={() => patch({ active: !draft.active })}
+            disabled={noTabs && !draft.active}
+            className="h-10 rounded-full px-5 text-[13px] font-semibold text-white disabled:opacity-40"
+            style={{ backgroundColor: draft.active ? '#6b7280' : RED }}
             title={noTabs ? 'Add at least one tab first' : undefined}
           >
-            {bundle.active ? 'Deactivate' : 'Publish'}
+            {draft.active ? 'Set to draft' : 'Set live'}
           </button>
         </div>
 
@@ -96,8 +133,8 @@ export default function CustomBundleEditor({ bundleId }: { bundleId: string }) {
               <span className="mb-1 block text-[12px] font-semibold text-gray-600">Bundle name</span>
               <input
                 type="text"
-                value={bundle.name}
-                onChange={(e) => updateCustomBundleMeta(bundle.id, { name: e.target.value })}
+                value={draft.name}
+                onChange={(e) => patch({ name: e.target.value })}
                 className="h-10 w-full rounded-lg border border-gray-200 px-3 text-[13px] outline-none focus:border-gray-400"
               />
             </label>
@@ -105,8 +142,8 @@ export default function CustomBundleEditor({ bundleId }: { bundleId: string }) {
               <span className="mb-1 block text-[12px] font-semibold text-gray-600">Description</span>
               <input
                 type="text"
-                value={bundle.description ?? ''}
-                onChange={(e) => updateCustomBundleMeta(bundle.id, { description: e.target.value })}
+                value={draft.description ?? ''}
+                onChange={(e) => patch({ description: e.target.value })}
                 className="h-10 w-full rounded-lg border border-gray-200 px-3 text-[13px] outline-none focus:border-gray-400"
               />
             </label>
@@ -121,19 +158,20 @@ export default function CustomBundleEditor({ bundleId }: { bundleId: string }) {
           </p>
 
           <div className="mb-4 flex flex-col gap-2">
-            {bundle.tabs.map((tab) => (
+            {draft.tabs.map((tab) => (
               <div key={tab.key} className="flex items-center gap-2 rounded-xl bg-gray-50 px-3 py-2">
                 <input
                   type="text"
                   value={tab.label}
-                  onChange={(e) => updateCustomBundleTab(bundle.id, tab.key, e.target.value)}
+                  onChange={(e) => patchTab(tab.key, { label: e.target.value })}
                   className="h-9 min-w-0 flex-1 rounded-lg border border-gray-200 px-2 text-[13px] outline-none focus:border-gray-400"
                 />
                 <span className="shrink-0 text-[12px] text-gray-500">{tab.products.length} products</span>
                 <button
                   type="button"
                   onClick={() => {
-                    if (window.confirm(`Delete tab "${tab.label}"?`)) deleteCustomBundleTab(bundle.id, tab.key)
+                    if (window.confirm(`Delete tab "${tab.label}"?`))
+                      patch({ tabs: draft.tabs.filter((t) => t.key !== tab.key) })
                   }}
                   className="shrink-0 text-gray-400 hover:text-[#bd2026]"
                   aria-label={`Delete ${tab.label}`}
@@ -149,17 +187,16 @@ export default function CustomBundleEditor({ bundleId }: { bundleId: string }) {
               type="text"
               value={newTabLabel}
               onChange={(e) => setNewTabLabel(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') addTab()
+              }}
               placeholder="New tab name (e.g. Processor)"
               className="h-10 min-w-0 flex-1 rounded-lg border border-gray-200 px-3 text-[13px] outline-none focus:border-gray-400"
             />
             <button
               type="button"
-              onClick={() => {
-                if (!newTabLabel.trim()) return
-                addCustomBundleTab(bundle.id, newTabLabel)
-                setNewTabLabel('')
-              }}
-              className="h-10 shrink-0 cursor-pointer rounded-full px-5 text-[13px] font-semibold text-white"
+              onClick={addTab}
+              className="h-10 shrink-0 rounded-full px-5 text-[13px] font-semibold text-white"
               style={{ backgroundColor: RED }}
             >
               + Add Tab
@@ -176,7 +213,7 @@ export default function CustomBundleEditor({ bundleId }: { bundleId: string }) {
           ) : (
             <>
               <div className="mb-4 flex flex-wrap gap-2">
-                {bundle.tabs.map((tab) => (
+                {draft.tabs.map((tab) => (
                   <button
                     key={tab.key}
                     type="button"
@@ -210,10 +247,15 @@ export default function CustomBundleEditor({ bundleId }: { bundleId: string }) {
                       type="button"
                       disabled={!importCategory}
                       onClick={() => {
-                        importCategoryIntoCustomTab(bundle.id, activeTab.key, importCategory)
+                        const catalog = categoryProductsMap[importCategory]?.products ?? []
+                        const existing = new Set(activeTab.products.map((p) => p.slug))
+                        const added = catalog
+                          .filter((p) => !existing.has(p.slug))
+                          .map((p) => toBundleProduct(p, activeTab.key))
+                        patchTab(activeTab.key, { products: [...activeTab.products, ...added] })
                         setImportCategory('')
                       }}
-                      className="h-10 cursor-pointer rounded-full border border-gray-300 px-4 text-[13px] font-semibold text-gray-700 disabled:opacity-40"
+                      className="h-10 rounded-full border border-gray-300 px-4 text-[13px] font-semibold text-gray-700 disabled:opacity-40"
                     >
                       Import
                     </button>
@@ -236,7 +278,9 @@ export default function CustomBundleEditor({ bundleId }: { bundleId: string }) {
                             type="button"
                             disabled={already}
                             onClick={() => {
-                              addProductToCustomTab(bundle.id, activeTab.key, p)
+                              patchTab(activeTab.key, {
+                                products: [...activeTab.products, toBundleProduct(p, activeTab.key)],
+                              })
                               setQuery('')
                             }}
                             className="flex w-full items-center gap-3 border-b border-gray-50 px-3 py-2 text-left last:border-b-0 hover:bg-gray-50 disabled:opacity-40"
@@ -261,7 +305,11 @@ export default function CustomBundleEditor({ bundleId }: { bundleId: string }) {
                           </span>
                           <button
                             type="button"
-                            onClick={() => removeProductFromCustomTab(bundle.id, activeTab.key, p.id)}
+                            onClick={() =>
+                              patchTab(activeTab.key, {
+                                products: activeTab.products.filter((x) => x.id !== p.id),
+                              })
+                            }
                             className="text-gray-400 hover:text-[#bd2026]"
                             aria-label={`Remove ${p.name}`}
                           >
@@ -283,12 +331,26 @@ export default function CustomBundleEditor({ bundleId }: { bundleId: string }) {
         <section className="rounded-2xl bg-white p-5">
           <h2 className="m-0 mb-1 text-[15px] font-bold text-gray-900">Discount &amp; Free Gift</h2>
           <TierEditor
-            tiers={bundle.tiers}
-            onChange={(tiers) => updateCustomBundleTiers(bundle.id, tiers)}
+            tiers={draft.tiers}
+            onChange={(tiers) => patch({ tiers })}
             hint={`Applied by how many products the customer picks across tabs (${MIN_BUNDLE_PRODUCTS}–${MAX_BUNDLE_PRODUCTS}).`}
           />
         </section>
       </div>
+
+      <SaveBar
+        dirty={dirty}
+        saved={saved}
+        onSave={() => {
+          const committed = saveCustomBundle(draft)
+          if (committed) setDraft(committed)
+          setSaved(true)
+        }}
+        onDiscard={() => {
+          setDraft(stored)
+          setSaved(false)
+        }}
+      />
     </div>
   )
 }

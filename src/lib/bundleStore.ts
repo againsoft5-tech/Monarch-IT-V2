@@ -248,6 +248,21 @@ export function updateReadyBundleTiers(id: string, tiers: BundleTier[]) {
   updateReady(id, (b) => ({ ...b, tiers }))
 }
 
+/**
+ * Commits a whole edited bundle at once. The editors keep changes in local draft state
+ * and call this on Save, so nothing reaches the live store until the admin says so.
+ */
+export function saveReadyBundle(bundle: ReadyBundle): ReadyBundle | undefined {
+  const db = readDB()
+  if (!db.ready[bundle.id]) return undefined
+  // Returned so the editor can re-seed its draft with the stamped record; otherwise the
+  // fresh `updatedAt` alone would keep the draft looking dirty forever after saving.
+  const next: ReadyBundle = { ...bundle, updatedAt: nowIso() }
+  db.ready[bundle.id] = next
+  writeDB(db)
+  return next
+}
+
 /* ----------------------------------------------------------- custom bundles */
 
 export function getCustomBundle(id: string): CustomBundle | undefined {
@@ -371,4 +386,14 @@ export function removeProductFromCustomTab(id: string, tabKey: string, productId
 
 export function updateCustomBundleTiers(id: string, tiers: BundleTier[]) {
   updateCustom(id, (b) => ({ ...b, tiers }))
+}
+
+/** Commits a whole edited custom bundle at once — see `saveReadyBundle`. */
+export function saveCustomBundle(bundle: CustomBundle): CustomBundle | undefined {
+  const db = readDB()
+  if (!db.custom[bundle.id]) return undefined
+  const next: CustomBundle = { ...bundle, updatedAt: nowIso() }
+  db.custom[bundle.id] = next
+  writeDB(db)
+  return next
 }

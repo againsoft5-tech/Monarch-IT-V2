@@ -43,7 +43,7 @@ function BundleCard({ bundle, onChat }: { bundle: ReadyBundle; onChat: () => voi
   return (
     // h-full + flex so every card in a row is the same height and the CTA can sit flush
     // at the bottom regardless of how many products the bundle lists.
-    <div className="flex h-full flex-col rounded-2xl border border-[#f0f0f0] bg-white p-3 shadow-[0_2px_10px_rgba(0,0,0,0.03)]">
+    <div className="flex h-full min-w-0 flex-col gap-3">
       {/*
         Always two columns: 2 → one row, 4 → 2×2, 3 → two on top and the last centred.
         The block keeps a FIXED height whatever the product count, so every card's image
@@ -51,7 +51,7 @@ function BundleCard({ bundle, onChat }: { bundle: ReadyBundle; onChat: () => voi
         gets proportionally smaller tiles rather than a taller card.
       */}
       <div
-        className="grid h-[168px] grid-cols-2 gap-2 sm:h-[190px]"
+        className="grid h-[168px] grid-cols-2 gap-3 sm:h-[190px]"
         style={{
           gridTemplateRows:
             bundle.products.length > 2 ? 'repeat(2, minmax(0, 1fr))' : 'minmax(0, 1fr)',
@@ -64,9 +64,9 @@ function BundleCard({ bundle, onChat }: { bundle: ReadyBundle; onChat: () => voi
               key={p.id}
               href={`/${p.slug}`}
               title={p.name}
-              className={`flex h-full items-center justify-center rounded-xl bg-[#f5f6fa] p-2 transition-colors hover:bg-[#eceff5] ${
-                // Half the row minus half the 8px gap keeps it the same width as the tiles above.
-                centredLast ? 'col-span-2 mx-auto w-[calc(50%-4px)]' : ''
+              className={`flex h-full items-center justify-center rounded-2xl bg-[#f5f6fa] p-3 transition-colors hover:bg-[#eceff5] ${
+                // Half the row minus half the 12px gap keeps it the same width as the tiles above.
+                centredLast ? 'col-span-2 mx-auto w-[calc(50%-6px)]' : ''
               }`}
             >
               <Image
@@ -81,9 +81,12 @@ function BundleCard({ bundle, onChat }: { bundle: ReadyBundle; onChat: () => voi
         })}
       </div>
 
-      <ul className="mt-3 flex list-none flex-col gap-1.5 p-0">
+      {/* Details panel — same tint and radius as the image tiles above, holding the product
+          list, price and CTA. mt-auto bottom-aligns it so CTAs line up across the row. */}
+      <div className="mt-auto flex min-w-0 flex-col rounded-2xl bg-[#f5f6fa] p-4">
+      <ul className="flex min-w-0 list-none flex-col gap-1.5 p-0">
         {bundle.products.map((p, i) => (
-          <li key={p.id} className="flex items-center gap-2 text-[11.5px] leading-snug">
+          <li key={p.id} className="flex min-w-0 items-center gap-2 text-[11.5px] leading-snug">
             <span className="flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full bg-[#333] text-[10px] font-bold text-white">
               {i + 1}
             </span>
@@ -111,24 +114,23 @@ function BundleCard({ bundle, onChat }: { bundle: ReadyBundle; onChat: () => voi
         </span>
       ) : null}
 
-      {/* mt-auto pushes price + CTA to the card's bottom edge so they line up across the row. */}
-      <div className="mt-auto flex items-center justify-end gap-2 border-t border-gray-100 pt-2">
+      <div className="mt-2.5 flex items-center justify-end gap-2 border-t border-[#e3e6ee] pt-2.5">
+        <span className="text-[15px] font-bold text-[#c3272b]">
+          <span className="font-medium">৳</span>
+          <span className="font-price">{pricing.total.toLocaleString()}</span>
+        </span>
         {pricing.regularTotal > pricing.total ? (
           <span className="text-[11.5px] text-gray-400 line-through">
             ৳{pricing.regularTotal.toLocaleString()}
           </span>
         ) : null}
-        <span className="text-[15px] font-bold text-[#c3272b]">
-          <span className="font-medium">৳</span>
-          <span className="font-price">{pricing.total.toLocaleString()}</span>
-        </span>
       </div>
 
-      <div className="mt-2.5 flex items-center gap-2">
+      <div className="mt-3 flex items-center gap-2">
         <button
           type="button"
           onClick={add}
-          className="h-9 flex-1 rounded-full bg-[#c3272b] text-[12px] font-bold uppercase tracking-wide text-white transition-colors hover:bg-[#a5121c]"
+          className="h-10 min-w-0 flex-1 rounded-full bg-[#c3272b] px-2 text-[11px] font-bold uppercase tracking-wide text-white transition-colors hover:bg-[#a5121c] sm:text-[12px]"
         >
           Add bundle to cart
         </button>
@@ -137,7 +139,8 @@ function BundleCard({ bundle, onChat }: { bundle: ReadyBundle; onChat: () => voi
           onClick={onChat}
           title="Chat with us"
           aria-label="Chat with us"
-          className="group flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#ebebeb] bg-[#f5f6fa] transition-colors hover:border-[#c3272b] hover:bg-[#c3272b]"
+          // White so it reads as a control against the tinted panel behind it.
+          className="group flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#e3e6ee] bg-white transition-colors hover:border-[#c3272b] hover:bg-[#c3272b]"
         >
           <Image
             src="/images/catalog/view/theme/default/image/message-icon.svg"
@@ -147,6 +150,7 @@ function BundleCard({ bundle, onChat }: { bundle: ReadyBundle; onChat: () => voi
             className="h-4 w-4 transition-all group-hover:brightness-0 group-hover:invert"
           />
         </button>
+      </div>
       </div>
     </div>
   )
@@ -222,7 +226,9 @@ export default function ShopYourBundles({ bundles }: { bundles: ReadyBundle[] })
         </div>
       </div>
 
-      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      {/* Gap matches the category product grid (gap-8 / md:gap-[50px]) so bundles sit on
+          the same rhythm as product cards elsewhere on the site. */}
+      <div className="grid gap-8 sm:grid-cols-2 md:gap-[50px] lg:grid-cols-3">
         {visible.map((b) => (
           <BundleCard key={b.id} bundle={b} onChat={onChat} />
         ))}
