@@ -14,7 +14,15 @@ const TABS: { key: Tab; label: string }[] = [
   { key: 'build', label: 'Build Your Own Bundle' },
 ]
 
-export default function BundlesPage() {
+type Props = {
+  /**
+   * Rendered inside another page (the Offers & Deals "Bundles" tab), which
+   * already supplies the breadcrumbs and page container.
+   */
+  embedded?: boolean
+}
+
+export default function BundlesPage({ embedded = false }: Props = {}) {
   const db = useBundleStore()
   const [tab, setTab] = useState<Tab>('shop')
 
@@ -26,9 +34,11 @@ export default function BundlesPage() {
 
   return (
     <>
-      <Breadcrumbs items={[{ label: 'Home', href: '/' }, { label: 'Bundles', href: '/bundles' }]} />
+      {embedded ? null : (
+        <Breadcrumbs items={[{ label: 'Home', href: '/' }, { label: 'Bundles', href: '/bundles' }]} />
+      )}
 
-      <div className="bundles-module container mx-auto px-4 py-8 min-[992px]:px-14">
+      <div className={embedded ? 'bundles-module' : 'bundles-module container mx-auto px-4 py-8 min-[992px]:px-14'}>
         {/* Tab pills — the whole page below switches with these. */}
         <div className="mb-8 flex flex-wrap justify-center gap-3">
           {TABS.map((t) => {

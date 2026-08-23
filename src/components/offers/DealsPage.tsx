@@ -8,6 +8,7 @@ import type { CategoryProduct } from '@/data/categoryProducts'
 import { getProductDetail } from '@/data/productDetail'
 import type { OffersPageContent } from '@/lib/live-edit/offers-page'
 import { DEFAULT_OFFERS_PAGE, ensureOffersContent } from '@/lib/live-edit/offers-page'
+import BundlesPage from '@/components/bundles/BundlesPage'
 import { productsForTab } from '@/lib/live-edit/offers-catalog'
 import { useAuth } from '@/context/AuthContext'
 import { useCart } from '@/context/CartContext'
@@ -17,6 +18,9 @@ import { useToast, Toast } from '@/components/ui/Toast'
 import ProductCard from '@/components/ui/ProductCard'
 import ChatWidget from '@/components/chat/ChatWidget'
 import Breadcrumbs from '@/components/category/Breadcrumbs'
+
+/** Tab id whose panel is the bundles module rather than a product grid. */
+const BUNDLES_TAB_ID = 'bundles'
 
 // Keep in sync with the min-[87.5rem] (1400px) grid-cols-5 class on the grid below.
 const FIVE_COL_QUERY = '(min-width: 1400px)'
@@ -112,6 +116,13 @@ export default function DealsPage({ content }: Props = {}) {
   const tabs = useMemo(() => page.tabs.filter((t) => !t.hidden), [page.tabs])
 
   const [activeDeal, setActiveDeal] = useState<string>(() => tabs[0]?.id ?? '')
+
+  /**
+   * The Bundles chip shows the whole bundles module instead of a product grid.
+   * Keyed on the tab id, not its label, so renaming the chip in live-edit does
+   * not silently turn it back into an ordinary deal listing.
+   */
+  const showBundles = activeDeal === BUNDLES_TAB_ID
 
   // A tab the admin just hid/removed must not strand the grid on an empty selection.
   useEffect(() => {
@@ -568,94 +579,100 @@ export default function DealsPage({ content }: Props = {}) {
             </div>
           </div>
 
-          <div className="flex items-center justify-between gap-3 mb-4">
-            <button
-              type="button"
-              onClick={() => setFilterOpen(true)}
-              className="group shrink-0 inline-flex items-center gap-1.5 bg-[#f5f5f7] border border-[#f5f5f7] rounded-full px-4 py-2 text-[14px] font-semibold text-gray-600 hover:border-[#d32f2f] hover:text-[#d32f2f] transition-colors cursor-pointer"
-            >
-              <span className="relative w-[21px] h-[15px]">
-                <Image
-                  src="/images/pc-builder/icons/filter-icon.svg"
-                  alt=""
-                  width={21}
-                  height={15}
-                  className="absolute inset-0 transition-opacity opacity-100 group-hover:opacity-0"
-                />
-                <Image
-                  src="/images/pc-builder/icons/filter-icon-red2.svg"
-                  alt=""
-                  width={21}
-                  height={15}
-                  className="absolute inset-0 transition-opacity opacity-0 group-hover:opacity-100"
-                />
-              </span>
-              Filter By
-            </button>
-
-            <div ref={sortRef} className="relative shrink-0">
+          {showBundles ? (
+            <BundlesPage embedded />
+          ) : (
+            <>
+            <div className="flex items-center justify-between gap-3 mb-4">
               <button
                 type="button"
-                onClick={() => setSortOpen((v) => !v)}
-                className="flex items-center gap-1.5 bg-[#f5f5f7] rounded-full px-3 py-2 cursor-pointer"
+                onClick={() => setFilterOpen(true)}
+                className="group shrink-0 inline-flex items-center gap-1.5 bg-[#f5f5f7] border border-[#f5f5f7] rounded-full px-4 py-2 text-[14px] font-semibold text-gray-600 hover:border-[#d32f2f] hover:text-[#d32f2f] transition-colors cursor-pointer"
               >
-                <span className="mi text-gray-500 text-[24px]">swap_vert</span>
-                <span className="text-gray-500 text-[14px] font-semibold max-[400px]:hidden">Sort By:</span>
-                <span className="text-[13px] font-medium text-gray-500">{sortLabels[sort]}</span>
+                <span className="relative w-[21px] h-[15px]">
+                  <Image
+                    src="/images/pc-builder/icons/filter-icon.svg"
+                    alt=""
+                    width={21}
+                    height={15}
+                    className="absolute inset-0 transition-opacity opacity-100 group-hover:opacity-0"
+                  />
+                  <Image
+                    src="/images/pc-builder/icons/filter-icon-red2.svg"
+                    alt=""
+                    width={21}
+                    height={15}
+                    className="absolute inset-0 transition-opacity opacity-0 group-hover:opacity-100"
+                  />
+                </span>
+                Filter By
               </button>
 
-              {sortOpen && (
-                <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-[190px] bg-white border border-gray-100 rounded-2xl shadow-[0_16px_40px_rgba(0,0,0,0.14)] z-50 p-3.5 flex flex-col gap-3.5">
-                  {(['best-seller', 'price-asc', 'price-desc'] as const).map((value) => (
-                    <label key={value} className="flex items-center gap-2.5 cursor-pointer select-none">
-                      <input
-                        type="checkbox"
-                        checked={sort === value}
-                        onChange={() => {
-                          setSort(sort === value ? 'default' : value)
-                          setPagesShown(1)
-                          setSortOpen(false)
-                        }}
-                        className="w-[18px] h-[18px] accent-[#c3272b] cursor-pointer"
-                      />
-                      <span className="text-[14px] text-gray-800">{sortLabels[value]}</span>
-                    </label>
-                  ))}
+              <div ref={sortRef} className="relative shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setSortOpen((v) => !v)}
+                  className="flex items-center gap-1.5 bg-[#f5f5f7] rounded-full px-3 py-2 cursor-pointer"
+                >
+                  <span className="mi text-gray-500 text-[24px]">swap_vert</span>
+                  <span className="text-gray-500 text-[14px] font-semibold max-[400px]:hidden">Sort By:</span>
+                  <span className="text-[13px] font-medium text-gray-500">{sortLabels[sort]}</span>
+                </button>
+
+                {sortOpen && (
+                  <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-[190px] bg-white border border-gray-100 rounded-2xl shadow-[0_16px_40px_rgba(0,0,0,0.14)] z-50 p-3.5 flex flex-col gap-3.5">
+                    {(['best-seller', 'price-asc', 'price-desc'] as const).map((value) => (
+                      <label key={value} className="flex items-center gap-2.5 cursor-pointer select-none">
+                        <input
+                          type="checkbox"
+                          checked={sort === value}
+                          onChange={() => {
+                            setSort(sort === value ? 'default' : value)
+                            setPagesShown(1)
+                            setSortOpen(false)
+                          }}
+                          className="w-[18px] h-[18px] accent-[#c3272b] cursor-pointer"
+                        />
+                        <span className="text-[14px] text-gray-800">{sortLabels[value]}</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 min-[87.5rem]:grid-cols-5 gap-8 md:gap-[50px]">
+              {paged.map((p) => (
+                <ProductCard
+                  key={p.id}
+                  product={p}
+                  ribbonLabel={p.dealLabel}
+                  onBuyNow={handleBuyNow}
+                  onCompare={handleCompareClick}
+                  onChat={() => handleChatClick(p)}
+                />
+              ))}
+
+              {paged.length === 0 && (
+                <div className="col-span-full text-center py-16">
+                  <span className="mi text-[56px] text-gray-400 block mb-3">search_off</span>
+                  <p className="text-gray-600">No products match the selected filters.</p>
                 </div>
               )}
             </div>
-          </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 min-[87.5rem]:grid-cols-5 gap-8 md:gap-[50px]">
-            {paged.map((p) => (
-              <ProductCard
-                key={p.id}
-                product={p}
-                ribbonLabel={p.dealLabel}
-                onBuyNow={handleBuyNow}
-                onCompare={handleCompareClick}
-                onChat={() => handleChatClick(p)}
-              />
-            ))}
-
-            {paged.length === 0 && (
-              <div className="col-span-full text-center py-16">
-                <span className="mi text-[56px] text-gray-400 block mb-3">search_off</span>
-                <p className="text-gray-600">No products match the selected filters.</p>
+            {hasMore && (
+              <div className="flex justify-center mt-10">
+                <button
+                  type="button"
+                  onClick={() => setPagesShown((p) => p + 1)}
+                  className="inline-flex items-center gap-2 bg-white text-[#c3272b] border border-[#c3272b] font-bold text-[13px] px-6 py-2.5 rounded-full hover:bg-[#c3272b] hover:text-white transition-colors cursor-pointer"
+                >
+                  <i className="fa fa-chevron-down text-base" /> More
+                </button>
               </div>
             )}
-          </div>
-
-          {hasMore && (
-            <div className="flex justify-center mt-10">
-              <button
-                type="button"
-                onClick={() => setPagesShown((p) => p + 1)}
-                className="inline-flex items-center gap-2 bg-white text-[#c3272b] border border-[#c3272b] font-bold text-[13px] px-6 py-2.5 rounded-full hover:bg-[#c3272b] hover:text-white transition-colors cursor-pointer"
-              >
-                <i className="fa fa-chevron-down text-base" /> More
-              </button>
-            </div>
+            </>
           )}
 
           <div className="bg-white border-[1.5px] border-[#f1f5f9] rounded-[25px] mt-10">
