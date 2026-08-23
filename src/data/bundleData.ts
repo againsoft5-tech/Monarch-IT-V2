@@ -274,9 +274,17 @@ function seedProduct(slug: string): BundleProduct | undefined {
   return undefined
 }
 
+/**
+ * Artwork for the shipped "Free T-Shirt" gift.
+ *
+ * Committed under `public/images/` rather than `public/uploads/` — uploads are
+ * written at runtime by the admin, while a seed has to resolve on a fresh clone.
+ */
+const TSHIRT_GIFT_IMAGE = '/images/bundles/t-shirt-free.png'
+
 /** Seed gift ids are fixed so server and client markup agree. */
-function seedTextGift(id: string, text: string): BundleGiftItem[] {
-  return [{ id: `seed-${id}`, kind: 'text', name: text }]
+function seedTextGift(id: string, text: string, image?: string): BundleGiftItem[] {
+  return [{ id: `seed-${id}`, kind: 'text', name: text, image }]
 }
 
 function seedTiers(twoOff: number, gifts: BundleGiftItem[]): BundleTier[] {
@@ -293,7 +301,7 @@ const READY_SEEDS: { id: string; name: string; slugs: string[]; off: number; gif
   { id: 'case-psu', name: 'Case + Power Combo', slugs: ['t-wolf--infinity-x10-atx-gaming-case-black', 'k600-80plus-600w-power-supply'], off: 1200, gifts: [] },
   { id: 'gpu-power', name: 'Graphics Power Combo', slugs: ['powercolor-fighter-amd-radeon-rx-7700-xt-12gb-gddr6-graphics-card', 'k600-80plus-600w-power-supply', 't-wolf--infinity-x10-atx-gaming-case-black'], off: 3500, gifts: seedTextGift('gpu-power', 'Free Cable Kit') },
   { id: 'play-station', name: 'Play Station Combo', slugs: ['koorui-g2421v-24-inch-qhd-180hz-gaming-monitor', 'aolion-al-ns2288pro-wh-gaming-controller'], off: 1800, gifts: [] },
-  { id: 'stream-setup', name: 'Streamer Setup Combo', slugs: ['koorui-e2721h-120hz-gaming-monitor', 'RK-L98-mechanical-cream-keyboard'], off: 2500, gifts: seedTextGift('stream-setup', 'Free T-Shirt') },
+  { id: 'stream-setup', name: 'Streamer Setup Combo', slugs: ['koorui-e2721h-120hz-gaming-monitor', 'RK-L98-mechanical-cream-keyboard'], off: 2500, gifts: seedTextGift('stream-setup', 'Free T-Shirt', TSHIRT_GIFT_IMAGE) },
   { id: 'pro-gamer', name: 'Pro Gamer Combo', slugs: ['xiaomi-redmi-g27-27-inch-monitor', 'steelseries-nimbus-plus-wireless-black-gaming-controller'], off: 2200, gifts: [] },
   { id: 'build-base', name: 'Build Base Combo', slugs: ['monarch-mystery-box-x5-gaming-case', 'oscoo-r500-rgb-16gb-ddr5-5600mhz-ram'], off: 2600, gifts: [] },
   { id: 'casual-play', name: 'Casual Play Combo', slugs: ['xiaomi-redmi-g24-240hz-gaming-monitor', 'redragon-pluto-g815-blue-dual-mode-vibration-game-pad'], off: 1400, gifts: seedTextGift('casual-play', 'Free Mouse') },
@@ -339,7 +347,7 @@ function buildDefaultDB(): BundleDB {
         tabs,
         tiers: [
           { count: 2, discountType: 'fixed', discountValue: 1500, gifts: [] },
-          { count: 3, discountType: 'percent', discountValue: 8, gifts: seedTextGift('custom-3', 'Free T-Shirt') },
+          { count: 3, discountType: 'percent', discountValue: 8, gifts: seedTextGift('custom-3', 'Free T-Shirt', TSHIRT_GIFT_IMAGE) },
           {
             count: 4,
             discountType: 'percent',
@@ -357,6 +365,7 @@ function buildDefaultDB(): BundleDB {
                   image: p.image,
                 })),
               ...seedTextGift('custom-4', 'Free Gaming Mousepad'),
+              ...seedTextGift('custom-4-tshirt', 'Free T-Shirt', TSHIRT_GIFT_IMAGE),
             ],
           },
         ],

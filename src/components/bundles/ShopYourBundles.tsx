@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
 import { useCart } from '@/context/CartContext'
+import GiftChoiceModal from '@/components/bundles/GiftChoiceModal'
 import { bundleToCartItem } from '@/lib/bundleCart'
 import { computeBundlePricing, resolveGift, type ReadyBundle } from '@/data/bundleData'
 
@@ -26,9 +27,13 @@ function BundleCard({ bundle, onChat }: { bundle: ReadyBundle; onChat: () => voi
   // A single gift comes with the bundle; several are offered as a choice, with the
   // first standing in so the card always shows what the customer will receive.
   const [chosenGiftId, setChosenGiftId] = useState<string | undefined>()
+  const [giftOpen, setGiftOpen] = useState(false)
   const pricing = computeBundlePricing(bundle.products, bundle.tiers)
   const gifts = pricing.gifts
   const activeGift = resolveGift(gifts, chosenGiftId)
+
+  /** What the bundle takes off the products' regular prices, shown next to the total. */
+  const saving = Math.max(0, pricing.regularTotal - pricing.total)
 
   const add = () => {
     addItems([
@@ -87,8 +92,12 @@ function BundleCard({ bundle, onChat }: { bundle: ReadyBundle; onChat: () => voi
       </div>
 
       {/* Details panel — same tint and radius as the image tiles above, holding the product
-          list, price and CTA. mt-auto bottom-aligns it so CTAs line up across the row. */}
-      <div className="mt-auto flex min-w-0 flex-col rounded-2xl bg-[#f5f6fa] p-4">
+          list, price and CTA. flex-1 (not mt-auto) so the panel starts directly under the
+          fixed-height image block and stretches to the bottom: every card in the row then
+          shows the same tinted rectangle, however many products or gifts it carries. */}
+      <div className="flex min-w-0 flex-1 flex-col rounded-2xl bg-[#f5f6fa] p-4">
+      {/* Grows to absorb the height difference, keeping price and CTA on the bottom edge. */}
+      <div className="flex min-w-0 flex-1 flex-col">
       <ul className="flex min-w-0 list-none flex-col gap-1.5 p-0">
         {bundle.products.map((p, i) => (
           <li key={p.id} className="flex min-w-0 items-center gap-2 text-[11.5px] leading-snug">
@@ -119,45 +128,55 @@ function BundleCard({ bundle, onChat }: { bundle: ReadyBundle; onChat: () => voi
         </span>
       ) : null}
 
-      {gifts.length > 1 ? (
-        <div className="mt-2 min-w-0">
-          <span className="mb-1 flex items-center gap-1 text-[10.5px] font-bold uppercase tracking-wide text-[#0f7a43]">
-            <span className="mi text-[14px] leading-none">redeem</span> Free gift — pick one
-          </span>
-          <div className="flex min-w-0 flex-wrap gap-1">
-            {gifts.map((g) => {
-              const on = activeGift?.id === g.id
-              return (
-                <button
-                  key={g.id}
-                  type="button"
-                  title={g.name}
-                  onClick={() => setChosenGiftId(g.id)}
-                  aria-pressed={on}
-                  className={`max-w-full truncate rounded-full border px-2 py-[3px] text-[10.5px] font-semibold transition-colors ${
-                    on
-                      ? 'border-[#0f7a43] bg-[#e8f6ee] text-[#0f7a43]'
-                      : 'border-[#dfe3ec] bg-white text-gray-500 hover:border-[#0f7a43]'
-                  }`}
-                >
-                  {g.name}
-                </button>
-              )
-            })}
-          </div>
-        </div>
+      {gifts.length > 1 && activeGift ? (
+        <>
+          {/* The card is too narrow to show gift artwork, so picking happens in a dialog. */}
+          <button
+            type="button"
+            onClick={() => setGiftOpen(true)}
+            className="mt-2 flex min-w-0 items-center gap-1.5 rounded-xl bg-[#e8f6ee] px-2.5 py-1.5 text-left transition-colors hover:bg-[#d8efe2]"
+          >
+            <span className="mi shrink-0 text-[16px] leading-none text-[#0f7a43]">redeem</span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-[10.5px] font-bold uppercase tracking-wide text-[#0f7a43]">
+                Free gift — pick one
+              </span>
+              <span className="block truncate text-[11px] font-semibold text-[#0f7a43]">
+                {activeGift.name}
+              </span>
+            </span>
+            <span className="mi shrink-0 text-[18px] leading-none text-[#0f7a43]">expand_more</span>
+          </button>
+
+          <GiftChoiceModal
+            open={giftOpen}
+            gifts={gifts}
+            selectedId={activeGift.id}
+            onSelect={setChosenGiftId}
+            onClose={() => setGiftOpen(false)}
+          />
+        </>
       ) : null}
 
-      <div className="mt-2.5 flex items-center justify-end gap-2 border-t border-[#e3e6ee] pt-2.5">
-        <span className="text-[15px] font-bold text-[#c3272b]">
-          <span className="font-medium">৳</span>
-          <span className="font-price">{pricing.total.toLocaleString()}</span>
-        </span>
-        {pricing.regularTotal > pricing.total ? (
-          <span className="text-[11.5px] text-gray-400 line-through">
-            ৳{pricing.regularTotal.toLocaleString()}
+      </div>
+
+      <div className="mt-2.5 flex items-center gap-2 border-t border-[#e3e6ee] pt-2.5">
+        {saving > 0 ? (
+          <span className="shrink-0 rounded-full bg-[#e8f6ee] px-2 py-[2px] text-[10.5px] font-bold text-[#00a05a]">
+            Save ৳{saving.toLocaleString()}
           </span>
         ) : null}
+        <span className="ml-auto flex min-w-0 items-center gap-2">
+          <span className="text-[15px] font-bold text-[#c3272b]">
+            <span className="font-medium">৳</span>
+            <span className="font-price">{pricing.total.toLocaleString()}</span>
+          </span>
+          {saving > 0 ? (
+            <span className="text-[11.5px] text-gray-400 line-through">
+              ৳{pricing.regularTotal.toLocaleString()}
+            </span>
+          ) : null}
+        </span>
       </div>
 
       <div className="mt-3 flex items-center gap-2">
