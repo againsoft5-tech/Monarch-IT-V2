@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { mkdir, writeFile } from 'fs/promises'
 import path from 'path'
 
-const ALLOWED_FOLDERS = new Set(['promo-banner', 'hero-slider', 'deal-tabs'])
+const ALLOWED_FOLDERS = new Set(['promo-banner', 'hero-slider', 'deal-tabs', 'bundle-gifts'])
 const DEFAULT_FOLDER = 'promo-banner'
 const ALLOWED_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp', 'image/avif', 'image/svg+xml'])
 const MAX_SIZE = 5 * 1024 * 1024

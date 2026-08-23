@@ -32,27 +32,35 @@ export type BundleProduct = {
   priceNew: number
 }
 
-/** A giftable product reference. */
-export type GiftProduct = { slug: string; name: string; image: string }
+/** Shape of a product inside a pre-list stored gift; see `normalizeGifts`. */
+type LegacyGiftProduct = { slug: string; name: string; image: string }
 
 /**
- * Free gift attached to a tier:
- * - `product` — one fixed store product the customer always receives
- * - `choice`  — a pool of eligible products the customer picks one from
- * - `text`    — free text like "Free T-Shirt", shown but never a cart line
+ * One entry in a tier's free-gift list.
+ *
+ * A tier holds a *list* so an admin can mix catalog products and custom
+ * text+image gifts in the same offer:
+ * - `product` — a real store product, carrying its slug so it can link out
+ * - `text`    — a custom gift such as "Free T-Shirt", with an optional image
+ *
+ * A lone gift is granted automatically; more than one means the customer picks.
  */
-export type BundleGift =
-  | { kind: 'none' }
-  | ({ kind: 'product' } & GiftProduct)
-  | { kind: 'choice'; products: GiftProduct[] }
-  | { kind: 'text'; text: string }
+export type BundleGiftItem = {
+  id: string
+  kind: 'product' | 'text'
+  /** Catalog slug — product gifts only. */
+  slug?: string
+  /** Product name, or the custom gift text. */
+  name: string
+  image?: string
+}
 
-/** Discount + optional gift unlocked at an exact selected-product count. */
+/** Discount + free-gift list unlocked at an exact selected-product count. */
 export type BundleTier = {
   count: BundleTierCount
   discountType: BundleDiscountType
   discountValue: number
-  gift: BundleGift
+  gifts: BundleGiftItem[]
 }
 
 /** Admin-authored fixed bundle shown on "Shop Your Bundles". */
@@ -94,8 +102,73 @@ export type BundleDB = {
   custom: Record<string, CustomBundle>
 }
 
-export function emptyGift(): BundleGift {
-  return { kind: 'none' }
+/** Ids only have to be unique inside one tier's gift list. */
+export function newGiftId(): string {
+  return `gift-${Math.random().toString(36).slice(2, 10)}`
+}
+
+/**
+ * Reads a tier's gift list, upgrading the pre-list shape on the way.
+ *
+ * Bundles are persisted in the visitor's own localStorage, so records written by
+ * an older build (a single `gift` object) are still out there and have to keep
+ * working — a stored `{ kind: 'choice', products: [...] }` becomes one gift item
+ * per product, which is exactly what it always meant.
+ */
+export function normalizeGifts(raw: unknown): BundleGiftItem[] {
+  if (Array.isArray(raw)) {
+    return raw
+      .filter((g): g is BundleGiftItem => Boolean(g) && typeof (g as BundleGiftItem).name === 'string')
+      .map((g) => ({
+        id: g.id || newGiftId(),
+        kind: g.kind === 'product' ? ('product' as const) : ('text' as const),
+        slug: g.slug,
+        name: g.name,
+        image: g.image,
+      }))
+  }
+
+  const legacy = raw as {
+    kind?: string
+    name?: string
+    image?: string
+    slug?: string
+    text?: string
+    products?: LegacyGiftProduct[]
+  } | null
+
+  if (!legacy || !legacy.kind || legacy.kind === 'none') return []
+  if (legacy.kind === 'text') {
+    return legacy.text ? [{ id: newGiftId(), kind: 'text', name: legacy.text }] : []
+  }
+  if (legacy.kind === 'product') {
+    return legacy.slug
+      ? [{ id: newGiftId(), kind: 'product', slug: legacy.slug, name: legacy.name ?? '', image: legacy.image }]
+      : []
+  }
+  return (legacy.products ?? []).map((g) => ({
+    id: newGiftId(),
+    kind: 'product' as const,
+    slug: g.slug,
+    name: g.name,
+    image: g.image,
+  }))
+}
+
+/** Applies `normalizeGifts` across a whole tier table. */
+export function normalizeTiers(tiers: unknown): BundleTier[] {
+  if (!Array.isArray(tiers)) return defaultTiers()
+  return tiers.map((t) => {
+    // Deliberately loose: `t` may be a record written by an older build, which
+    // carried a single `gift` object where the current shape has `gifts`.
+    const tier = t as Partial<BundleTier> & { gift?: unknown }
+    return {
+      count: tier.count as BundleTierCount,
+      discountType: (tier.discountType ?? 'fixed') as BundleDiscountType,
+      discountValue: tier.discountValue ?? 0,
+      gifts: normalizeGifts(tier.gifts ?? tier.gift),
+    }
+  })
 }
 
 /** A blank tier set covering every supported product count. */
@@ -104,7 +177,7 @@ export function defaultTiers(): BundleTier[] {
     count,
     discountType: 'fixed' as BundleDiscountType,
     discountValue: 0,
-    gift: emptyGift(),
+    gifts: [],
   }))
 }
 
@@ -126,8 +199,8 @@ export type BundlePricing = {
   total: number
   /** Tier that applied, if any. */
   tier?: BundleTier
-  /** Gift unlocked by the applied tier, if any. */
-  gift?: BundleGift
+  /** Gifts unlocked by the applied tier — empty when the tier offers none. */
+  gifts: BundleGiftItem[]
 }
 
 /**
@@ -157,22 +230,22 @@ export function computeBundlePricing(products: BundleProduct[], tiers: BundleTie
     tierDiscount,
     total: Math.max(0, subtotal - tierDiscount),
     tier,
-    gift: tier && tier.gift.kind !== 'none' ? tier.gift : undefined,
+    gifts: tier?.gifts ?? [],
   }
 }
 
-/** Human label for a gift, for cart lines and summaries. */
-export function giftLabel(gift?: BundleGift, chosen?: GiftProduct): string | undefined {
-  if (!gift || gift.kind === 'none') return undefined
-  if (gift.kind === 'product') return gift.name
-  if (gift.kind === 'text') return gift.text
-  // A choice gift only has a label once the customer has picked from the pool.
-  return chosen?.name
-}
-
-/** Whether the customer still has to pick their free product before checking out. */
-export function giftNeedsChoice(gift?: BundleGift): boolean {
-  return gift?.kind === 'choice' && gift.products.length > 0
+/**
+ * The gift a bundle line actually carries.
+ *
+ * A single configured gift is granted automatically — the customer never has to
+ * ask for it — so it resolves even with no explicit choice. With several on
+ * offer the customer's pick decides, falling back to the first so a bundle is
+ * never added to the cart with an empty gift slot.
+ */
+export function resolveGift(gifts: BundleGiftItem[], chosenId?: string): BundleGiftItem | undefined {
+  if (gifts.length === 0) return undefined
+  if (gifts.length === 1) return gifts[0]
+  return gifts.find((g) => g.id === chosenId) ?? gifts[0]
 }
 
 /* ------------------------------------------------------------------ seeds */
@@ -201,24 +274,29 @@ function seedProduct(slug: string): BundleProduct | undefined {
   return undefined
 }
 
-function seedTiers(twoOff: number, gift: BundleGift): BundleTier[] {
+/** Seed gift ids are fixed so server and client markup agree. */
+function seedTextGift(id: string, text: string): BundleGiftItem[] {
+  return [{ id: `seed-${id}`, kind: 'text', name: text }]
+}
+
+function seedTiers(twoOff: number, gifts: BundleGiftItem[]): BundleTier[] {
   return [
-    { count: 2, discountType: 'fixed', discountValue: twoOff, gift },
-    { count: 3, discountType: 'percent', discountValue: 8, gift },
-    { count: 4, discountType: 'percent', discountValue: 12, gift },
+    { count: 2, discountType: 'fixed', discountValue: twoOff, gifts },
+    { count: 3, discountType: 'percent', discountValue: 8, gifts },
+    { count: 4, discountType: 'percent', discountValue: 12, gifts },
   ]
 }
 
-const READY_SEEDS: { id: string; name: string; slugs: string[]; off: number; gift: BundleGift }[] = [
-  { id: 'am5-starter', name: 'AM5 Starter Combo', slugs: ['Gigabyte-b650m-k-micro-ATX-motherboard', 'oscoo-on901-256gb-ssd'], off: 1500, gift: { kind: 'none' } },
-  { id: 'am4-value', name: 'AM4 Value Combo', slugs: ['gigabyte-A520M-K-V2', 'oscoo-r500-rgb-16gb-ddr5-5600mhz-ram'], off: 2000, gift: { kind: 'text', text: 'Free Mousepad' } },
-  { id: 'case-psu', name: 'Case + Power Combo', slugs: ['t-wolf--infinity-x10-atx-gaming-case-black', 'k600-80plus-600w-power-supply'], off: 1200, gift: { kind: 'none' } },
-  { id: 'gpu-power', name: 'Graphics Power Combo', slugs: ['powercolor-fighter-amd-radeon-rx-7700-xt-12gb-gddr6-graphics-card', 'k600-80plus-600w-power-supply', 't-wolf--infinity-x10-atx-gaming-case-black'], off: 3500, gift: { kind: 'text', text: 'Free Cable Kit' } },
-  { id: 'play-station', name: 'Play Station Combo', slugs: ['koorui-g2421v-24-inch-qhd-180hz-gaming-monitor', 'aolion-al-ns2288pro-wh-gaming-controller'], off: 1800, gift: { kind: 'none' } },
-  { id: 'stream-setup', name: 'Streamer Setup Combo', slugs: ['koorui-e2721h-120hz-gaming-monitor', 'RK-L98-mechanical-cream-keyboard'], off: 2500, gift: { kind: 'text', text: 'Free T-Shirt' } },
-  { id: 'pro-gamer', name: 'Pro Gamer Combo', slugs: ['xiaomi-redmi-g27-27-inch-monitor', 'steelseries-nimbus-plus-wireless-black-gaming-controller'], off: 2200, gift: { kind: 'none' } },
-  { id: 'build-base', name: 'Build Base Combo', slugs: ['monarch-mystery-box-x5-gaming-case', 'oscoo-r500-rgb-16gb-ddr5-5600mhz-ram'], off: 2600, gift: { kind: 'none' } },
-  { id: 'casual-play', name: 'Casual Play Combo', slugs: ['xiaomi-redmi-g24-240hz-gaming-monitor', 'redragon-pluto-g815-blue-dual-mode-vibration-game-pad'], off: 1400, gift: { kind: 'text', text: 'Free Mouse' } },
+const READY_SEEDS: { id: string; name: string; slugs: string[]; off: number; gifts: BundleGiftItem[] }[] = [
+  { id: 'am5-starter', name: 'AM5 Starter Combo', slugs: ['Gigabyte-b650m-k-micro-ATX-motherboard', 'oscoo-on901-256gb-ssd'], off: 1500, gifts: [] },
+  { id: 'am4-value', name: 'AM4 Value Combo', slugs: ['gigabyte-A520M-K-V2', 'oscoo-r500-rgb-16gb-ddr5-5600mhz-ram'], off: 2000, gifts: seedTextGift('am4-value', 'Free Mousepad') },
+  { id: 'case-psu', name: 'Case + Power Combo', slugs: ['t-wolf--infinity-x10-atx-gaming-case-black', 'k600-80plus-600w-power-supply'], off: 1200, gifts: [] },
+  { id: 'gpu-power', name: 'Graphics Power Combo', slugs: ['powercolor-fighter-amd-radeon-rx-7700-xt-12gb-gddr6-graphics-card', 'k600-80plus-600w-power-supply', 't-wolf--infinity-x10-atx-gaming-case-black'], off: 3500, gifts: seedTextGift('gpu-power', 'Free Cable Kit') },
+  { id: 'play-station', name: 'Play Station Combo', slugs: ['koorui-g2421v-24-inch-qhd-180hz-gaming-monitor', 'aolion-al-ns2288pro-wh-gaming-controller'], off: 1800, gifts: [] },
+  { id: 'stream-setup', name: 'Streamer Setup Combo', slugs: ['koorui-e2721h-120hz-gaming-monitor', 'RK-L98-mechanical-cream-keyboard'], off: 2500, gifts: seedTextGift('stream-setup', 'Free T-Shirt') },
+  { id: 'pro-gamer', name: 'Pro Gamer Combo', slugs: ['xiaomi-redmi-g27-27-inch-monitor', 'steelseries-nimbus-plus-wireless-black-gaming-controller'], off: 2200, gifts: [] },
+  { id: 'build-base', name: 'Build Base Combo', slugs: ['monarch-mystery-box-x5-gaming-case', 'oscoo-r500-rgb-16gb-ddr5-5600mhz-ram'], off: 2600, gifts: [] },
+  { id: 'casual-play', name: 'Casual Play Combo', slugs: ['xiaomi-redmi-g24-240hz-gaming-monitor', 'redragon-pluto-g815-blue-dual-mode-vibration-game-pad'], off: 1400, gifts: seedTextGift('casual-play', 'Free Mouse') },
 ]
 
 const CUSTOM_SEED_TABS: { key: string; label: string; slugs: string[] }[] = [
@@ -239,7 +317,7 @@ function buildDefaultDB(): BundleDB {
       name: seed.name,
       active: true,
       products,
-      tiers: seedTiers(seed.off, seed.gift),
+      tiers: seedTiers(seed.off, seed.gifts),
       createdAt: SEED_DATE,
       updatedAt: SEED_DATE,
     }
@@ -260,19 +338,26 @@ function buildDefaultDB(): BundleDB {
         active: true,
         tabs,
         tiers: [
-          { count: 2, discountType: 'fixed', discountValue: 1500, gift: { kind: 'none' } },
-          { count: 3, discountType: 'percent', discountValue: 8, gift: { kind: 'text', text: 'Free T-Shirt' } },
+          { count: 2, discountType: 'fixed', discountValue: 1500, gifts: [] },
+          { count: 3, discountType: 'percent', discountValue: 8, gifts: seedTextGift('custom-3', 'Free T-Shirt') },
           {
             count: 4,
             discountType: 'percent',
             discountValue: 12,
-            gift: {
-              kind: 'choice',
-              products: ['aolion-al-ns2258-t-wireless-controller', 'rapoo-v600se-black-wireless-game-pad']
+            // A mixed pool — two catalog products plus a custom gift — so the customer picks one.
+            gifts: [
+              ...['aolion-al-ns2258-t-wireless-controller', 'rapoo-v600se-black-wireless-game-pad']
                 .map(seedProduct)
                 .filter((p): p is BundleProduct => Boolean(p))
-                .map((p) => ({ slug: p.slug, name: p.name, image: p.image })),
-            },
+                .map((p) => ({
+                  id: `seed-gift-${p.slug}`,
+                  kind: 'product' as const,
+                  slug: p.slug,
+                  name: p.name,
+                  image: p.image,
+                })),
+              ...seedTextGift('custom-4', 'Free Gaming Mousepad'),
+            ],
           },
         ],
         createdAt: SEED_DATE,

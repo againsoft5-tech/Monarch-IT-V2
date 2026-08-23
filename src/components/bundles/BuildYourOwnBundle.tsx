@@ -8,14 +8,12 @@ import { bundleToCartItem } from '@/lib/bundleCart'
 import {
   BUNDLE_TIER_COUNTS,
   computeBundlePricing,
-  giftLabel,
-  giftNeedsChoice,
+  resolveGift,
   tierForCount,
+  type BundleGiftItem,
   type BundleProduct,
   type BundleTierCount,
   type CustomBundle,
-  type CustomBundleTab,
-  type GiftProduct,
 } from '@/data/bundleData'
 
 /** Copy for each tier card, matching the three-card selector in the design. */
@@ -23,6 +21,51 @@ const TIER_COPY: Record<BundleTierCount, { eyebrow: string; blurb: string }> = {
   2: { eyebrow: 'Get a special bundle discount', blurb: 'Choose 2 products and save more.' },
   3: { eyebrow: 'Get a higher bundle discount', blurb: 'Choose 3 products and unlock a bigger discount.' },
   4: { eyebrow: 'Get our best bundle discount', blurb: 'Choose 4 products and get the best bundle price.' },
+}
+
+/**
+ * One free-gift tile.
+ *
+ * Handles both gift kinds: a product shows its photo, a custom gift falls back to
+ * the gift glyph. Only selectable when the tier offers more than one, since a lone
+ * gift is already the customer's.
+ */
+function GiftTile({
+  gift,
+  selected,
+  selectable,
+  onSelect,
+}: {
+  gift: BundleGiftItem
+  selected: boolean
+  selectable: boolean
+  onSelect: () => void
+}) {
+  const Tag = selectable ? 'button' : 'div'
+  return (
+    <Tag
+      {...(selectable ? { type: 'button' as const, onClick: onSelect, 'aria-pressed': selected } : {})}
+      className={`flex aspect-square w-[calc(50%-6px)] flex-col items-center justify-center gap-2 rounded-2xl border-2 bg-[#f5f6fa] px-3 py-2 text-center transition-colors sm:w-[180px] ${
+        selected ? 'border-[#0f7a43]' : 'border-transparent'
+      } ${selectable ? 'hover:border-[#0f7a43]/50' : ''}`}
+    >
+      {gift.image ? (
+        <Image
+          src={gift.image}
+          alt={gift.name}
+          width={110}
+          height={110}
+          className="max-h-[55%] w-auto max-w-full object-contain"
+        />
+      ) : (
+        <span className="mi text-[32px] leading-none text-[#0f7a43]">redeem</span>
+      )}
+      <span className="line-clamp-2 text-[12.5px] font-bold text-[#0f7a43]">{gift.name}</span>
+      {selected && selectable ? (
+        <span className="text-[10.5px] font-semibold uppercase tracking-wide text-[#0f7a43]">Selected</span>
+      ) : null}
+    </Tag>
+  )
 }
 
 /** Empty slot / filled slot tile. */
@@ -88,12 +131,15 @@ export default function BuildYourOwnBundle({ bundles }: { bundles: CustomBundle[
   const [tierCount, setTierCount] = useState<BundleTierCount>(2)
   /** Slot index → chosen product. Sparse so slots can be filled in any order. */
   const [slots, setSlots] = useState<Record<number, BundleProduct>>({})
-  const [chosenGift, setChosenGift] = useState<GiftProduct | undefined>()
-  const [picking, setPicking] = useState<{ kind: 'slot'; index: number } | { kind: 'gift' } | null>(null)
+  /** Which gift the customer picked; only meaningful when the tier offers several. */
+  const [chosenGiftId, setChosenGiftId] = useState<string | undefined>()
+  const [picking, setPicking] = useState<{ index: number } | null>(null)
 
   const tier = bundle ? tierForCount(bundle.tiers, tierCount) : undefined
-  const gift = tier?.gift
-  const needsGiftChoice = giftNeedsChoice(gift)
+  const gifts = tier?.gifts ?? []
+  // A lone gift is simply included; with several, the first stands in until the
+  // customer picks, so a bundle can never reach the cart with no gift attached.
+  const activeGift = resolveGift(gifts, chosenGiftId)
 
   const selected = useMemo(
     () => Array.from({ length: tierCount }, (_, i) => slots[i]).filter(Boolean) as BundleProduct[],
@@ -105,8 +151,7 @@ export default function BuildYourOwnBundle({ bundles }: { bundles: CustomBundle[
   )
 
   const allFilled = selected.length === tierCount
-  const giftSatisfied = !needsGiftChoice || Boolean(chosenGift)
-  const canAdd = allFilled && giftSatisfied
+  const canAdd = allFilled
 
   const reset = (count: BundleTierCount) => {
     setTierCount(count)
@@ -116,45 +161,26 @@ export default function BuildYourOwnBundle({ bundles }: { bundles: CustomBundle[
       for (let i = 0; i < count; i++) if (prev[i]) next[i] = prev[i]
       return next
     })
-    setChosenGift(undefined)
+    setChosenGiftId(undefined)
   }
 
-  /** Pool the picker browses: the bundle's own tabs, or the gift's eligible products. */
-  const pickerTabs: CustomBundleTab[] = useMemo(() => {
-    if (!picking) return []
-    if (picking.kind === 'gift') {
-      if (gift?.kind !== 'choice') return []
-      return [
-        {
-          key: 'gift',
-          label: 'Free products',
-          products: gift.products.map((g) => ({
-            id: `gift-${g.slug}`,
-            slug: g.slug,
-            name: g.name,
-            image: g.image,
-            priceOld: 0,
-            priceNew: 0,
-          })),
-        },
-      ]
-    }
-    return bundle?.tabs ?? []
-  }, [picking, gift, bundle])
+  /* Gifts are chosen inline from their own tiles, so the picker only ever
+     browses the bundle's purchasable tabs. */
 
   const addToCart = () => {
     if (!bundle || !canAdd) return
-    const label = giftLabel(gift, chosenGift)
-    const item = bundleToCartItem({
-      cartId: `bundle-${bundle.id}-${selected.map((p) => p.slug).sort().join('_')}`,
-      name: `${bundle.name} · ${tierCount}-Product Bundle`,
-      slug: 'bundles',
-      products: selected,
-      tiers: bundle.tiers,
-    })
-    addItems([{ ...item, giftLabel: label, giftImage: chosenGift?.image ?? item.giftImage }])
+    addItems([
+      bundleToCartItem({
+        cartId: `bundle-${bundle.id}-${selected.map((p) => p.slug).sort().join('_')}`,
+        name: `${bundle.name} · ${tierCount}-Product Bundle`,
+        slug: 'bundles',
+        products: selected,
+        tiers: bundle.tiers,
+        chosenGiftId,
+      }),
+    ])
     setSlots({})
-    setChosenGift(undefined)
+    setChosenGiftId(undefined)
     openCart()
   }
 
@@ -184,7 +210,7 @@ export default function BuildYourOwnBundle({ bundles }: { bundles: CustomBundle[
               onClick={() => {
                 setBundleId(b.id)
                 setSlots({})
-                setChosenGift(undefined)
+                setChosenGiftId(undefined)
               }}
               className={`rounded-full px-4 py-2 text-[13px] font-semibold ${
                 b.id === bundle.id ? 'bg-[#c3272b] text-white' : 'bg-[#f5f5f7] text-gray-600'
@@ -234,40 +260,35 @@ export default function BuildYourOwnBundle({ bundles }: { bundles: CustomBundle[
           <div key={i} className="w-[calc(50%-8px)] sm:w-[200px]">
             <Slot
               product={slots[i]}
-              onClick={() => setPicking({ kind: 'slot', index: i })}
+              onClick={() => setPicking({ index: i })}
               onClear={slots[i] ? () => setSlots((p) => { const n = { ...p }; delete n[i]; return n }) : undefined}
             />
           </div>
         ))}
       </div>
 
-      {/* Free gift */}
-      {gift && gift.kind !== 'none' ? (
+      {/* Free gift — a single gift is granted automatically, several are picked from. */}
+      {gifts.length > 0 ? (
         <div className="mb-10">
           <div className="mb-3 text-center">
             <h3 className="m-0 text-[19px] font-bold text-gray-900">Select your free products</h3>
             <p className="m-0 mt-0.5 text-[12.5px] text-gray-500">
-              {gift.kind === 'choice'
-                ? 'Choose eligible free products from our collection.'
+              {gifts.length > 1
+                ? 'Choose one eligible free product from our collection.'
                 : 'Included free with this bundle.'}
             </p>
           </div>
 
-          <div className="mx-auto w-[calc(50%-8px)] sm:w-[200px]">
-            {gift.kind === 'choice' ? (
-              <Slot
-                product={chosenGift}
-                onClick={() => setPicking({ kind: 'gift' })}
-                onClear={chosenGift ? () => setChosenGift(undefined) : undefined}
+          <div className="mx-auto flex flex-wrap justify-center gap-3 sm:gap-4">
+            {gifts.map((g) => (
+              <GiftTile
+                key={g.id}
+                gift={g}
+                selected={activeGift?.id === g.id}
+                selectable={gifts.length > 1}
+                onSelect={() => setChosenGiftId(g.id)}
               />
-            ) : gift.kind === 'product' ? (
-              <Slot product={{ name: gift.name, image: gift.image }} onClick={() => {}} />
-            ) : (
-              <div className="flex aspect-square w-full flex-col items-center justify-center gap-2 rounded-2xl bg-[#f5f6fa] px-3 text-center">
-                <span className="mi text-[32px] leading-none text-[#0f7a43]">redeem</span>
-                <span className="text-[13px] font-bold text-[#0f7a43]">{gift.text}</span>
-              </div>
-            )}
+            ))}
           </div>
         </div>
       ) : null}
@@ -295,10 +316,10 @@ export default function BuildYourOwnBundle({ bundles }: { bundles: CustomBundle[
           </ul>
 
           <div className="px-4 py-3">
-            {giftLabel(gift, chosenGift) ? (
-              <div className="mb-2 flex items-center justify-between text-[13px]">
-                <span className="font-semibold text-[#0f7a43]">Free gift</span>
-                <span className="font-semibold text-[#0f7a43]">{giftLabel(gift, chosenGift)}</span>
+            {activeGift ? (
+              <div className="mb-2 flex items-center justify-between gap-3 text-[13px]">
+                <span className="shrink-0 font-semibold text-[#0f7a43]">Free gift</span>
+                <span className="min-w-0 truncate font-semibold text-[#0f7a43]">{activeGift.name}</span>
               </div>
             ) : null}
             <div className="flex items-center justify-between text-[13px]">
@@ -334,17 +355,13 @@ export default function BuildYourOwnBundle({ bundles }: { bundles: CustomBundle[
       <ProductPickerModal
         open={picking !== null}
         onClose={() => setPicking(null)}
-        tabs={pickerTabs}
-        takenSlugs={picking?.kind === 'slot' ? selected.map((p) => p.slug) : []}
-        title={picking?.kind === 'gift' ? 'Choose your free product' : 'Choose your product'}
-        eyebrow={picking?.kind === 'gift' ? 'Free gift' : 'Purchase product'}
+        tabs={bundle?.tabs ?? []}
+        takenSlugs={selected.map((p) => p.slug)}
+        title="Choose your product"
+        eyebrow="Purchase product"
         onPick={(product) => {
           if (!picking) return
-          if (picking.kind === 'gift') {
-            setChosenGift({ slug: product.slug, name: product.name, image: product.image })
-          } else {
-            setSlots((prev) => ({ ...prev, [picking.index]: product }))
-          }
+          setSlots((prev) => ({ ...prev, [picking.index]: product }))
         }}
       />
     </div>

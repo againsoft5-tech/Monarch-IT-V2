@@ -6,6 +6,7 @@ import {
   MAX_BUNDLE_PRODUCTS,
   SEED_DATE,
   defaultTiers,
+  normalizeTiers,
   type BundleDB,
   type BundleProduct,
   type BundleTier,
@@ -47,12 +48,29 @@ function nowIso() {
  * seeds merged in once — stamping the version means a bundle the admin deleted stays
  * deleted instead of reappearing on every page load.
  */
-const SEED_VERSION = 2
+const SEED_VERSION = 3
 
 type StoredDB = BundleDB & { seedVersion?: number }
 
 function persist(db: BundleDB) {
   localStorage.setItem(DB_KEY, JSON.stringify({ ...db, seedVersion: SEED_VERSION } satisfies StoredDB))
+}
+
+/**
+ * Brings every stored tier onto the current gift shape.
+ *
+ * Bundles live in the visitor's own localStorage, so a browser can hold records
+ * written before gifts became a list. Normalising on read means the rest of the
+ * app only ever sees `tier.gifts`.
+ */
+function upgradeTiers(db: BundleDB): BundleDB {
+  const ready = Object.fromEntries(
+    Object.entries(db.ready).map(([id, b]) => [id, { ...b, tiers: normalizeTiers(b.tiers) }]),
+  )
+  const custom = Object.fromEntries(
+    Object.entries(db.custom).map(([id, b]) => [id, { ...b, tiers: normalizeTiers(b.tiers) }]),
+  )
+  return { ready, custom }
 }
 
 function readDB(): BundleDB {
@@ -66,7 +84,7 @@ function readDB(): BundleDB {
     }
 
     const parsed = JSON.parse(raw) as Partial<StoredDB>
-    const stored: BundleDB = { ready: parsed.ready ?? {}, custom: parsed.custom ?? {} }
+    const stored = upgradeTiers({ ready: parsed.ready ?? {}, custom: parsed.custom ?? {} })
     if (parsed.seedVersion === SEED_VERSION) return stored
 
     // Older store (or one created before seeding existed): fill in the missing seeds.
@@ -149,6 +167,11 @@ export function searchCatalog(query: string, limit = 12): CategoryProduct[] {
   return out
 }
 
+/** First page of the catalog, so a picker can be browsed before anything is typed. */
+export function catalogSample(limit = 20): CategoryProduct[] {
+  return catalog().slice(0, limit)
+}
+
 export function catalogProductBySlug(slug: string): CategoryProduct | undefined {
   return catalog().find((p) => p.slug === slug)
 }
@@ -215,7 +238,7 @@ export function duplicateReadyBundle(id: string): ReadyBundle | undefined {
     description: source.description,
     image: source.image,
     products: source.products.map((p) => ({ ...p })),
-    tiers: source.tiers.map((t) => ({ ...t, gift: { ...t.gift } })),
+    tiers: source.tiers.map((t) => ({ ...t, gifts: t.gifts.map((g) => ({ ...g })) })),
   }))
   return getReadyBundle(copy.id)
 }
@@ -312,7 +335,7 @@ export function duplicateCustomBundle(id: string): CustomBundle | undefined {
     ...b,
     description: source.description,
     tabs: source.tabs.map((t) => ({ ...t, products: t.products.map((p) => ({ ...p })) })),
-    tiers: source.tiers.map((t) => ({ ...t, gift: { ...t.gift } })),
+    tiers: source.tiers.map((t) => ({ ...t, gifts: t.gifts.map((g) => ({ ...g })) })),
   }))
   return getCustomBundle(copy.id)
 }

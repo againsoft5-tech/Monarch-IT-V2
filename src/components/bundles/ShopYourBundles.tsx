@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
 import { useCart } from '@/context/CartContext'
 import { bundleToCartItem } from '@/lib/bundleCart'
-import { computeBundlePricing, giftLabel, type ReadyBundle } from '@/data/bundleData'
+import { computeBundlePricing, resolveGift, type ReadyBundle } from '@/data/bundleData'
 
 /** 3 rows of the 3-across grid, matching the design. */
 const PAGE_SIZE = 9
@@ -23,8 +23,12 @@ const SORT_LABELS: Record<SortKey, string> = {
 
 function BundleCard({ bundle, onChat }: { bundle: ReadyBundle; onChat: () => void }) {
   const { addItems, openCart } = useCart()
+  // A single gift comes with the bundle; several are offered as a choice, with the
+  // first standing in so the card always shows what the customer will receive.
+  const [chosenGiftId, setChosenGiftId] = useState<string | undefined>()
   const pricing = computeBundlePricing(bundle.products, bundle.tiers)
-  const gift = giftLabel(pricing.gift)
+  const gifts = pricing.gifts
+  const activeGift = resolveGift(gifts, chosenGiftId)
 
   const add = () => {
     addItems([
@@ -35,6 +39,7 @@ function BundleCard({ bundle, onChat }: { bundle: ReadyBundle; onChat: () => voi
         slug: 'bundles',
         products: bundle.products,
         tiers: bundle.tiers,
+        chosenGiftId,
       }),
     ])
     openCart()
@@ -107,11 +112,40 @@ function BundleCard({ bundle, onChat }: { bundle: ReadyBundle; onChat: () => voi
         ))}
       </ul>
 
-      {gift ? (
-        <span className="mt-2 inline-flex items-center gap-1 rounded-full bg-[#e8f6ee] px-2.5 py-1 text-[11px] font-bold text-[#0f7a43]">
-          <span className="mi text-[14px] leading-none">redeem</span>
-          {gift}
+      {gifts.length === 1 && activeGift ? (
+        <span className="mt-2 inline-flex min-w-0 items-center gap-1 rounded-full bg-[#e8f6ee] px-2.5 py-1 text-[11px] font-bold text-[#0f7a43]">
+          <span className="mi shrink-0 text-[14px] leading-none">redeem</span>
+          <span className="min-w-0 truncate">{activeGift.name}</span>
         </span>
+      ) : null}
+
+      {gifts.length > 1 ? (
+        <div className="mt-2 min-w-0">
+          <span className="mb-1 flex items-center gap-1 text-[10.5px] font-bold uppercase tracking-wide text-[#0f7a43]">
+            <span className="mi text-[14px] leading-none">redeem</span> Free gift — pick one
+          </span>
+          <div className="flex min-w-0 flex-wrap gap-1">
+            {gifts.map((g) => {
+              const on = activeGift?.id === g.id
+              return (
+                <button
+                  key={g.id}
+                  type="button"
+                  title={g.name}
+                  onClick={() => setChosenGiftId(g.id)}
+                  aria-pressed={on}
+                  className={`max-w-full truncate rounded-full border px-2 py-[3px] text-[10.5px] font-semibold transition-colors ${
+                    on
+                      ? 'border-[#0f7a43] bg-[#e8f6ee] text-[#0f7a43]'
+                      : 'border-[#dfe3ec] bg-white text-gray-500 hover:border-[#0f7a43]'
+                  }`}
+                >
+                  {g.name}
+                </button>
+              )
+            })}
+          </div>
+        </div>
       ) : null}
 
       <div className="mt-2.5 flex items-center justify-end gap-2 border-t border-[#e3e6ee] pt-2.5">

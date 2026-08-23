@@ -13,7 +13,6 @@ import {
   MAX_BUNDLE_PRODUCTS,
   MIN_BUNDLE_PRODUCTS,
   computeBundlePricing,
-  giftLabel,
   type ReadyBundle,
 } from '@/data/bundleData'
 
@@ -258,11 +257,14 @@ export default function ReadyBundleEditor({ bundleId }: { bundleId: string }) {
             <span className="text-gray-500">
               Bundle price <b className="text-[17px] text-[#c3272b]">৳{pricing.total.toLocaleString()}</b>
             </span>
-            {pricing.gift ? (
-              <span className="rounded-full bg-[#e8f6ee] px-3 py-1 text-[12px] font-bold text-[#0f7a43]">
-                Free gift: {giftLabel(pricing.gift)}
+            {pricing.gifts.map((g) => (
+              <span
+                key={g.id}
+                className="rounded-full bg-[#e8f6ee] px-3 py-1 text-[12px] font-bold text-[#0f7a43]"
+              >
+                {pricing.gifts.length > 1 ? 'Gift option' : 'Free gift'}: {g.name}
               </span>
-            ) : null}
+            ))}
           </div>
         </section>
       </div>
