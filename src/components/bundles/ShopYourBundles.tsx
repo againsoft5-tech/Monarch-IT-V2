@@ -37,6 +37,8 @@ function BundleCard({ bundle, onChat }: { bundle: ReadyBundle; onChat: () => voi
 
   /** What the bundle takes off the products' regular prices, shown next to the total. */
   const saving = Math.max(0, pricing.regularTotal - pricing.total)
+  /** Three products get the small-small-feature layout rather than a plain grid. */
+  const threeUp = bundle.products.length === 3
 
   const add = () => {
     addItems([
@@ -58,29 +60,37 @@ function BundleCard({ bundle, onChat }: { bundle: ReadyBundle; onChat: () => voi
     // at the bottom regardless of how many products the bundle lists.
     <div className="flex h-full min-w-0 flex-col gap-3">
       {/*
-        Always two columns: 2 → one row, 4 → 2×2, 3 → two on top and the last centred.
+        Two columns in every case: 2 → one row, 4 → 2×2, 3 → two stacked small tiles
+        beside one full-height feature tile.
         The block keeps a FIXED height whatever the product count, so every card's image
         area, product list and CTA line up across the row — a 3- or 4-product bundle just
         gets proportionally smaller tiles rather than a taller card.
       */}
       <div
-        className="grid h-[168px] grid-cols-2 gap-3 sm:h-[190px]"
+        className="grid h-[168px] gap-3 sm:h-[190px]"
         style={{
+          // A 3-product bundle gives the feature tile the wider column.
+          gridTemplateColumns: threeUp ? 'minmax(0, 0.85fr) minmax(0, 1.5fr)' : 'repeat(2, minmax(0, 1fr))',
           gridTemplateRows:
             bundle.products.length > 2 ? 'repeat(2, minmax(0, 1fr))' : 'minmax(0, 1fr)',
         }}
       >
         {bundle.products.map((p, i) => {
-          const centredLast = bundle.products.length === 3 && i === 2
+          // Three products: two small tiles stack in column 1 while the third fills
+          // column 2. Positions are explicit — auto-placement would flow the third
+          // tile back under the first instead of spanning both rows.
+          const cell = !threeUp
+            ? undefined
+            : i === 2
+              ? { gridColumn: 2, gridRow: '1 / span 2' }
+              : { gridColumn: 1, gridRow: i + 1 }
           return (
             <Link
               key={p.id}
               href={`/${p.slug}`}
               title={p.name}
-              className={`flex h-full items-center justify-center rounded-2xl bg-[#f5f6fa] p-3 transition-colors hover:bg-[#eceff5] ${
-                // Half the row minus half the 12px gap keeps it the same width as the tiles above.
-                centredLast ? 'col-span-2 mx-auto w-[calc(50%-6px)]' : ''
-              }`}
+              style={cell}
+              className="flex h-full items-center justify-center rounded-2xl bg-[#f5f6fa] p-3 transition-colors hover:bg-[#eceff5]"
             >
               <Image
                 src={p.image}
@@ -306,8 +316,10 @@ export default function ShopYourBundles({ bundles }: { bundles: ReadyBundle[] })
       </div>
 
       {/* Gap matches the category product grid (gap-8 / md:gap-[50px]) so bundles sit on
-          the same rhythm as product cards elsewhere on the site. */}
-      <div className="grid gap-8 sm:grid-cols-2 md:gap-[50px] lg:grid-cols-3">
+          the same rhythm as product cards elsewhere on the site.
+          The 1366px step is written in rem: Tailwind v4 emits px-based media queries
+          BEFORE rem-based ones, so a `min-[1366px]` rule would lose to `lg:`. */}
+      <div className="grid gap-8 sm:grid-cols-2 md:gap-[50px] lg:grid-cols-3 min-[85.375rem]:grid-cols-4 min-[85.375rem]:gap-8">
         {visible.map((b) => (
           <BundleCard key={b.id} bundle={b} onChat={onChat} />
         ))}
