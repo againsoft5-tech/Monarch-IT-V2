@@ -414,7 +414,8 @@ export default function BuildYourOwnBundle({
                 <ShareButton
                   size="md"
                   path={buildShareLink({
-                    bundleId: bundle.id,
+                    bundles,
+                    bundle,
                     tierCount,
                     slugs: selected.map((p) => p.slug),
                     giftIds: chosenGifts.map((g) => g.id),
