@@ -4,8 +4,10 @@ import { useMemo, useState } from 'react'
 import Image from 'next/image'
 import { useCart } from '@/context/CartContext'
 import ProductPickerModal from '@/components/bundles/ProductPickerModal'
+import BundleAddedModal from '@/components/bundles/BundleAddedModal'
 import GiftChoiceModal from '@/components/bundles/GiftChoiceModal'
 import { bundleToCartItem } from '@/lib/bundleCart'
+import type { CartItem } from '@/data/cart'
 import {
   BUNDLE_TIER_COUNTS,
   computeBundlePricing,
@@ -91,7 +93,7 @@ function Slot({
 }
 
 export default function BuildYourOwnBundle({ bundles }: { bundles: CustomBundle[] }) {
-  const { addItems, openCart } = useCart()
+  const { addItems } = useCart()
   const [bundleId, setBundleId] = useState(bundles[0]?.id ?? '')
   const bundle = bundles.find((b) => b.id === bundleId) ?? bundles[0]
 
@@ -102,6 +104,8 @@ export default function BuildYourOwnBundle({ bundles }: { bundles: CustomBundle[
   const [chosenGiftIds, setChosenGiftIds] = useState<string[]>([])
   const [picking, setPicking] = useState<{ index: number } | null>(null)
   const [giftOpen, setGiftOpen] = useState(false)
+  /** The line just added, shown in the confirmation dialog. */
+  const [added, setAdded] = useState<CartItem | null>(null)
 
   const tier = bundle ? tierForCount(bundle.tiers, tierCount) : undefined
   const gifts = tier?.gifts ?? []
@@ -145,19 +149,18 @@ export default function BuildYourOwnBundle({ bundles }: { bundles: CustomBundle[
 
   const addToCart = () => {
     if (!bundle || !canAdd) return
-    addItems([
-      bundleToCartItem({
-        cartId: `bundle-${bundle.id}-${selected.map((p) => p.slug).sort().join('_')}`,
-        name: `${bundle.name} · ${tierCount}-Product Bundle`,
-        slug: 'bundles',
-        products: selected,
-        tiers: bundle.tiers,
-        chosenGiftIds,
-      }),
-    ])
+    const item = bundleToCartItem({
+      cartId: `bundle-${bundle.id}-${selected.map((p) => p.slug).sort().join('_')}`,
+      name: `${bundle.name} · ${tierCount}-Product Bundle`,
+      slug: 'bundles',
+      products: selected,
+      tiers: bundle.tiers,
+      chosenGiftIds,
+    })
+    addItems([item])
     setSlots({})
     setChosenGiftIds([])
-    openCart()
+    setAdded(item)
   }
 
   if (!bundle) {
@@ -357,14 +360,15 @@ export default function BuildYourOwnBundle({ bundles }: { bundles: CustomBundle[
               type="button"
               onClick={addToCart}
               disabled={!canAdd}
-              className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[#c3272b] text-[14px] font-bold uppercase tracking-wide text-white shadow-[0_6px_16px_rgba(195,39,43,0.28)] transition-colors hover:bg-[#a5121c] disabled:cursor-not-allowed disabled:bg-[#c8ccd6] disabled:shadow-none"
+              className="flex h-12 w-full items-center justify-center rounded-full bg-[#c3272b] text-[14px] font-bold uppercase tracking-wide text-white shadow-[0_6px_16px_rgba(195,39,43,0.28)] transition-colors hover:bg-[#a5121c] disabled:cursor-not-allowed disabled:bg-[#c8ccd6] disabled:shadow-none"
             >
-              <span className="mi text-[20px] leading-none">shopping_cart</span>
               Add bundle to cart
             </button>
           </div>
         </div>
       ) : null}
+
+      <BundleAddedModal item={added} onClose={() => setAdded(null)} />
 
       <GiftChoiceModal
         open={giftOpen}

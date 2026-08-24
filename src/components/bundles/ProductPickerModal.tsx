@@ -92,7 +92,7 @@ export default function ProductPickerModal({
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-start justify-center overflow-y-auto bg-black/40 p-3 sm:p-6">
+    <div className="fixed inset-0 z-[10020] flex items-start justify-center overflow-y-auto bg-black/40 p-3 sm:p-6">
       <button type="button" aria-label="Close" className="fixed inset-0 cursor-default" onClick={onClose} />
 
       <div

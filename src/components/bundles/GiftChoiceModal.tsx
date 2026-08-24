@@ -38,7 +38,7 @@ export default function GiftChoiceModal({ open, gifts, limit, selectedIds, onCha
       role="dialog"
       aria-modal="true"
       aria-label="Choose your free gift"
-      className="fixed inset-0 z-[200] flex items-center justify-center bg-black/45 p-4"
+      className="fixed inset-0 z-[10020] flex items-center justify-center bg-black/45 p-4"
       onClick={onClose}
     >
       <div

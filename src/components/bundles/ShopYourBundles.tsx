@@ -6,9 +6,11 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
 import { useCart } from '@/context/CartContext'
+import BundleAddedModal from '@/components/bundles/BundleAddedModal'
 import GiftChoiceModal from '@/components/bundles/GiftChoiceModal'
 import { bundleToCartItem } from '@/lib/bundleCart'
 import { computeBundlePricing, resolveGifts, type ReadyBundle } from '@/data/bundleData'
+import type { CartItem } from '@/data/cart'
 
 /** 3 rows of the 3-across grid, matching the design. */
 const PAGE_SIZE = 9
@@ -22,8 +24,17 @@ const SORT_LABELS: Record<SortKey, string> = {
   saving: 'Biggest Saving',
 }
 
-function BundleCard({ bundle, onChat }: { bundle: ReadyBundle; onChat: () => void }) {
-  const { addItems, openCart } = useCart()
+function BundleCard({
+  bundle,
+  onChat,
+  onAdded,
+}: {
+  bundle: ReadyBundle
+  onChat: () => void
+  /** Raises the just-added line so the list can confirm it in one shared dialog. */
+  onAdded: (item: CartItem) => void
+}) {
+  const { addItems } = useCart()
   // A single gift comes with the bundle; several are offered as a choice, with the
   // first standing in so the card always shows what the customer will receive.
   const [chosenGiftIds, setChosenGiftIds] = useState<string[]>([])
@@ -41,18 +52,17 @@ function BundleCard({ bundle, onChat }: { bundle: ReadyBundle; onChat: () => voi
   const threeUp = bundle.products.length === 3
 
   const add = () => {
-    addItems([
-      bundleToCartItem({
-        cartId: `ready-${bundle.id}`,
-        name: bundle.name,
-        image: bundle.image,
-        slug: 'bundles',
-        products: bundle.products,
-        tiers: bundle.tiers,
-        chosenGiftIds,
-      }),
-    ])
-    openCart()
+    const item = bundleToCartItem({
+      cartId: `ready-${bundle.id}`,
+      name: bundle.name,
+      image: bundle.image,
+      slug: 'bundles',
+      products: bundle.products,
+      tiers: bundle.tiers,
+      chosenGiftIds,
+    })
+    addItems([item])
+    onAdded(item)
   }
 
   return (
@@ -249,6 +259,8 @@ export default function ShopYourBundles({ bundles }: { bundles: ReadyBundle[] })
   const router = useRouter()
   const { isLoggedIn } = useAuth()
   const [sort, setSort] = useState<SortKey>('best')
+  /** The line just added, shown in the confirmation dialog. */
+  const [added, setAdded] = useState<CartItem | null>(null)
   const [sortOpen, setSortOpen] = useState(false)
   const [pages, setPages] = useState(1)
 
@@ -321,9 +333,11 @@ export default function ShopYourBundles({ bundles }: { bundles: ReadyBundle[] })
           BEFORE rem-based ones, so a `min-[1366px]` rule would lose to `lg:`. */}
       <div className="grid gap-8 sm:grid-cols-2 md:gap-[50px] lg:grid-cols-3 min-[85.375rem]:grid-cols-4 min-[85.375rem]:gap-8">
         {visible.map((b) => (
-          <BundleCard key={b.id} bundle={b} onChat={onChat} />
+          <BundleCard key={b.id} bundle={b} onChat={onChat} onAdded={setAdded} />
         ))}
       </div>
+
+      <BundleAddedModal item={added} onClose={() => setAdded(null)} />
 
       {hasMore ? (
         <div className="mt-10 flex justify-center">
