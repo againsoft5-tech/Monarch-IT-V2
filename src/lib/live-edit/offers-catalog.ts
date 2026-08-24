@@ -97,6 +97,17 @@ function ownProducts(tab: OffersTab): OffersTabProduct[] {
  * never has to maintain the same product list twice. If nothing else is configured yet
  * it falls back to every discounted product in the catalog.
  */
+/**
+ * Every catalog product, for a tab that selects by rule rather than by hand.
+ *
+ * A "Coupon products" tab means *whatever currently carries a coupon* — the caller
+ * filters this list. Its own category/product picks are ignored, because a coupon can
+ * land on anything and the tab would otherwise miss it.
+ */
+export function everyOffersProduct(dealLabel: string): OffersTabProduct[] {
+  return dedupeById(allProducts().map((p) => ({ ...p, dealLabel })))
+}
+
 export function productsForTab(tab: OffersTab, allTabs: OffersTab[]): OffersTabProduct[] {
   // A bundles tab renders the bundle module, so it has no deal products of its own.
   if (tab.panel === 'bundles') return []

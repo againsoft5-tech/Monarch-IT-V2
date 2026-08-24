@@ -97,12 +97,30 @@ type Mode = 'guest' | 'login' | 'register'
 type Payment = 'cod' | 'mobile' | 'online'
 
 export default function CheckoutPage() {
-  const { items, subtotal, discount, total: cartTotal, couponMessage, applyCoupon, updateQty, removeItem } = useCart()
+  const {
+    items,
+    subtotal,
+    discount,
+    total: cartTotal,
+    couponMessage,
+    applyCoupon,
+    appliedCoupon,
+    couponAuto,
+    couponSavingFor,
+    updateQty,
+    removeItem,
+  } = useCart()
   const [mode, setMode] = useState<Mode>('guest')
   const [district, setDistrict] = useState('Dhaka')
   const [upazila, setUpazila] = useState(UPAZILAS['Dhaka'][0])
   const [payment, setPayment] = useState<Payment>('cod')
   const [coupon, setCoupon] = useState('')
+
+  // An auto-applied coupon fills the box on its own: the discount is already in the
+  // total, so an empty field would read as "no code applied".
+  useEffect(() => {
+    if (appliedCoupon) setCoupon(appliedCoupon)
+  }, [appliedCoupon])
   const [showLoginPassword, setShowLoginPassword] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
@@ -379,6 +397,12 @@ export default function CheckoutPage() {
 
                         <BundleLineDetails item={item} />
 
+                        {couponSavingFor(item) > 0 ? (
+                          <span className="inline-flex w-fit items-center rounded-full bg-[#d32f2f] px-2 py-0.5 text-[10.5px] font-bold text-white">
+                            ৳{couponSavingFor(item).toLocaleString()} OFF Coupon Applied
+                          </span>
+                        ) : null}
+
                         <div className="flex items-center gap-1.5 flex-wrap">
                           <span className="text-[13.5px] font-bold text-[#d32f2f]">
                             <span className="font-medium">৳</span><span className="font-price">{item.price.toLocaleString()}</span>
@@ -450,7 +474,12 @@ export default function CheckoutPage() {
                   </div>
                   {discount > 0 && (
                     <div className="flex justify-between">
-                      <span>Discount</span>
+                      <span>
+                        Promo Code Discount
+                        {appliedCoupon ? (
+                          <b className="ml-1 text-gray-700">{appliedCoupon}</b>
+                        ) : null}
+                      </span>
                       <span className="text-green-600 font-bold">-<span className="font-medium">৳</span><span className="font-price">{discount.toLocaleString()}</span></span>
                     </div>
                   )}
@@ -481,6 +510,11 @@ export default function CheckoutPage() {
                       Apply
                     </button>
                   </div>
+                  {couponAuto && appliedCoupon && !couponMessage ? (
+                    <p className="mt-2 text-[12px] font-semibold text-green-600">
+                      {appliedCoupon} applied automatically — best available offer.
+                    </p>
+                  ) : null}
                   {couponMessage && (
                     <p
                       className={`text-[11px] m-0 ${

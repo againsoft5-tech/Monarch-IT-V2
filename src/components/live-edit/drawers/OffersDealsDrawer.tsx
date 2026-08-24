@@ -109,7 +109,12 @@ function SortableTabRow({
               {isHidden ? <span className="ml-1.5 text-[10px] font-normal text-[#888]">(hidden)</span> : null}
             </p>
             <p className="truncate text-[10px] text-[#888]">
-              {tab.panel === 'bundles' ? (
+              {tab.panel === 'coupons' ? (
+            <p className="m-0 text-[11px] leading-snug text-[#777]">
+              This tab lists every product carrying a live coupon. Coupons are managed in
+              Admin → Coupons, so there is nothing to pick here.
+            </p>
+          ) : tab.panel === 'bundles' ? (
                 'Bundles module'
               ) : (
                 <>
@@ -201,6 +206,7 @@ function SortableTabRow({
               {([
                 { key: 'grid', label: 'Product grid' },
                 { key: 'bundles', label: 'Bundles module' },
+                { key: 'coupons', label: 'Coupon products' },
               ] as const).map((opt) => (
                 <button
                   key={opt.key}
@@ -208,7 +214,7 @@ function SortableTabRow({
                   onClick={() => onUpdate({ panel: opt.key })}
                   aria-pressed={(tab.panel ?? 'grid') === opt.key}
                   className={cn(
-                    'flex-1 rounded-none border px-2 py-1.5 text-[12px] font-medium transition-colors',
+                    'flex-1 rounded-none border px-1.5 py-1.5 text-[11.5px] font-medium transition-colors',
                     (tab.panel ?? 'grid') === opt.key
                       ? 'border-[#c3272b] bg-[#c3272b] text-white'
                       : 'border-[#e5e5e5] bg-white text-[#555] hover:border-[#c3272b]',
@@ -220,7 +226,12 @@ function SortableTabRow({
             </div>
           </div>
 
-          {tab.panel === 'bundles' ? (
+          {tab.panel === 'coupons' ? (
+            <p className="m-0 text-[11px] leading-snug text-[#777]">
+              This tab lists every product carrying a live coupon. Coupons are managed in
+              Admin → Coupons, so there is nothing to pick here.
+            </p>
+          ) : tab.panel === 'bundles' ? (
             <p className="m-0 text-[11px] leading-snug text-[#777]">
               This tab shows the Bundles module — ready bundles and Build Your Own Bundle. Its
               contents come from Admin → Bundles, so there is nothing to pick here.

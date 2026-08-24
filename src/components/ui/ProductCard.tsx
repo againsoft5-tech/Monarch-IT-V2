@@ -1,6 +1,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import type { CategoryProduct } from '@/data/categoryProducts'
+import CouponBadge from '@/components/ui/CouponBadge'
 
 /** Ribbon captions are capped by character count so every band truncates at the same point. */
 const RIBBON_LABEL_MAX = 10
@@ -80,6 +81,12 @@ export default function ProductCard({
             <span className="text-[9.5px] md:text-[10.5px] font-bold text-[#00c68b]">{p.discountPct}% OFF</span>
           )}
         </div>
+
+        {/* Advertises the best live coupon; the cart applies it on its own. */}
+        <div className="mb-2 flex md:mb-2.5">
+          <CouponBadge product={p} />
+        </div>
+
         <div className="flex items-center gap-1.5 md:gap-2.5">
           <button
             type="button"

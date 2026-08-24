@@ -15,6 +15,7 @@ const NAV_ITEMS = [
   { key: 'live-chat', label: 'Live Chat', href: '/admin/live-chat', icon: 'forum' },
   { key: 'combo', label: 'Combo Campaign', href: '/admin/combo', icon: 'inventory_2' },
   { key: 'bundles', label: 'Bundles', href: '/admin/bundles', icon: 'category' },
+  { key: 'coupons', label: 'Coupons', href: '/admin/coupons', icon: 'local_offer' },
   { key: 'hero-slider', label: 'Hero Slider', href: '/admin/hero-slider', icon: 'slideshow' },
   { key: 'promo-banner', label: 'Promo Banner', href: '/admin/promo-banner', icon: 'view_carousel' },
 ] as const

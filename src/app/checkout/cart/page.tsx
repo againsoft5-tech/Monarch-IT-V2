@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import Breadcrumbs from '@/components/category/Breadcrumbs'
 import { useCart } from '@/context/CartContext'
@@ -8,8 +8,25 @@ import BundleLineDetails from '@/components/cart/BundleLineDetails'
 import CartLineThumb from '@/components/cart/CartLineThumb'
 
 export default function CartPage() {
-  const { items, subtotal, discount, total, couponMessage, applyCoupon, updateQty, removeItem } = useCart()
+  const {
+    items,
+    subtotal,
+    discount,
+    total,
+    couponMessage,
+    applyCoupon,
+    appliedCoupon,
+    couponAuto,
+    couponSavingFor,
+    updateQty,
+    removeItem,
+  } = useCart()
   const [coupon, setCoupon] = useState('')
+
+  // Mirrors checkout: show the code that is actually working.
+  useEffect(() => {
+    if (appliedCoupon) setCoupon(appliedCoupon)
+  }, [appliedCoupon])
 
   return (
     <>
@@ -60,6 +77,12 @@ export default function CartPage() {
                       </Link>
 
                       <BundleLineDetails item={item} />
+
+                      {couponSavingFor(item) > 0 ? (
+                        <span className="mt-1.5 inline-flex w-fit items-center rounded-full bg-[#d32f2f] px-2 py-0.5 text-[10.5px] font-bold text-white">
+                          ৳{couponSavingFor(item).toLocaleString()} OFF Coupon Applied
+                        </span>
+                      ) : null}
 
                       <div className="flex items-center justify-between gap-3 flex-wrap mt-3">
                         <div className="flex items-center h-[38px] w-[116px] bg-[#f5f5f7] rounded-full overflow-hidden">
@@ -150,7 +173,10 @@ export default function CartPage() {
                   </div>
                   {discount > 0 && (
                     <div className="flex justify-between text-[13.5px] font-medium text-gray-500">
-                      <span>Discount</span>
+                      <span>
+                        Promo Code Discount
+                        {appliedCoupon ? <b className="ml-1 text-gray-700">{appliedCoupon}</b> : null}
+                      </span>
                       <span className="text-green-600 font-bold">-<span className="font-medium">৳</span><span className="font-price">{discount.toLocaleString()}</span></span>
                     </div>
                   )}

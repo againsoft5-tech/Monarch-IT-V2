@@ -13,6 +13,7 @@ import { toCompareProduct } from '@/lib/compareAdapter'
 import { useAuth } from '@/context/AuthContext'
 import ChatWidget from '@/components/chat/ChatWidget'
 import type { VariantCombo, VariantGroup } from '@/lib/productVariants'
+import { useProductCoupon } from '@/components/ui/CouponBadge'
 
 function formatDeliveryDate(date: Date) {
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
@@ -42,6 +43,8 @@ export default function ProductInfo({
   const [qty, setQty] = useState(1)
   const [priceOption, setPriceOption] = useState<'full' | 'emi'>('full')
   const [chatOpen, setChatOpen] = useState(false)
+  /** Best live coupon for this product — advertised above the price. */
+  const productCoupon = useProductCoupon(product)
   const { toast, showToast } = useToast()
   const { addItems } = useCart()
   const { slots, setSlot } = useCompare()
@@ -155,6 +158,17 @@ export default function ProductInfo({
             </label>
           )}
         </div>
+
+        {productCoupon ? (
+          <div className="w-full order-3 md:order-2">
+            <p className="m-0 text-[13px] text-[#d92128]">
+              {/* Only the saving is bold — the code that follows is supporting detail. */}
+              <span className="font-bold">+৳{productCoupon.discount.toLocaleString()} OFF</span>{' '}
+              with promo code {productCoupon.coupon.code}
+              {productCoupon.coupon.label ? <span> · {productCoupon.coupon.label}</span> : null}
+            </p>
+          </div>
+        ) : null}
 
         <div className="order-5 w-full flex items-center gap-1.5 md:gap-2 md:contents md:w-auto">
           <div className="shrink-0 inline-flex items-center gap-1 bg-[#f3f4f6] rounded-full h-9 px-2 md:order-8">

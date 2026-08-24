@@ -10,8 +10,9 @@
  * What a tab renders below the chip strip.
  * - `grid`    — the usual filter/sort row plus a product grid
  * - `bundles` — the Bundles module (ready bundles + build-your-own)
+ * - `coupons` — the same grid, narrowed to products carrying a live coupon
  */
-export type OffersTabPanel = 'grid' | 'bundles'
+export type OffersTabPanel = 'grid' | 'bundles' | 'coupons'
 
 export type OffersTab = {
   id: string
@@ -97,6 +98,7 @@ export const DEFAULT_OFFERS_PAGE: OffersPageContent = {
       label: 'Coupons',
       icon: `${ICON_DIR}/coupons.svg`,
       iconActive: `${ICON_DIR}/coupons-active.svg`,
+      panel: 'coupons',
       categorySlugs: ['ups-ips', 'security'],
       productSlugs: [],
     },
@@ -128,7 +130,7 @@ export function ensureOffersContent(content?: Partial<OffersPageContent> | null)
       icon: typeof tab?.icon === 'string' ? tab.icon : '',
       iconActive: typeof tab?.iconActive === 'string' ? tab.iconActive : '',
       hidden: tab?.hidden === true,
-      panel: tab?.panel === 'bundles' ? 'bundles' : 'grid',
+      panel: tab?.panel === 'bundles' || tab?.panel === 'coupons' ? tab.panel : 'grid',
       showAll: tab?.showAll === true,
       categorySlugs: asStringArray(tab?.categorySlugs),
       productSlugs: asStringArray(tab?.productSlugs),

@@ -9,7 +9,9 @@ import { getProductDetail } from '@/data/productDetail'
 import type { OffersPageContent } from '@/lib/live-edit/offers-page'
 import { DEFAULT_OFFERS_PAGE, ensureOffersContent } from '@/lib/live-edit/offers-page'
 import BundlesPage from '@/components/bundles/BundlesPage'
-import { productsForTab } from '@/lib/live-edit/offers-catalog'
+import { useCouponStore } from '@/lib/couponStore'
+import { bestCouponForProduct } from '@/data/couponData'
+import { everyOffersProduct, productsForTab } from '@/lib/live-edit/offers-catalog'
 import { useAuth } from '@/context/AuthContext'
 import { useCart } from '@/context/CartContext'
 import { useCompare } from '@/context/CompareContext'
@@ -118,7 +120,9 @@ export default function DealsPage({ content }: Props = {}) {
    * Any tab can be switched to the bundles module from live-edit, so this reads
    * the tab's own `panel` setting rather than assuming a particular tab id.
    */
-  const showBundles = (tabs.find((t) => t.id === activeDeal) ?? tabs[0])?.panel === 'bundles'
+  const activePanel = (tabs.find((t) => t.id === activeDeal) ?? tabs[0])?.panel
+  const showBundles = activePanel === 'bundles'
+  const couponDb = useCouponStore()
 
   // A tab the admin just hid/removed must not strand the grid on an empty selection.
   useEffect(() => {
@@ -127,14 +131,22 @@ export default function DealsPage({ content }: Props = {}) {
 
   const dealProducts = useMemo(() => {
     const tab = tabs.find((t) => t.id === activeDeal) ?? tabs[0]
-    return tab ? productsForTab(tab, page.tabs) : []
+    if (!tab) return []
+    // A coupon tab selects by rule, not by hand: it draws on the whole catalog and is
+    // narrowed to products carrying a live coupon further down. Using its own category
+    // picks would hide any coupon that landed outside them.
+    if (tab.panel === 'coupons') return everyOffersProduct(tab.label)
+    return productsForTab(tab, page.tabs)
   }, [tabs, activeDeal, page.tabs])
 
   // Price slider bounds span every tab so switching tabs never fights the active filter.
-  const allProducts = useMemo(
-    () => page.tabs.flatMap((t) => productsForTab(t, page.tabs)),
-    [page.tabs],
-  )
+  // A coupon tab can surface any catalog product, so those have to count too —
+  // otherwise a cheap coupon product falls outside the slider and silently vanishes.
+  const allProducts = useMemo(() => {
+    const fromTabs = page.tabs.flatMap((t) => productsForTab(t, page.tabs))
+    if (!page.tabs.some((t) => t.panel === 'coupons')) return fromTabs
+    return [...fromTabs, ...everyOffersProduct('')]
+  }, [page.tabs])
   const priceMinDefault = allProducts.length ? Math.min(...allProducts.map((p) => p.priceNew)) : 0
   const priceMaxDefault = allProducts.length ? Math.max(...allProducts.map((p) => p.priceNew)) : 0
 
@@ -262,6 +274,11 @@ export default function DealsPage({ content }: Props = {}) {
 
   const filtered = useMemo(() => {
     let list = dealProducts.filter((p) => p.priceNew >= priceMin && p.priceNew <= priceMax)
+    // A coupon tab is the same grid, narrowed to what actually carries an offer.
+    if (activePanel === 'coupons') {
+      const coupons = Object.values(couponDb.coupons)
+      list = list.filter((p) => Boolean(bestCouponForProduct(coupons, p)))
+    }
     if (selectedBrands.length) {
       list = list.filter((p) => selectedBrands.includes(p.name.split(' ')[0]))
     }
@@ -272,7 +289,7 @@ export default function DealsPage({ content }: Props = {}) {
     if (sort === 'price-asc') list = [...list].sort((a, b) => a.priceNew - b.priceNew)
     if (sort === 'price-desc') list = [...list].sort((a, b) => b.priceNew - a.priceNew)
     return list
-  }, [dealProducts, priceMin, priceMax, selectedBrands, selectedAvailability, sort])
+  }, [dealProducts, priceMin, priceMax, selectedBrands, selectedAvailability, sort, activePanel, couponDb])
 
   const visibleCount = pagesShown * pageSize
   const paged = filtered.slice(0, visibleCount)
