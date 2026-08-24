@@ -23,7 +23,9 @@ export default function BundleLineDetails({ item }: { item: CartItem }) {
               <Link
                 href={`/${child.slug}`}
                 title={child.name}
-                className="block truncate text-gray-500 no-underline transition-colors hover:text-[#c3272b]"
+                // inline-block, not block: the hit area should hug the text rather than
+                // stretch across the row. max-w-full keeps truncation working.
+                className="inline-block max-w-full truncate align-bottom text-gray-500 no-underline transition-colors hover:text-[#c3272b]"
               >
                 {child.name}
               </Link>
