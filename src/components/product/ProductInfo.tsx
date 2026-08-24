@@ -250,7 +250,12 @@ export default function ProductInfo({
           </div>
         )}
 
-        <div className="w-full md:w-fit order-12 flex flex-col items-start md:flex-row md:items-center gap-2.5 md:gap-5 md:flex-wrap text-[12px] text-gray-600 md:px-3.5 md:py-2.5 md:border-[1.5px] md:border-gray-100 md:rounded-2xl">
+        {/* Wrapped in a full-width row of its own: the action buttons above use
+            `md:contents`, so on a wide screen they and this block are siblings in the
+            same flex-wrap line and all fit side by side. The outer div forces the
+            break; the inner one keeps the pill hugging its content. */}
+        <div className="w-full order-12">
+        <div className="w-full md:w-fit flex flex-col items-start md:flex-row md:items-center gap-2.5 md:gap-5 md:flex-wrap text-[12px] text-gray-600 md:px-3.5 md:py-2.5 md:border-[1.5px] md:border-gray-100 md:rounded-2xl">
           <span className="inline-flex items-center gap-1.5 px-3.5 py-2.5 border-[1.5px] border-gray-100 rounded-2xl md:border-0 md:rounded-none md:p-0">
             <Image src="/images/catalog/view/theme/default/image/delivery-icon.svg" alt="Delivery" width={20} height={16} />
             Estimated delivery:{' '}
@@ -262,6 +267,7 @@ export default function ProductInfo({
             <Image src="/images/catalog/view/theme/default/image/return-and-refund-policy-icon.svg" alt="Returns" width={16} height={16} />
             Returns &amp; Refunds Policy
           </a>
+        </div>
         </div>
       </div>
 
