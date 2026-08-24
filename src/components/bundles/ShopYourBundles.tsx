@@ -8,6 +8,7 @@ import { useAuth } from '@/context/AuthContext'
 import { useCart } from '@/context/CartContext'
 import BundleAddedModal from '@/components/bundles/BundleAddedModal'
 import GiftChoiceModal from '@/components/bundles/GiftChoiceModal'
+import ShareButton from '@/components/bundles/ShareButton'
 import { bundleToCartItem } from '@/lib/bundleCart'
 import { computeBundlePricing, resolveGifts, type ReadyBundle } from '@/data/bundleData'
 import type { CartItem } from '@/data/cart'
@@ -233,6 +234,10 @@ function BundleCard({
         >
           Add bundle to cart
         </button>
+        <ShareButton
+          path={`/bundles/${bundle.id}`}
+          text={`${bundle.name} — ৳${pricing.total.toLocaleString()} at Monarch IT`}
+        />
         <button
           type="button"
           onClick={onChat}

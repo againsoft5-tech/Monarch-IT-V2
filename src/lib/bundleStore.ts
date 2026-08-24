@@ -4,9 +4,7 @@ import { useEffect, useState } from 'react'
 import {
   DEFAULT_BUNDLE_DB,
   MAX_BUNDLE_PRODUCTS,
-  SEED_DATE,
   defaultTiers,
-  normalizeTiers,
   type BundleDB,
   type BundleProduct,
   type BundleTier,
@@ -17,10 +15,17 @@ import {
 import { categoryProductsMap, type CategoryProduct } from '@/data/categoryProducts'
 
 /**
- * Client-side store for bundles, mirroring `comboStore` (localStorage + BroadcastChannel)
- * so admin edits sync across tabs. Swap `readDB`/`writeDB` for an API when a backend exists.
+ * Client-side view of the bundle store.
+ *
+ * Bundles are now served by `/api/bundles` (see `bundle-repository.ts`) rather than
+ * living in each visitor's localStorage — a shared bundle link has to mean the same
+ * thing in someone else's browser, which local storage can never provide.
+ *
+ * The mutation helpers below stay synchronous: they act on an in-memory snapshot,
+ * notify listeners immediately, then persist in the background. That keeps the admin
+ * editors responsive and their call sites unchanged.
  */
-const DB_KEY = 'monarch_bundles'
+const API_URL = '/api/bundles'
 const CHANNEL_NAME = 'monarch-bundle-sync'
 const LOCAL_EVENT = 'monarch-bundle-local-change'
 
@@ -44,99 +49,92 @@ function nowIso() {
 }
 
 /**
- * Bump when the shipped seed set changes. Stores created before a bump get the new
- * seeds merged in once — stamping the version means a bundle the admin deleted stays
- * deleted instead of reappearing on every page load.
+ * Last DB seen from the server. Seeded with the shipped bundles so the very first
+ * render has something real to show while the fetch is in flight.
  */
-const SEED_VERSION = 6
+let snapshot: BundleDB = DEFAULT_BUNDLE_DB
+/** De-duplicates concurrent fetches (several components mount at once). */
+let inFlight: Promise<BundleDB> | null = null
 
-type StoredDB = BundleDB & { seedVersion?: number }
-
-function persist(db: BundleDB) {
-  localStorage.setItem(DB_KEY, JSON.stringify({ ...db, seedVersion: SEED_VERSION } satisfies StoredDB))
-}
-
-/**
- * Brings every stored tier onto the current gift shape.
- *
- * Bundles live in the visitor's own localStorage, so a browser can hold records
- * written before gifts became a list. Normalising on read means the rest of the
- * app only ever sees `tier.gifts`.
- */
-function upgradeTiers(db: BundleDB): BundleDB {
-  const ready = Object.fromEntries(
-    Object.entries(db.ready).map(([id, b]) => [id, { ...b, tiers: normalizeTiers(b.tiers) }]),
-  )
-  const custom = Object.fromEntries(
-    Object.entries(db.custom).map(([id, b]) => [id, { ...b, tiers: normalizeTiers(b.tiers) }]),
-  )
-  return { ready, custom }
-}
-
-function readDB(): BundleDB {
-  if (typeof window === 'undefined') return DEFAULT_BUNDLE_DB
-  try {
-    const raw = localStorage.getItem(DB_KEY)
-    if (!raw) {
-      // First visit — seed so the shipped bundles are editable in admin, not just rendered.
-      persist(DEFAULT_BUNDLE_DB)
-      return DEFAULT_BUNDLE_DB
-    }
-
-    const parsed = JSON.parse(raw) as Partial<StoredDB>
-    const stored = upgradeTiers({ ready: parsed.ready ?? {}, custom: parsed.custom ?? {} })
-    if (parsed.seedVersion === SEED_VERSION) return stored
-
-    // Older store (or one created before seeding existed): fill in the missing seeds.
-    // Stored entries win, so anything the admin created or edited is preserved.
-    const merged: BundleDB = {
-      ready: { ...DEFAULT_BUNDLE_DB.ready, ...stored.ready },
-      custom: { ...DEFAULT_BUNDLE_DB.custom, ...stored.custom },
-    }
-
-    // Refresh seeds the admin never touched, so seed changes (a new product in a shipped
-    // bundle, say) actually reach existing browsers. An edited seed still carries a fresh
-    // `updatedAt`, so it is left exactly as the admin left it.
-    for (const [id, seed] of Object.entries(DEFAULT_BUNDLE_DB.ready)) {
-      if (merged.ready[id]?.updatedAt === SEED_DATE) merged.ready[id] = seed
-    }
-    for (const [id, seed] of Object.entries(DEFAULT_BUNDLE_DB.custom)) {
-      if (merged.custom[id]?.updatedAt === SEED_DATE) merged.custom[id] = seed
-    }
-
-    persist(merged)
-    return merged
-  } catch {
-    return DEFAULT_BUNDLE_DB
-  }
-}
-
-function writeDB(db: BundleDB) {
-  persist(db)
+function notify() {
   getChannel()?.postMessage({ kind: 'db' })
   window.dispatchEvent(new Event(LOCAL_EVENT))
 }
 
+/** Synchronous read of the snapshot — every mutation helper builds on this. */
+function readDB(): BundleDB {
+  return snapshot
+}
+
+/** Pulls the authoritative DB from the server and republishes it to listeners. */
+async function refreshDB(): Promise<BundleDB> {
+  if (typeof window === 'undefined') return snapshot
+  if (inFlight) return inFlight
+
+  inFlight = (async () => {
+    try {
+      const res = await fetch(API_URL, { cache: 'no-store' })
+      if (!res.ok) throw new Error(`GET ${API_URL} -> ${res.status}`)
+      const db = (await res.json()) as BundleDB
+      snapshot = { ready: db.ready ?? {}, custom: db.custom ?? {} }
+    } catch (err) {
+      // Keep whatever we already have rather than blanking the storefront.
+      console.error('[bundles] failed to load', err)
+    } finally {
+      inFlight = null
+    }
+    return snapshot
+  })()
+
+  return inFlight
+}
+
+/**
+ * Applies a change optimistically, then persists.
+ *
+ * The UI updates from the snapshot straight away; the PUT confirms it. A failed write
+ * is logged and the server copy pulled back, so the admin never sees a phantom save.
+ */
+function writeDB(db: BundleDB) {
+  snapshot = db
+  notify()
+  void (async () => {
+    try {
+      const res = await fetch(API_URL, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(db),
+      })
+      if (!res.ok) throw new Error(`PUT ${API_URL} -> ${res.status}`)
+      snapshot = (await res.json()) as BundleDB
+      notify()
+    } catch (err) {
+      console.error('[bundles] failed to save', err)
+      await refreshDB()
+      notify()
+    }
+  })()
+}
+
 export function useBundleStore(): BundleDB {
-  const [db, setDb] = useState<BundleDB>(DEFAULT_BUNDLE_DB)
+  const [db, setDb] = useState<BundleDB>(snapshot)
 
   useEffect(() => {
-    setDb(readDB())
-    const refresh = () => setDb(readDB())
-    const ch = getChannel()
+    void refreshDB().then(setDb)
+
+    // Same tab: the snapshot already holds the change, so just re-read it.
+    const onLocal = () => setDb(readDB())
+    // Another tab saved, so this tab's snapshot is stale — go back to the server.
     const onMessage = (e: MessageEvent<{ kind: string }>) => {
-      if (e.data?.kind === 'db') refresh()
+      if (e.data?.kind === 'db') void refreshDB().then(setDb)
     }
-    const onStorage = (e: StorageEvent) => {
-      if (e.key === DB_KEY) refresh()
-    }
+
+    const ch = getChannel()
     ch?.addEventListener('message', onMessage)
-    window.addEventListener(LOCAL_EVENT, refresh)
-    window.addEventListener('storage', onStorage)
+    window.addEventListener(LOCAL_EVENT, onLocal)
     return () => {
       ch?.removeEventListener('message', onMessage)
-      window.removeEventListener(LOCAL_EVENT, refresh)
-      window.removeEventListener('storage', onStorage)
+      window.removeEventListener(LOCAL_EVENT, onLocal)
     }
   }, [])
 
