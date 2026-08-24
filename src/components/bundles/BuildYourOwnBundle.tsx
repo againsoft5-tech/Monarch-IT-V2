@@ -2,12 +2,15 @@
 
 import { useMemo, useState } from 'react'
 import Image from 'next/image'
+import { useRouter } from 'next/navigation'
 import { useCart } from '@/context/CartContext'
+import { useAuth } from '@/context/AuthContext'
 import ProductPickerModal from '@/components/bundles/ProductPickerModal'
 import BundleAddedModal from '@/components/bundles/BundleAddedModal'
 import GiftChoiceModal from '@/components/bundles/GiftChoiceModal'
 import ShareButton from '@/components/bundles/ShareButton'
-import { bundleToCartItem } from '@/lib/bundleCart'
+import ChatWidget from '@/components/chat/ChatWidget'
+import { bundleToCartItem, bundleToChatSnapshot } from '@/lib/bundleCart'
 import { buildShareLink } from '@/lib/bundleShareLink'
 import type { CartItem } from '@/data/cart'
 import {
@@ -112,6 +115,9 @@ export default function BuildYourOwnBundle({
   initial?: BuildInitialSelection
 }) {
   const { addItems } = useCart()
+  const { isLoggedIn } = useAuth()
+  const router = useRouter()
+  const [chatOpen, setChatOpen] = useState(false)
   const [bundleId, setBundleId] = useState(initial?.bundleId ?? bundles[0]?.id ?? '')
   const bundle = bundles.find((b) => b.id === bundleId) ?? bundles[0]
 
@@ -154,6 +160,18 @@ export default function BuildYourOwnBundle({
   // Empty gift slots would ship a bundle the customer did not finish configuring.
   const giftsPicked = giftsAuto || gifts.length === 0 || chosenGifts.length === giftLimit
   const canAdd = allFilled && giftsPicked
+
+  /** Where a shared or chatted build sends the recipient. */
+  const shareHref =
+    bundle && selected.length > 0
+      ? buildShareLink({
+          bundles,
+          bundle,
+          tierCount,
+          slugs: selected.map((p) => p.slug),
+          giftIds: chosenGifts.map((g) => g.id),
+        })
+      : ''
 
   const reset = (count: BundleTierCount) => {
     setTierCount(count)
@@ -411,19 +429,36 @@ export default function BuildYourOwnBundle({
               {/* Only shareable once something is actually chosen — an empty link
                   would just drop the recipient on a blank builder. */}
               {bundle && selected.length > 0 ? (
-                <ShareButton
-                  size="md"
-                  path={buildShareLink({
-                    bundles,
-                    bundle,
-                    tierCount,
-                    slugs: selected.map((p) => p.slug),
-                    giftIds: chosenGifts.map((g) => g.id),
-                  })}
-                  text={`My ${tierCount}-product bundle${
-                    pricing ? ` — ৳${pricing.total.toLocaleString()}` : ''
-                  } at Monarch IT`}
-                />
+                <>
+                  <ShareButton
+                    size="md"
+                    path={shareHref}
+                    text={`My ${tierCount}-product bundle${
+                      pricing ? ` — ৳${pricing.total.toLocaleString()}` : ''
+                    } at Monarch IT`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!isLoggedIn) {
+                        router.push('/login')
+                        return
+                      }
+                      setChatOpen(true)
+                    }}
+                    title="Chat about this bundle"
+                    aria-label="Chat about this bundle"
+                    className="group flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[#e3e6ee] bg-white transition-colors hover:border-[#c3272b] hover:bg-[#c3272b]"
+                  >
+                    <Image
+                      src="/images/catalog/view/theme/default/image/message-icon.svg"
+                      alt=""
+                      width={20}
+                      height={20}
+                      className="h-[18px] w-[18px] transition-all group-hover:brightness-0 group-hover:invert"
+                    />
+                  </button>
+                </>
               ) : null}
             </div>
           </div>
@@ -431,6 +466,22 @@ export default function BuildYourOwnBundle({
       ) : null}
 
       <BundleAddedModal item={added} onClose={() => setAdded(null)} />
+
+      <ChatWidget
+        open={chatOpen}
+        onClose={() => setChatOpen(false)}
+        bundle={
+          bundle && selected.length > 0
+            ? bundleToChatSnapshot({
+                name: `${bundle.name} · ${tierCount}-Product Bundle`,
+                products: selected,
+                tiers: bundle.tiers,
+                giftNames: chosenGifts.map((g) => g.name),
+                href: shareHref,
+              })
+            : undefined
+        }
+      />
 
       <GiftChoiceModal
         open={giftOpen}

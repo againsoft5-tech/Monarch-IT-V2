@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { productsByCategory } from '@/data/pcBuilderData'
 import { useToast, Toast } from '@/components/ui/Toast'
 import ReadReceipt from '@/components/chat/ReadReceipt'
+import BundleChatCard from '@/components/chat/BundleChatCard'
 import AttachMenu from '@/components/chat/AttachMenu'
 import FileBubble from '@/components/chat/FileBubble'
 import ImageLightbox from '@/components/chat/ImageLightbox'
@@ -61,6 +62,7 @@ function unreadCount(convo: Conversation) {
 function previewText(msg: Conversation['messages'][number]) {
   if (msg.text) return msg.text
   if (msg.type === 'product') return 'Sent a product'
+  if (msg.type === 'bundle') return 'Sent a bundle'
   if (msg.type === 'file') {
     if (msg.fileKind === 'image') return 'Sent a photo'
     if (msg.fileKind === 'video') return 'Sent a video'
@@ -389,12 +391,20 @@ export default function AdminDashboard() {
                 const showDivider = i === 0 || prevTime !== time
                 const isAdmin = msg.sender === 'admin'
                 const product = msg.type === 'product' ? (msg.productSnapshot ?? findProduct(msg.productId)) : undefined
+                const bundleMsg = msg.type === 'bundle' ? msg.bundleSnapshot : undefined
 
                 return (
                   <div key={msg.id} className="flex flex-col">
                     {showDivider && <p className="text-center text-[11px] font-medium text-gray-400 my-4">{time}</p>}
 
-                    {product ? (
+                    {bundleMsg ? (
+                      <div
+                        className={`max-w-[70%] mb-4 flex flex-col ${isAdmin ? 'self-end items-end' : 'self-start items-start'}`}
+                      >
+                        <BundleChatCard bundle={bundleMsg} />
+                        {isAdmin && <ReadReceipt read={msg.read} />}
+                      </div>
+                    ) : product ? (
                       <div
                         className={`max-w-[70%] mb-4 flex flex-col ${isAdmin ? 'self-end items-end' : 'self-start items-start'}`}
                       >

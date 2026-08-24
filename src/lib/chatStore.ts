@@ -3,12 +3,28 @@
 import { useEffect, useState } from 'react'
 
 export type ChatSender = 'customer' | 'admin'
-export type ChatMessageType = 'text' | 'product' | 'file'
+export type ChatMessageType = 'text' | 'product' | 'bundle' | 'file'
 export type FileKind = 'image' | 'video' | 'document' | 'audio'
 
 export type ProductSnapshot = {
   name: string
   image: string
+  priceNew: number
+  priceOld: number
+  discountPct: number
+  href?: string
+}
+
+/**
+ * A bundle sent into a conversation.
+ *
+ * Distinct from `ProductSnapshot` because a bundle is several products plus its free
+ * gifts — flattening it to one thumbnail and one name would hide what is being sent.
+ */
+export type BundleSnapshot = {
+  name: string
+  products: { name: string; image: string; slug?: string }[]
+  giftNames: string[]
   priceNew: number
   priceOld: number
   discountPct: number
@@ -22,6 +38,7 @@ export type StoredMessage = {
   text: string
   productId?: string
   productSnapshot?: ProductSnapshot
+  bundleSnapshot?: BundleSnapshot
   fileName?: string
   fileUrl?: string
   fileMime?: string
@@ -177,6 +194,7 @@ export function getOrCreateConversation(email: string, name: string): Conversati
 type SendMessageOptions = {
   productId?: string
   productSnapshot?: ProductSnapshot
+  bundleSnapshot?: BundleSnapshot
   fileName?: string
   fileUrl?: string
   fileMime?: string

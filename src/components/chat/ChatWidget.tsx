@@ -8,6 +8,7 @@ import { productsByCategory } from '@/data/pcBuilderData'
 import { useToast, Toast } from '@/components/ui/Toast'
 import { useAuth } from '@/context/AuthContext'
 import ReadReceipt from '@/components/chat/ReadReceipt'
+import BundleChatCard from '@/components/chat/BundleChatCard'
 import AttachMenu from '@/components/chat/AttachMenu'
 import FileBubble from '@/components/chat/FileBubble'
 import ImageLightbox from '@/components/chat/ImageLightbox'
@@ -25,6 +26,7 @@ import {
   formatFileSize,
   type FileKind,
   type ProductSnapshot,
+  type BundleSnapshot,
 } from '@/lib/chatStore'
 
 const IMG_BASE = '/images'
@@ -35,6 +37,8 @@ type Props = {
   onClose: () => void
   /** When set, opening the widget immediately sends this product as a message. */
   product?: ProductSnapshot
+  /** Same, for a whole bundle — rendered as a multi-product card. */
+  bundle?: BundleSnapshot
 }
 
 const railIcons = [
@@ -44,7 +48,7 @@ const railIcons = [
   { icon: `${IMG_BASE}/catalog/view/theme/default/image/svg/order-track-icon.svg`, label: 'Order Track' },
 ]
 
-export default function ChatWidget({ open, onClose, product }: Props) {
+export default function ChatWidget({ open, onClose, product, bundle }: Props) {
   const [activeTab, setActiveTab] = useState<'products' | 'orders'>('products')
   const [search, setSearch] = useState('')
   const [mounted, setMounted] = useState(false)
@@ -80,14 +84,25 @@ export default function ChatWidget({ open, onClose, product }: Props) {
       sentProductForRef.current = null
       return
     }
-    if (mounted && customerEmail && conversationId && product) {
+    if (!mounted || !customerEmail || !conversationId) return
+
+    if (bundle) {
+      const key = `${conversationId}:bundle:${bundle.name}:${bundle.priceNew}`
+      if (sentProductForRef.current !== key) {
+        sendMessage(conversationId, 'customer', '', 'bundle', { bundleSnapshot: bundle })
+        sentProductForRef.current = key
+      }
+      return
+    }
+
+    if (product) {
       const key = `${conversationId}:${product.image}:${product.name}`
       if (sentProductForRef.current !== key) {
         sendMessage(conversationId, 'customer', '', 'product', { productSnapshot: product })
         sentProductForRef.current = key
       }
     }
-  }, [open, mounted, customerEmail, conversationId, product])
+  }, [open, mounted, customerEmail, conversationId, product, bundle])
 
   const conversation = conversationId ? db[conversationId] : undefined
   const messages = conversation?.messages ?? []
@@ -279,12 +294,20 @@ export default function ChatWidget({ open, onClose, product }: Props) {
               const showDivider = i === 0 || prevTime !== time
               const isCustomer = msg.sender === 'customer'
               const product = msg.type === 'product' ? (msg.productSnapshot ?? findProduct(msg.productId)) : undefined
+              const bundleMsg = msg.type === 'bundle' ? msg.bundleSnapshot : undefined
 
               return (
                 <div key={msg.id} className="flex flex-col">
                   {showDivider && <p className="text-center text-[11px] font-medium text-gray-400 my-4">{time}</p>}
 
-                  {product ? (
+                  {bundleMsg ? (
+                    <div
+                      className={`max-w-[75%] mb-4 flex flex-col ${isCustomer ? 'self-end items-end' : 'self-start items-start'}`}
+                    >
+                      <BundleChatCard bundle={bundleMsg} onNavigate={onClose} />
+                      {isCustomer && <ReadReceipt read={msg.read} />}
+                    </div>
+                  ) : product ? (
                     <div
                       className={`max-w-[75%] mb-4 flex flex-col ${isCustomer ? 'self-end items-end' : 'self-start items-start'}`}
                     >

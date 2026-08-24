@@ -9,7 +9,8 @@ import { useCart } from '@/context/CartContext'
 import BundleAddedModal from '@/components/bundles/BundleAddedModal'
 import GiftChoiceModal from '@/components/bundles/GiftChoiceModal'
 import ShareButton from '@/components/bundles/ShareButton'
-import { bundleToCartItem } from '@/lib/bundleCart'
+import ChatWidget from '@/components/chat/ChatWidget'
+import { bundleToCartItem, bundleToChatSnapshot } from '@/lib/bundleCart'
 import { computeBundlePricing, resolveGifts, type ReadyBundle } from '@/data/bundleData'
 import type { CartItem } from '@/data/cart'
 
@@ -25,13 +26,19 @@ const SORT_LABELS: Record<SortKey, string> = {
   saving: 'Biggest Saving',
 }
 
+/** Gifts the customer would actually receive, for the chat card. */
+function chatGiftNames(bundle: ReadyBundle) {
+  const pricing = computeBundlePricing(bundle.products, bundle.tiers)
+  return resolveGifts(pricing.gifts, [], pricing.giftLimit).map((g) => g.name)
+}
+
 function BundleCard({
   bundle,
   onChat,
   onAdded,
 }: {
   bundle: ReadyBundle
-  onChat: () => void
+  onChat: (bundle: ReadyBundle) => void
   /** Raises the just-added line so the list can confirm it in one shared dialog. */
   onAdded: (item: CartItem) => void
 }) {
@@ -243,7 +250,7 @@ function BundleCard({
         />
         <button
           type="button"
-          onClick={onChat}
+          onClick={() => onChat(bundle)}
           title="Chat with us"
           aria-label="Chat with us"
           // White so it reads as a control against the tinted panel behind it.
@@ -283,8 +290,15 @@ export default function ShopYourBundles({ bundles }: { bundles: ReadyBundle[] })
   const visible = sorted.slice(0, pages * PAGE_SIZE)
   const hasMore = visible.length < sorted.length
 
-  const onChat = () => {
-    if (!isLoggedIn) router.push('/login')
+  /** The bundle whose conversation is open — chat posts it as its opening message. */
+  const [chatBundle, setChatBundle] = useState<ReadyBundle | null>(null)
+
+  const onChat = (bundle: ReadyBundle) => {
+    if (!isLoggedIn) {
+      router.push('/login')
+      return
+    }
+    setChatBundle(bundle)
   }
 
   if (bundles.length === 0) {
@@ -346,6 +360,22 @@ export default function ShopYourBundles({ bundles }: { bundles: ReadyBundle[] })
       </div>
 
       <BundleAddedModal item={added} onClose={() => setAdded(null)} />
+
+      <ChatWidget
+        open={chatBundle !== null}
+        onClose={() => setChatBundle(null)}
+        bundle={
+          chatBundle
+            ? bundleToChatSnapshot({
+                name: chatBundle.name,
+                products: chatBundle.products,
+                tiers: chatBundle.tiers,
+                giftNames: chatGiftNames(chatBundle),
+                href: `/bundles/${chatBundle.id}`,
+              })
+            : undefined
+        }
+      />
 
       {hasMore ? (
         <div className="mt-10 flex justify-center">

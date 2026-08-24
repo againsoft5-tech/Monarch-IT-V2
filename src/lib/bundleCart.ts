@@ -48,3 +48,31 @@ export function bundleToCartItem(input: {
       : undefined,
   }
 }
+
+/**
+ * Describes a bundle for chat.
+ *
+ * Carries every product and gift, not just a cover image, so the chat bubble can show
+ * what the share link's preview shows.
+ */
+export function bundleToChatSnapshot(input: {
+  name: string
+  products: BundleProduct[]
+  tiers: BundleTier[]
+  giftNames: string[]
+  href: string
+}) {
+  const pricing = computeBundlePricing(input.products, input.tiers)
+  return {
+    name: input.name,
+    products: input.products.map((p) => ({ name: p.name, image: p.image, slug: p.slug })),
+    giftNames: input.giftNames,
+    priceNew: pricing.total,
+    priceOld: pricing.regularTotal,
+    discountPct:
+      pricing.regularTotal > pricing.total
+        ? Math.round(((pricing.regularTotal - pricing.total) / pricing.regularTotal) * 100)
+        : 0,
+    href: input.href,
+  }
+}
