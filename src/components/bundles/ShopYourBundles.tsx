@@ -230,9 +230,12 @@ function BundleCard({
         <button
           type="button"
           onClick={add}
-          className="h-10 min-w-0 flex-1 rounded-full bg-[#c3272b] px-2 text-[11px] font-bold uppercase tracking-wide text-white transition-colors hover:bg-[#a5121c] sm:text-[12px]"
+          // Short label + nowrap: with the share and chat buttons alongside, the CTA
+          // only gets ~134px in the 4-up grid, and "Add bundle to cart" wrapped there.
+          // "bundle" is redundant on a bundle card anyway.
+          className="h-10 min-w-0 flex-1 whitespace-nowrap rounded-full bg-[#c3272b] px-2 text-[11px] font-bold uppercase tracking-wide text-white transition-colors hover:bg-[#a5121c] sm:text-[12px]"
         >
-          Add bundle to cart
+          Add to cart
         </button>
         <ShareButton
           path={`/bundles/${bundle.id}`}
