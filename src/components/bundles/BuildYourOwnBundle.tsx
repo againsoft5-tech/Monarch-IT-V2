@@ -6,7 +6,9 @@ import { useCart } from '@/context/CartContext'
 import ProductPickerModal from '@/components/bundles/ProductPickerModal'
 import BundleAddedModal from '@/components/bundles/BundleAddedModal'
 import GiftChoiceModal from '@/components/bundles/GiftChoiceModal'
+import ShareButton from '@/components/bundles/ShareButton'
 import { bundleToCartItem } from '@/lib/bundleCart'
+import { buildShareLink } from '@/lib/bundleShareLink'
 import type { CartItem } from '@/data/cart'
 import {
   BUNDLE_TIER_COUNTS,
@@ -92,16 +94,36 @@ function Slot({
   )
 }
 
-export default function BuildYourOwnBundle({ bundles }: { bundles: CustomBundle[] }) {
+export type BuildInitialSelection = {
+  bundleId: string
+  tierCount: BundleTierCount
+  products: BundleProduct[]
+  giftIds: string[]
+  /** Slugs a share link asked for that no longer resolve. */
+  droppedProducts: string[]
+}
+
+export default function BuildYourOwnBundle({
+  bundles,
+  initial,
+}: {
+  bundles: CustomBundle[]
+  /** A selection restored from a share link, already validated server-side. */
+  initial?: BuildInitialSelection
+}) {
   const { addItems } = useCart()
-  const [bundleId, setBundleId] = useState(bundles[0]?.id ?? '')
+  const [bundleId, setBundleId] = useState(initial?.bundleId ?? bundles[0]?.id ?? '')
   const bundle = bundles.find((b) => b.id === bundleId) ?? bundles[0]
 
-  const [tierCount, setTierCount] = useState<BundleTierCount>(2)
+  const [tierCount, setTierCount] = useState<BundleTierCount>(initial?.tierCount ?? 2)
   /** Slot index → chosen product. Sparse so slots can be filled in any order. */
-  const [slots, setSlots] = useState<Record<number, BundleProduct>>({})
+  const [slots, setSlots] = useState<Record<number, BundleProduct>>(() =>
+    Object.fromEntries((initial?.products ?? []).map((p, i) => [i, p])),
+  )
   /** Gifts the customer picked; only meaningful when the pool exceeds the allowance. */
-  const [chosenGiftIds, setChosenGiftIds] = useState<string[]>([])
+  const [chosenGiftIds, setChosenGiftIds] = useState<string[]>(initial?.giftIds ?? [])
+  /** Dismissible: the recipient only needs telling once. */
+  const [droppedNotice, setDroppedNotice] = useState(initial?.droppedProducts ?? [])
   const [picking, setPicking] = useState<{ index: number } | null>(null)
   const [giftOpen, setGiftOpen] = useState(false)
   /** The line just added, shown in the confirmation dialog. */
@@ -179,6 +201,27 @@ export default function BuildYourOwnBundle({ bundles }: { bundles: CustomBundle[
           Choose 2, 3, or 4 products and enjoy an exclusive discount on your bundle.
         </p>
       </div>
+
+      {/* A shared link can outlive its products. Say so rather than quietly showing
+          a smaller bundle than the sender built. */}
+      {droppedNotice.length > 0 ? (
+        <div className="mx-auto mb-6 flex max-w-[560px] items-start gap-2 rounded-2xl bg-[#fff6e6] px-4 py-3 text-[12.5px] text-[#8a5a00]">
+          <span className="mi shrink-0 text-[18px] leading-none">info</span>
+          <span className="min-w-0 flex-1">
+            {droppedNotice.length === 1
+              ? '1 product from this shared bundle is no longer available, so it was left out.'
+              : `${droppedNotice.length} products from this shared bundle are no longer available, so they were left out.`}
+          </span>
+          <button
+            type="button"
+            onClick={() => setDroppedNotice([])}
+            aria-label="Dismiss"
+            className="shrink-0 text-[#8a5a00]/60 hover:text-[#8a5a00]"
+          >
+            <span className="mi text-[16px] leading-none">close</span>
+          </button>
+        </div>
+      ) : null}
 
       {bundles.length > 1 ? (
         <div className="mb-6 flex flex-wrap justify-center gap-2">
@@ -356,14 +399,32 @@ export default function BuildYourOwnBundle({ bundles }: { bundles: CustomBundle[
                     }.`}
               </p>
             ) : null}
-            <button
-              type="button"
-              onClick={addToCart}
-              disabled={!canAdd}
-              className="flex h-12 w-full items-center justify-center rounded-full bg-[#c3272b] text-[14px] font-bold uppercase tracking-wide text-white shadow-[0_6px_16px_rgba(195,39,43,0.28)] transition-colors hover:bg-[#a5121c] disabled:cursor-not-allowed disabled:bg-[#c8ccd6] disabled:shadow-none"
-            >
-              Add bundle to cart
-            </button>
+            <div className="flex items-center gap-2.5">
+              <button
+                type="button"
+                onClick={addToCart}
+                disabled={!canAdd}
+                className="flex h-12 min-w-0 flex-1 items-center justify-center whitespace-nowrap rounded-full bg-[#c3272b] text-[14px] font-bold uppercase tracking-wide text-white shadow-[0_6px_16px_rgba(195,39,43,0.28)] transition-colors hover:bg-[#a5121c] disabled:cursor-not-allowed disabled:bg-[#c8ccd6] disabled:shadow-none"
+              >
+                Add bundle to cart
+              </button>
+              {/* Only shareable once something is actually chosen — an empty link
+                  would just drop the recipient on a blank builder. */}
+              {bundle && selected.length > 0 ? (
+                <ShareButton
+                  size="md"
+                  path={buildShareLink({
+                    bundleId: bundle.id,
+                    tierCount,
+                    slugs: selected.map((p) => p.slug),
+                    giftIds: chosenGifts.map((g) => g.id),
+                  })}
+                  text={`My ${tierCount}-product bundle${
+                    pricing ? ` — ৳${pricing.total.toLocaleString()}` : ''
+                  } at Monarch IT`}
+                />
+              ) : null}
+            </div>
           </div>
         </div>
       ) : null}

@@ -1,0 +1,81 @@
+import type { Metadata } from 'next'
+import { notFound } from 'next/navigation'
+import Breadcrumbs from '@/components/category/Breadcrumbs'
+import BuildYourOwnBundle from '@/components/bundles/BuildYourOwnBundle'
+import { bundleRepository } from '@/lib/bundle-repository'
+import { parseBuildLink, type BuildSearchParams } from '@/lib/bundleShareLink'
+import { computeBundlePricing } from '@/data/bundleData'
+
+/** The selection lives in the query string, and bundles change — never cache. */
+export const dynamic = 'force-dynamic'
+
+async function resolve(searchParams: Promise<BuildSearchParams>) {
+  const [db, params] = await Promise.all([bundleRepository.read(), searchParams])
+  const customs = Object.values(db.custom)
+  return { customs, parsed: parseBuildLink(customs, params) }
+}
+
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<BuildSearchParams>
+}): Promise<Metadata> {
+  const { parsed } = await resolve(searchParams)
+  if (!parsed) return { title: 'Build Your Own Bundle | Monarch IT' }
+
+  const { products, tierCount, hasSelection } = parsed
+  const pricing = computeBundlePricing(products, parsed.bundle.tiers)
+  const title = hasSelection
+    ? `${tierCount}-Product Bundle | Monarch IT`
+    : 'Build Your Own Bundle | Monarch IT'
+  const description = hasSelection
+    ? `${products.map((p) => p.name).join(' + ')} — ৳${pricing.total.toLocaleString()}`
+    : 'Pick 2, 3 or 4 products and unlock an exclusive bundle discount at Monarch IT.'
+
+  return {
+    title,
+    description,
+    openGraph: { title, description, type: 'website' },
+    twitter: { card: 'summary_large_image', title, description },
+  }
+}
+
+/**
+ * The builder on its own URL, so a custom selection can be shared.
+ *
+ * A custom build is not a stored record — it is whatever someone picked — so the
+ * selection travels as query params and is validated here, server-side, before the
+ * builder ever renders. See `bundleShareLink.ts` for the encoding.
+ */
+export default async function BuildBundlePage({
+  searchParams,
+}: {
+  searchParams: Promise<BuildSearchParams>
+}) {
+  const { customs, parsed } = await resolve(searchParams)
+  if (!parsed) notFound()
+
+  return (
+    <>
+      <Breadcrumbs
+        items={[
+          { label: 'Home', href: '/' },
+          { label: 'Bundles', href: '/bundles' },
+          { label: 'Build Your Own', href: '/bundles/build' },
+        ]}
+      />
+      <div className="bundles-module container mx-auto px-4 py-8 min-[992px]:px-14">
+        <BuildYourOwnBundle
+          bundles={customs.filter((b) => b.active && b.tabs.length > 0)}
+          initial={{
+            bundleId: parsed.bundle.id,
+            tierCount: parsed.tierCount,
+            products: parsed.products,
+            giftIds: parsed.giftIds,
+            droppedProducts: parsed.droppedProducts,
+          }}
+        />
+      </div>
+    </>
+  )
+}
