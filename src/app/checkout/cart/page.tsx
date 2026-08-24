@@ -16,8 +16,10 @@ export default function CartPage() {
     couponMessage,
     applyCoupon,
     appliedCoupon,
+    appliedCoupons,
     couponAuto,
     couponSavingFor,
+    couponCodeFor,
     updateQty,
     removeItem,
   } = useCart()
@@ -80,7 +82,7 @@ export default function CartPage() {
 
                       {couponSavingFor(item) > 0 ? (
                         <span className="mt-1.5 inline-flex w-fit items-center rounded-full bg-[#d32f2f] px-2 py-0.5 text-[10.5px] font-bold text-white">
-                          ৳{couponSavingFor(item).toLocaleString()} OFF Coupon Applied
+                          ৳{couponSavingFor(item).toLocaleString()} OFF · {couponCodeFor(item)}
                         </span>
                       ) : null}
 
@@ -175,7 +177,11 @@ export default function CartPage() {
                     <div className="flex justify-between text-[13.5px] font-medium text-gray-500">
                       <span>
                         Promo Code Discount
-                        {appliedCoupon ? <b className="ml-1 text-gray-700">{appliedCoupon}</b> : null}
+                        {appliedCoupons.length ? (
+                          <b className="ml-1 text-gray-700">
+                            {appliedCoupons.map((c) => c.code).join(', ')}
+                          </b>
+                        ) : null}
                       </span>
                       <span className="text-green-600 font-bold">-<span className="font-medium">৳</span><span className="font-price">{discount.toLocaleString()}</span></span>
                     </div>

@@ -105,8 +105,10 @@ export default function CheckoutPage() {
     couponMessage,
     applyCoupon,
     appliedCoupon,
+    appliedCoupons,
     couponAuto,
     couponSavingFor,
+    couponCodeFor,
     updateQty,
     removeItem,
   } = useCart()
@@ -399,7 +401,7 @@ export default function CheckoutPage() {
 
                         {couponSavingFor(item) > 0 ? (
                           <span className="inline-flex w-fit items-center rounded-full bg-[#d32f2f] px-2 py-0.5 text-[10.5px] font-bold text-white">
-                            ৳{couponSavingFor(item).toLocaleString()} OFF Coupon Applied
+                            ৳{couponSavingFor(item).toLocaleString()} OFF · {couponCodeFor(item)}
                           </span>
                         ) : null}
 
@@ -476,8 +478,10 @@ export default function CheckoutPage() {
                     <div className="flex justify-between">
                       <span>
                         Promo Code Discount
-                        {appliedCoupon ? (
-                          <b className="ml-1 text-gray-700">{appliedCoupon}</b>
+                        {appliedCoupons.length ? (
+                          <b className="ml-1 text-gray-700">
+                            {appliedCoupons.map((c) => c.code).join(', ')}
+                          </b>
                         ) : null}
                       </span>
                       <span className="text-green-600 font-bold">-<span className="font-medium">৳</span><span className="font-price">{discount.toLocaleString()}</span></span>
@@ -512,7 +516,8 @@ export default function CheckoutPage() {
                   </div>
                   {couponAuto && appliedCoupon && !couponMessage ? (
                     <p className="mt-2 text-[12px] font-semibold text-green-600">
-                      {appliedCoupon} applied automatically — best available offer.
+                      {appliedCoupons.map((c) => c.code).join(', ')} applied automatically —
+                      best available offer{appliedCoupons.length > 1 ? 's' : ''}.
                     </p>
                   ) : null}
                   {couponMessage && (

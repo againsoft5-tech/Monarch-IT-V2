@@ -4,8 +4,10 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 import { initialCartItems, type CartItem } from '@/data/cart'
 import { useCouponStore } from '@/lib/couponStore'
 import {
-  bestCouponForCart,
+  couponCoversProduct,
+  couponDiscount,
   couponDiscountForCart,
+  isCouponLive,
   normalizeCode,
   type Coupon,
 } from '@/data/couponData'
@@ -29,10 +31,14 @@ type CartContextType = {
   total: number
   couponMessage: CouponMessage | null
   applyCoupon: (code: string) => void
-  /** True when the applied coupon was chosen for the customer, not typed. */
+  /** True when coupons were chosen for the customer rather than typed. */
   couponAuto: boolean
-  /** Per-line saving, so a cart row can show its own "coupon applied" badge. */
+  /** Every coupon contributing to the discount, with what each is worth. */
+  appliedCoupons: { code: string; discount: number }[]
+  /** This line's share of the discount, for its "coupon applied" badge. */
   couponSavingFor: (item: CartItem) => number
+  /** The coupon covering this line, if any. */
+  couponCodeFor: (item: CartItem) => string | null
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined)
@@ -101,34 +107,80 @@ export function CartProvider({ children }: { children: ReactNode }) {
   )
 
   /**
-   * The coupon actually in force.
+   * Coupons applied per line, so a cart of several products keeps every offer it
+   * advertised — the product page promised each one, and losing all but the largest
+   * would make those promises false.
    *
-   * Nothing typed → the best-value live coupon applies on its own, which is what
-   * makes "add to cart and the discount is already there" work. A typed code only
-   * wins if it beats that; otherwise the customer would lose money by entering one.
+   * Each line takes the coupon worth most to it, then a coupon's total is computed
+   * over all the lines it won and shared back out. That matters because a coupon's
+   * generosity is defined once, not per line: a flat ৳500 code is ৳500 across the
+   * cart, and a "10%, max ৳2,000" code caps at ৳2,000 in total, not per product.
    */
   const applied = useMemo(() => {
-    const auto = bestCouponForCart(couponList, lines)
-    if (!manualCoupon) return auto ? { ...auto, manual: false } : undefined
+    const usable = couponList.filter(
+      (c) => isCouponLive(c) && (!c.minOrder || subtotal >= c.minOrder),
+    )
 
-    const typed = couponList.find((c) => c.code === manualCoupon)
-    const typedDiscount = typed ? couponDiscountForCart(typed, lines) : 0
-    if (typed && typedDiscount > 0 && (!auto || typedDiscount >= auto.discount)) {
-      return { coupon: typed, discount: typedDiscount, manual: true }
+    // 1. Assign: each line picks the coupon that would save it the most on its own.
+    const assignment = new Map<string, Coupon>()
+    for (const line of lines) {
+      let best: { coupon: Coupon; discount: number } | undefined
+      for (const coupon of usable) {
+        if (!couponCoversProduct(coupon, line.slug)) continue
+        const d = couponDiscount(coupon, line.price * line.qty)
+        if (d > 0 && (!best || d > best.discount)) best = { coupon, discount: d }
+      }
+      if (best) assignment.set(line.slug, best.coupon)
     }
-    return auto ? { ...auto, manual: false } : undefined
-  }, [couponList, lines, manualCoupon])
 
-  const appliedCoupon = applied?.coupon.code ?? null
-  const discount = Math.min(applied?.discount ?? 0, subtotal)
+    // 2. Total each coupon over the lines it won, so caps apply once.
+    const byCoupon = new Map<string, { coupon: Coupon; lines: typeof lines; total: number }>()
+    for (const line of lines) {
+      const coupon = assignment.get(line.slug)
+      if (!coupon) continue
+      const entry = byCoupon.get(coupon.id) ?? { coupon, lines: [], total: 0 }
+      entry.lines = [...entry.lines, line]
+      byCoupon.set(coupon.id, entry)
+    }
+    for (const entry of byCoupon.values()) {
+      entry.total = couponDiscountForCart(entry.coupon, entry.lines)
+    }
+
+    // 3. Share each coupon's total back across its lines, for the per-row badges.
+    const perLine = new Map<string, { code: string; amount: number }>()
+    for (const entry of byCoupon.values()) {
+      const base = entry.lines.reduce((sum, l) => sum + l.price * l.qty, 0)
+      let handed = 0
+      entry.lines.forEach((line, i) => {
+        const isLast = i === entry.lines.length - 1
+        // The last line absorbs the rounding remainder so the parts match the total.
+        const share = isLast
+          ? entry.total - handed
+          : Math.round((entry.total * (line.price * line.qty)) / (base || 1))
+        handed += share
+        perLine.set(line.slug, { code: entry.coupon.code, amount: share })
+      })
+    }
+
+    const coupons = [...byCoupon.values()]
+      .filter((e) => e.total > 0)
+      .map((e) => ({ code: e.coupon.code, discount: e.total }))
+      .sort((a, b) => b.discount - a.discount)
+
+    return {
+      perLine,
+      coupons,
+      total: coupons.reduce((sum, c) => sum + c.discount, 0),
+    }
+  }, [couponList, lines, subtotal])
+
+  const appliedCoupons = applied.coupons
+  const appliedCoupon = appliedCoupons[0]?.code ?? null
+  const discount = Math.min(applied.total, subtotal)
   const total = subtotal - discount
 
-  /** How much of the discount this line accounts for, for the per-row badge. */
-  const couponSavingFor = (item: CartItem) => {
-    if (!applied) return 0
-    const line = { slug: item.slug, price: item.price, qty: item.qty }
-    return couponDiscountForCart(applied.coupon, [line])
-  }
+  const couponSavingFor = (item: CartItem) => applied.perLine.get(item.slug)?.amount ?? 0
+  const couponCodeFor = (item: CartItem) => applied.perLine.get(item.slug)?.code ?? null
 
   const applyCoupon = (code: string) => {
     const normalized = normalizeCode(code)
@@ -150,7 +202,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       setManualCoupon(null)
       setCouponMessage({
         type: 'error',
-        text: coupon.minOrder
+        text: coupon.minOrder && subtotal < coupon.minOrder
           ? `This code needs a minimum order of ৳${coupon.minOrder.toLocaleString()}.`
           : 'This code does not apply to anything in your cart.',
       })
@@ -158,16 +210,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
 
     setManualCoupon(coupon.code)
-    // Say so rather than silently ignoring the code they just typed.
-    const better = bestCouponForCart(couponList, lines)
-    setCouponMessage(
-      better && better.discount > worth
-        ? {
-            type: 'success',
-            text: `${better.coupon.code} saves you more, so it stayed applied.`,
-          }
-        : { type: 'success', text: 'Promo code applied successfully!' },
-    )
+    // Every live coupon is already applied where it fits, so a typed code is a
+    // confirmation rather than a change. Saying so beats a silent no-op.
+    const already = appliedCoupons.some((c) => c.code === coupon.code)
+    setCouponMessage({
+      type: 'success',
+      text: already
+        ? `${coupon.code} is already applied to your cart.`
+        : 'Promo code applied successfully!',
+    })
   }
 
   return (
@@ -187,8 +238,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
         total,
         couponMessage,
         applyCoupon,
-        couponAuto: applied ? !applied.manual : false,
+        couponAuto: !manualCoupon && appliedCoupons.length > 0,
+        appliedCoupons,
         couponSavingFor,
+        couponCodeFor,
       }}
     >
       {children}
