@@ -8,7 +8,7 @@ import { useAuth } from '@/context/AuthContext'
 import { useCart } from '@/context/CartContext'
 import GiftChoiceModal from '@/components/bundles/GiftChoiceModal'
 import { bundleToCartItem } from '@/lib/bundleCart'
-import { computeBundlePricing, resolveGift, type ReadyBundle } from '@/data/bundleData'
+import { computeBundlePricing, resolveGifts, type ReadyBundle } from '@/data/bundleData'
 
 /** 3 rows of the 3-across grid, matching the design. */
 const PAGE_SIZE = 9
@@ -26,11 +26,14 @@ function BundleCard({ bundle, onChat }: { bundle: ReadyBundle; onChat: () => voi
   const { addItems, openCart } = useCart()
   // A single gift comes with the bundle; several are offered as a choice, with the
   // first standing in so the card always shows what the customer will receive.
-  const [chosenGiftId, setChosenGiftId] = useState<string | undefined>()
+  const [chosenGiftIds, setChosenGiftIds] = useState<string[]>([])
   const [giftOpen, setGiftOpen] = useState(false)
   const pricing = computeBundlePricing(bundle.products, bundle.tiers)
   const gifts = pricing.gifts
-  const activeGift = resolveGift(gifts, chosenGiftId)
+  const giftLimit = pricing.giftLimit
+  /** What the customer walks away with — their picks, or the whole list when it fits. */
+  const activeGifts = resolveGifts(gifts, chosenGiftIds, giftLimit)
+  const needsChoice = gifts.length > giftLimit
 
   /** What the bundle takes off the products' regular prices, shown next to the total. */
   const saving = Math.max(0, pricing.regularTotal - pricing.total)
@@ -44,7 +47,7 @@ function BundleCard({ bundle, onChat }: { bundle: ReadyBundle; onChat: () => voi
         slug: 'bundles',
         products: bundle.products,
         tiers: bundle.tiers,
-        chosenGiftId,
+        chosenGiftIds,
       }),
     ])
     openCart()
@@ -121,25 +124,26 @@ function BundleCard({ bundle, onChat }: { bundle: ReadyBundle; onChat: () => voi
         ))}
       </ul>
 
-      {gifts.length === 1 && activeGift ? (
-        <span className="mt-2 inline-flex min-w-0 items-center gap-1.5 rounded-full bg-[#e8f6ee] px-2.5 py-1 text-[11px] font-bold text-[#0f7a43]">
-          {/* Gifts with artwork show it; the glyph is the fallback. */}
-          {activeGift.image ? (
-            <Image
-              src={activeGift.image}
-              alt=""
-              width={20}
-              height={20}
-              className="h-4 w-4 shrink-0 object-contain"
-            />
-          ) : (
-            <span className="mi shrink-0 text-[14px] leading-none">redeem</span>
-          )}
-          <span className="min-w-0 truncate">{activeGift.name}</span>
+      {!needsChoice && activeGifts.length > 0 ? (
+        <span className="mt-2 flex min-w-0 flex-col gap-1">
+          {activeGifts.map((g) => (
+            <span
+              key={g.id}
+              className="inline-flex min-w-0 items-center gap-1.5 rounded-full bg-[#e8f6ee] px-2.5 py-1 text-[11px] font-bold text-[#0f7a43]"
+            >
+              {/* Gifts with artwork show it; the glyph is the fallback. */}
+              {g.image ? (
+                <Image src={g.image} alt="" width={20} height={20} className="h-4 w-4 shrink-0 object-contain" />
+              ) : (
+                <span className="mi shrink-0 text-[14px] leading-none">redeem</span>
+              )}
+              <span className="min-w-0 truncate">{g.name}</span>
+            </span>
+          ))}
         </span>
       ) : null}
 
-      {gifts.length > 1 && activeGift ? (
+      {needsChoice ? (
         <>
           {/* The card is too narrow to show gift artwork, so picking happens in a dialog. */}
           <button
@@ -147,9 +151,9 @@ function BundleCard({ bundle, onChat }: { bundle: ReadyBundle; onChat: () => voi
             onClick={() => setGiftOpen(true)}
             className="mt-2 flex min-w-0 items-center gap-1.5 rounded-xl bg-[#e8f6ee] px-2.5 py-1.5 text-left transition-colors hover:bg-[#d8efe2]"
           >
-            {activeGift.image ? (
+            {activeGifts[0]?.image ? (
               <Image
-                src={activeGift.image}
+                src={activeGifts[0].image}
                 alt=""
                 width={22}
                 height={22}
@@ -160,10 +164,10 @@ function BundleCard({ bundle, onChat }: { bundle: ReadyBundle; onChat: () => voi
             )}
             <span className="min-w-0 flex-1">
               <span className="block text-[10.5px] font-bold uppercase tracking-wide text-[#0f7a43]">
-                Free gift — pick one
+                Free gift — pick {giftLimit}
               </span>
               <span className="block truncate text-[11px] font-semibold text-[#0f7a43]">
-                {activeGift.name}
+                {activeGifts.map((g) => g.name).join(', ')}
               </span>
             </span>
             <span className="mi shrink-0 text-[18px] leading-none text-[#0f7a43]">expand_more</span>
@@ -172,8 +176,9 @@ function BundleCard({ bundle, onChat }: { bundle: ReadyBundle; onChat: () => voi
           <GiftChoiceModal
             open={giftOpen}
             gifts={gifts}
-            selectedId={activeGift.id}
-            onSelect={setChosenGiftId}
+            limit={giftLimit}
+            selectedIds={activeGifts.map((g) => g.id)}
+            onChange={setChosenGiftIds}
             onClose={() => setGiftOpen(false)}
           />
         </>

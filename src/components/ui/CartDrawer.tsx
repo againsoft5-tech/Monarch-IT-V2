@@ -1,9 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import Image from 'next/image'
 import Link from 'next/link'
 import { useCart } from '@/context/CartContext'
+import BundleLineDetails from '@/components/cart/BundleLineDetails'
+import CartLineThumb from '@/components/cart/CartLineThumb'
 
 export default function CartDrawer() {
   const { items, isOpen, closeCart, removeItem, subtotal, discount, total, couponMessage, applyCoupon } = useCart()
@@ -42,14 +43,11 @@ export default function CartDrawer() {
           ) : (
             items.map((item) => (
               <div key={item.id} className="flex items-start gap-3 px-5 py-4 border-b border-gray-100">
-                <Link href={`/${item.slug}`} className="shrink-0">
-                  <Image
-                    src={item.image}
-                    alt={item.name}
-                    width={47}
-                    height={47}
-                    className="w-[47px] h-[47px] object-contain rounded border border-gray-100"
-                  />
+                <Link
+                  href={`/${item.slug}`}
+                  className="shrink-0 w-[47px] h-[47px] p-[2px] rounded border border-gray-100"
+                >
+                  <CartLineThumb item={item} size={47} />
                 </Link>
 
                 <div className="flex-1 min-w-0">
@@ -69,23 +67,9 @@ export default function CartDrawer() {
                     <span className="font-bold text-gray-900"><span className="font-medium">৳</span><span className="font-price">{(item.price * item.qty).toLocaleString()}</span></span>
                   </div>
 
-                  {/* Bundle lines list the products they contain, plus any free gift. */}
-                  {item.bundleItems?.length ? (
-                    <ul className="mt-1.5 flex list-none flex-col gap-0.5 border-l-2 border-gray-100 pl-2.5 m-0">
-                      {item.bundleItems.map((child) => (
-                        <li key={child.slug} className="text-[11.5px] text-gray-500 truncate">
-                          {child.name}
-                        </li>
-                      ))}
-                    </ul>
-                  ) : null}
+                  {/* Bundle contents + free gifts, shared with the cart and checkout pages. */}
+                  <BundleLineDetails item={item} />
 
-                  {item.giftLabel ? (
-                    <span className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-[#e8f6ee] px-2 py-0.5 text-[11px] font-bold text-[#0f7a43]">
-                      <span className="mi text-[13px] leading-none">redeem</span>
-                      Free: {item.giftLabel}
-                    </span>
-                  ) : null}
                 </div>
 
                 <button

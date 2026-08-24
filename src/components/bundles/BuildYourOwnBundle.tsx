@@ -4,13 +4,14 @@ import { useMemo, useState } from 'react'
 import Image from 'next/image'
 import { useCart } from '@/context/CartContext'
 import ProductPickerModal from '@/components/bundles/ProductPickerModal'
+import GiftChoiceModal from '@/components/bundles/GiftChoiceModal'
 import { bundleToCartItem } from '@/lib/bundleCart'
 import {
   BUNDLE_TIER_COUNTS,
   computeBundlePricing,
-  resolveGift,
+  giftPickLimit,
+  giftsAreAutomatic,
   tierForCount,
-  type BundleGiftItem,
   type BundleProduct,
   type BundleTierCount,
   type CustomBundle,
@@ -23,51 +24,6 @@ const TIER_COPY: Record<BundleTierCount, { eyebrow: string; blurb: string }> = {
   4: { eyebrow: 'Get our best bundle discount', blurb: 'Choose 4 products and get the best bundle price.' },
 }
 
-/**
- * One free-gift tile.
- *
- * Handles both gift kinds: a product shows its photo, a custom gift falls back to
- * the gift glyph. Only selectable when the tier offers more than one, since a lone
- * gift is already the customer's.
- */
-function GiftTile({
-  gift,
-  selected,
-  selectable,
-  onSelect,
-}: {
-  gift: BundleGiftItem
-  selected: boolean
-  selectable: boolean
-  onSelect: () => void
-}) {
-  const Tag = selectable ? 'button' : 'div'
-  return (
-    <Tag
-      {...(selectable ? { type: 'button' as const, onClick: onSelect, 'aria-pressed': selected } : {})}
-      className={`flex aspect-square w-[calc(50%-6px)] flex-col items-center justify-center gap-2 rounded-2xl border-2 bg-[#f5f6fa] px-3 py-2 text-center transition-colors sm:w-[180px] ${
-        selected ? 'border-[#0f7a43]' : 'border-transparent'
-      } ${selectable ? 'hover:border-[#0f7a43]/50' : ''}`}
-    >
-      {gift.image ? (
-        <Image
-          src={gift.image}
-          alt={gift.name}
-          width={110}
-          height={110}
-          className="max-h-[55%] w-auto max-w-full object-contain"
-        />
-      ) : (
-        <span className="mi text-[32px] leading-none text-[#0f7a43]">redeem</span>
-      )}
-      <span className="line-clamp-2 text-[12.5px] font-bold text-[#0f7a43]">{gift.name}</span>
-      {selected && selectable ? (
-        <span className="text-[10.5px] font-semibold uppercase tracking-wide text-[#0f7a43]">Selected</span>
-      ) : null}
-    </Tag>
-  )
-}
-
 /** Empty slot / filled slot tile. */
 function Slot({
   product,
@@ -75,7 +31,7 @@ function Slot({
   onClear,
   label = 'SELECT PRODUCT',
 }: {
-  product?: { name: string; image: string; priceNew?: number }
+  product?: { name: string; image?: string; priceNew?: number }
   onClick: () => void
   onClear?: () => void
   label?: string
@@ -101,7 +57,18 @@ function Slot({
         className="flex h-full w-full flex-col items-center justify-center gap-1"
         title="Change product"
       >
-        <Image src={product.image} alt={product.name} width={150} height={150} className="h-[62%] w-[70%] object-contain" />
+        {product.image ? (
+          <Image
+            src={product.image}
+            alt={product.name}
+            width={150}
+            height={150}
+            className="h-[62%] w-[70%] object-contain"
+          />
+        ) : (
+          // Text gifts carry no artwork, so the gift glyph stands in.
+          <span className="mi text-[40px] leading-none text-[#0f7a43]">redeem</span>
+        )}
         <span className="line-clamp-2 px-1 text-center text-[11px] font-semibold leading-tight text-gray-700">
           {product.name}
         </span>
@@ -131,15 +98,22 @@ export default function BuildYourOwnBundle({ bundles }: { bundles: CustomBundle[
   const [tierCount, setTierCount] = useState<BundleTierCount>(2)
   /** Slot index → chosen product. Sparse so slots can be filled in any order. */
   const [slots, setSlots] = useState<Record<number, BundleProduct>>({})
-  /** Which gift the customer picked; only meaningful when the tier offers several. */
-  const [chosenGiftId, setChosenGiftId] = useState<string | undefined>()
+  /** Gifts the customer picked; only meaningful when the pool exceeds the allowance. */
+  const [chosenGiftIds, setChosenGiftIds] = useState<string[]>([])
   const [picking, setPicking] = useState<{ index: number } | null>(null)
+  const [giftOpen, setGiftOpen] = useState(false)
 
   const tier = bundle ? tierForCount(bundle.tiers, tierCount) : undefined
   const gifts = tier?.gifts ?? []
-  // A lone gift is simply included; with several, the first stands in until the
-  // customer picks, so a bundle can never reach the cart with no gift attached.
-  const activeGift = resolveGift(gifts, chosenGiftId)
+  /** How many free products this tier hands over — the admin's allowance, capped by the pool. */
+  const giftLimit = giftPickLimit(gifts, tier?.giftLimit)
+  /** A pool no bigger than the allowance is simply granted: nothing to choose. */
+  const giftsAuto = giftsAreAutomatic(gifts, tier?.giftLimit)
+  const chosenGifts = giftsAuto
+    ? gifts
+    : chosenGiftIds
+        .map((id) => gifts.find((g) => g.id === id))
+        .filter((g): g is (typeof gifts)[number] => Boolean(g))
 
   const selected = useMemo(
     () => Array.from({ length: tierCount }, (_, i) => slots[i]).filter(Boolean) as BundleProduct[],
@@ -150,7 +124,10 @@ export default function BuildYourOwnBundle({ bundles }: { bundles: CustomBundle[
     [bundle, selected],
   )
 
-  const canAdd = selected.length === tierCount
+  const allFilled = selected.length === tierCount
+  // Empty gift slots would ship a bundle the customer did not finish configuring.
+  const giftsPicked = giftsAuto || gifts.length === 0 || chosenGifts.length === giftLimit
+  const canAdd = allFilled && giftsPicked
 
   const reset = (count: BundleTierCount) => {
     setTierCount(count)
@@ -160,7 +137,7 @@ export default function BuildYourOwnBundle({ bundles }: { bundles: CustomBundle[
       for (let i = 0; i < count; i++) if (prev[i]) next[i] = prev[i]
       return next
     })
-    setChosenGiftId(undefined)
+    setChosenGiftIds([])
   }
 
   /* Gifts are chosen inline from their own tiles, so the picker only ever
@@ -175,11 +152,11 @@ export default function BuildYourOwnBundle({ bundles }: { bundles: CustomBundle[
         slug: 'bundles',
         products: selected,
         tiers: bundle.tiers,
-        chosenGiftId,
+        chosenGiftIds,
       }),
     ])
     setSlots({})
-    setChosenGiftId(undefined)
+    setChosenGiftIds([])
     openCart()
   }
 
@@ -209,7 +186,7 @@ export default function BuildYourOwnBundle({ bundles }: { bundles: CustomBundle[
               onClick={() => {
                 setBundleId(b.id)
                 setSlots({})
-                setChosenGiftId(undefined)
+                setChosenGiftIds([])
               }}
               className={`rounded-full px-4 py-2 text-[13px] font-semibold ${
                 b.id === bundle.id ? 'bg-[#c3272b] text-white' : 'bg-[#f5f5f7] text-gray-600'
@@ -266,28 +243,41 @@ export default function BuildYourOwnBundle({ bundles }: { bundles: CustomBundle[
         ))}
       </div>
 
-      {/* Free gift — a single gift is granted automatically, several are picked from. */}
+      {/* Free products — one slot per gift the tier hands over. A pool the same
+          size as the allowance needs no choosing, so those show as filled tiles. */}
       {gifts.length > 0 ? (
         <div className="mb-10">
           <div className="mb-3 text-center">
             <h3 className="m-0 text-[19px] font-bold text-gray-900">Select your free products</h3>
             <p className="m-0 mt-0.5 text-[12.5px] text-gray-500">
-              {gifts.length > 1
-                ? 'Choose one eligible free product from our collection.'
-                : 'Included free with this bundle.'}
+              {giftsAuto
+                ? 'Included free with this bundle.'
+                : `Choose ${giftLimit} eligible free product${
+                    giftLimit === 1 ? '' : 's'
+                  } from our collection.`}
             </p>
           </div>
 
-          <div className="mx-auto flex flex-wrap justify-center gap-3 sm:gap-4">
-            {gifts.map((g) => (
-              <GiftTile
-                key={g.id}
-                gift={g}
-                selected={activeGift?.id === g.id}
-                selectable={gifts.length > 1}
-                onSelect={() => setChosenGiftId(g.id)}
-              />
-            ))}
+          <div className="flex flex-wrap justify-center gap-4">
+            {Array.from({ length: giftLimit }, (_, i) => {
+              const gift = chosenGifts[i]
+              return (
+                <div key={gift?.id ?? `gift-slot-${i}`} className="w-[calc(50%-8px)] sm:w-[200px]">
+                  <Slot
+                    label="SELECT GIFT"
+                    product={gift ? { name: gift.name, image: gift.image } : undefined}
+                    onClick={() => {
+                      if (!giftsAuto) setGiftOpen(true)
+                    }}
+                    onClear={
+                      !giftsAuto && gift
+                        ? () => setChosenGiftIds((prev) => prev.filter((id) => id !== gift.id))
+                        : undefined
+                    }
+                  />
+                </div>
+              )
+            })}
           </div>
         </div>
       ) : null}
@@ -302,8 +292,13 @@ export default function BuildYourOwnBundle({ bundles }: { bundles: CustomBundle[
                   {i + 1}
                 </span>
                 <span className="min-w-0 flex-1 truncate text-[13px] text-gray-800">{p.name}</span>
-                <span className="shrink-0 text-[13px] font-semibold text-gray-700">
-                  ৳{p.priceNew.toLocaleString()}
+                <span className="shrink-0 whitespace-nowrap text-[13px]">
+                  <span className="font-semibold text-gray-700">৳{p.priceNew.toLocaleString()}</span>
+                  {p.priceOld > p.priceNew ? (
+                    <span className="ml-1 text-[11.5px] text-gray-400 line-through">
+                      ৳{p.priceOld.toLocaleString()}
+                    </span>
+                  ) : null}
                 </span>
               </li>
             ))}
@@ -315,20 +310,30 @@ export default function BuildYourOwnBundle({ bundles }: { bundles: CustomBundle[
           </ul>
 
           <div className="px-4 py-3">
-            {activeGift ? (
-              <div className="mb-2 flex items-center justify-between gap-3 text-[13px]">
-                <span className="shrink-0 font-semibold text-[#0f7a43]">Free gift</span>
-                <span className="min-w-0 truncate font-semibold text-[#0f7a43]">{activeGift.name}</span>
+            {/* Only what the customer actually holds — listing the fallback here would
+                credit gifts whose slots are still empty. */}
+            {chosenGifts.map((g, i) => (
+              <div key={g.id} className="mb-2 flex items-center justify-between gap-3 text-[13px]">
+                <span className="shrink-0 font-semibold text-[#0f7a43]">{i === 0 ? 'Free gift' : ''}</span>
+                <span className="min-w-0 truncate font-semibold text-[#0f7a43]">{g.name}</span>
               </div>
-            ) : null}
+            ))}
             <div className="flex items-center justify-between text-[13px]">
               <span className="text-gray-500">You save</span>
               <span className="font-bold text-[#00a05a]">৳{pricing.tierDiscount.toLocaleString()}</span>
             </div>
-            <div className="mt-1 flex items-center justify-between">
-              <span className="text-[14px] font-bold text-gray-800">Total</span>
-              <span className="text-[18px] font-bold text-[#c3272b]">
-                ৳{pricing.total.toLocaleString()}
+            <div className="mt-1 flex items-center justify-between gap-3">
+              <span className="text-[14px] font-bold text-[#c3272b]">Total</span>
+              <span className="flex items-baseline gap-2 whitespace-nowrap">
+                <span className="text-[18px] font-bold text-[#c3272b]">
+                  ৳{pricing.total.toLocaleString()}
+                </span>
+                {/* Regular total, so the bundle saving is visible on the price itself. */}
+                {pricing.regularTotal > pricing.total ? (
+                  <span className="text-[12.5px] text-gray-400 line-through">
+                    ৳{pricing.regularTotal.toLocaleString()}
+                  </span>
+                ) : null}
               </span>
             </div>
           </div>
@@ -339,9 +344,13 @@ export default function BuildYourOwnBundle({ bundles }: { bundles: CustomBundle[
             {!canAdd ? (
               <p className="m-0 mb-2 flex items-center justify-center gap-1 text-center text-[12px] text-gray-500">
                 <span className="mi text-[15px] leading-none text-gray-400">info</span>
-                {`Select ${tierCount - selected.length} more product${
-                  tierCount - selected.length === 1 ? '' : 's'
-                }.`}
+                {!allFilled
+                  ? `Select ${tierCount - selected.length} more product${
+                      tierCount - selected.length === 1 ? '' : 's'
+                    }.`
+                  : `Choose ${giftLimit - chosenGifts.length} more free gift${
+                      giftLimit - chosenGifts.length === 1 ? '' : 's'
+                    }.`}
               </p>
             ) : null}
             <button
@@ -356,6 +365,15 @@ export default function BuildYourOwnBundle({ bundles }: { bundles: CustomBundle[
           </div>
         </div>
       ) : null}
+
+      <GiftChoiceModal
+        open={giftOpen}
+        gifts={gifts}
+        limit={giftLimit}
+        selectedIds={chosenGiftIds}
+        onChange={setChosenGiftIds}
+        onClose={() => setGiftOpen(false)}
+      />
 
       <ProductPickerModal
         open={picking !== null}

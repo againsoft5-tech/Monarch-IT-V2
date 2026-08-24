@@ -20,9 +20,8 @@ export type CartItem = {
    * discounted bundle price and these are the products it contains, shown nested under it.
    */
   bundleItems?: CartBundleChild[]
-  /** Free gift unlocked with a bundle line — a product name or custom text. */
-  giftLabel?: string
-  giftImage?: string
+  /** Free gifts unlocked with a bundle line — product names or custom text. */
+  giftItems?: { name: string; image?: string; slug?: string }[]
 }
 
 export const initialCartItems: CartItem[] = []

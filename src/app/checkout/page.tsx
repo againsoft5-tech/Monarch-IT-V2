@@ -6,6 +6,8 @@ import Link from 'next/link'
 import Breadcrumbs from '@/components/category/Breadcrumbs'
 import { useCart } from '@/context/CartContext'
 import { DISTRICTS, UPAZILAS } from '@/data/bdLocations'
+import BundleLineDetails from '@/components/cart/BundleLineDetails'
+import CartLineThumb from '@/components/cart/CartLineThumb'
 
 function CashOnDeliveryIcon({ className = '' }: { className?: string }) {
   return (
@@ -364,13 +366,7 @@ export default function CheckoutPage() {
                   {items.map((item) => (
                     <div key={item.id} className="flex gap-3.5 items-start">
                       <div className="w-[62px] h-[62px] shrink-0 bg-gray-50 border border-gray-100 rounded-2xl flex items-center justify-center p-1">
-                        <Image
-                          src={item.image}
-                          alt={item.name}
-                          width={54}
-                          height={54}
-                          className="max-w-full max-h-full object-contain"
-                        />
+                        <CartLineThumb item={item} size={54} />
                       </div>
 
                       <div className="flex-1 min-w-0 flex flex-col gap-2">
@@ -380,6 +376,8 @@ export default function CheckoutPage() {
                         >
                           {item.name}
                         </Link>
+
+                        <BundleLineDetails item={item} />
 
                         <div className="flex items-center gap-1.5 flex-wrap">
                           <span className="text-[13.5px] font-bold text-[#d32f2f]">

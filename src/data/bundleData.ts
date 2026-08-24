@@ -12,6 +12,9 @@ import { categoryProductsMap } from './categoryProducts'
 export type BundleDiscountType = 'percent' | 'fixed'
 
 /** Smallest and largest number of products a bundle may contain / a customer may pick. */
+/** Nobody should be handing out more than this many gifts on one tier. */
+export const MAX_GIFT_PICKS = 4
+
 export const MIN_BUNDLE_PRODUCTS = 2
 export const MAX_BUNDLE_PRODUCTS = 4
 /** The product counts a tier can be defined for. */
@@ -61,6 +64,11 @@ export type BundleTier = {
   discountType: BundleDiscountType
   discountValue: number
   gifts: BundleGiftItem[]
+  /**
+   * How many gifts from the list the customer may keep. Defaults to 1, so a tier
+   * that never sets it behaves like a plain "pick one" offer.
+   */
+  giftLimit?: number
 }
 
 /** Admin-authored fixed bundle shown on "Shop Your Bundles". */
@@ -167,8 +175,26 @@ export function normalizeTiers(tiers: unknown): BundleTier[] {
       discountType: (tier.discountType ?? 'fixed') as BundleDiscountType,
       discountValue: tier.discountValue ?? 0,
       gifts: normalizeGifts(tier.gifts ?? tier.gift),
+      giftLimit: clampGiftLimit(tier.giftLimit),
     }
   })
+}
+
+/** Keeps a stored/edited limit inside 1..MAX_GIFT_PICKS. */
+export function clampGiftLimit(value: unknown): number {
+  const n = Math.round(Number(value))
+  if (!Number.isFinite(n)) return 1
+  return Math.max(1, Math.min(MAX_GIFT_PICKS, n))
+}
+
+/**
+ * How many gifts the customer actually gets to keep.
+ *
+ * Capped by the pool: promising 3 picks from a 2-gift list would render a slot
+ * that can never be filled.
+ */
+export function giftPickLimit(gifts: BundleGiftItem[], giftLimit?: number): number {
+  return Math.min(clampGiftLimit(giftLimit), gifts.length)
 }
 
 /** A blank tier set covering every supported product count. */
@@ -178,6 +204,7 @@ export function defaultTiers(): BundleTier[] {
     discountType: 'fixed' as BundleDiscountType,
     discountValue: 0,
     gifts: [],
+    giftLimit: 1,
   }))
 }
 
@@ -201,6 +228,8 @@ export type BundlePricing = {
   tier?: BundleTier
   /** Gifts unlocked by the applied tier — empty when the tier offers none. */
   gifts: BundleGiftItem[]
+  /** How many of those gifts the customer keeps. */
+  giftLimit: number
 }
 
 /**
@@ -231,21 +260,41 @@ export function computeBundlePricing(products: BundleProduct[], tiers: BundleTie
     total: Math.max(0, subtotal - tierDiscount),
     tier,
     gifts: tier?.gifts ?? [],
+    giftLimit: giftPickLimit(tier?.gifts ?? [], tier?.giftLimit),
   }
 }
 
 /**
- * The gift a bundle line actually carries.
+ * The gifts a bundle line actually carries.
  *
- * A single configured gift is granted automatically — the customer never has to
- * ask for it — so it resolves even with no explicit choice. With several on
- * offer the customer's pick decides, falling back to the first so a bundle is
+ * When the list is no longer than the allowance every gift is simply granted —
+ * there is nothing to choose between, so the customer never has to ask. Once the
+ * list is longer their picks decide, falling back to the first few so a bundle is
  * never added to the cart with an empty gift slot.
  */
-export function resolveGift(gifts: BundleGiftItem[], chosenId?: string): BundleGiftItem | undefined {
-  if (gifts.length === 0) return undefined
-  if (gifts.length === 1) return gifts[0]
-  return gifts.find((g) => g.id === chosenId) ?? gifts[0]
+export function resolveGifts(
+  gifts: BundleGiftItem[],
+  chosenIds: string[] = [],
+  giftLimit?: number,
+): BundleGiftItem[] {
+  const limit = giftPickLimit(gifts, giftLimit)
+  if (limit === 0) return []
+  if (gifts.length <= limit) return gifts
+
+  const picked = chosenIds
+    .map((id) => gifts.find((g) => g.id === id))
+    .filter((g): g is BundleGiftItem => Boolean(g))
+    .slice(0, limit)
+
+  if (picked.length === limit) return picked
+  // Top up from the front, skipping anything already picked.
+  const rest = gifts.filter((g) => !picked.some((x) => x.id === g.id))
+  return [...picked, ...rest].slice(0, limit)
+}
+
+/** Whether the tier hands out every gift it lists, with nothing to choose. */
+export function giftsAreAutomatic(gifts: BundleGiftItem[], giftLimit?: number): boolean {
+  return gifts.length > 0 && gifts.length <= giftPickLimit(gifts, giftLimit)
 }
 
 /* ------------------------------------------------------------------ seeds */
@@ -325,7 +374,10 @@ function buildDefaultDB(): BundleDB {
       name: seed.name,
       active: true,
       products,
-      tiers: seedTiers(seed.off, seed.gifts),
+      // Normalised like a stored record, so an editor seeded from this constant
+      // is byte-identical to what `readDB` hands back — otherwise every editor
+      // opens permanently "dirty".
+      tiers: normalizeTiers(seedTiers(seed.off, seed.gifts)),
       createdAt: SEED_DATE,
       updatedAt: SEED_DATE,
     }
@@ -345,14 +397,16 @@ function buildDefaultDB(): BundleDB {
         name: 'Build Your Own Bundle',
         active: true,
         tabs,
-        tiers: [
+        tiers: normalizeTiers([
           { count: 2, discountType: 'fixed', discountValue: 1500, gifts: [] },
           { count: 3, discountType: 'percent', discountValue: 8, gifts: seedTextGift('custom-3', 'Free T-Shirt', TSHIRT_GIFT_IMAGE) },
           {
             count: 4,
             discountType: 'percent',
             discountValue: 12,
-            // A mixed pool — two catalog products plus a custom gift — so the customer picks one.
+            // Four on offer, two kept: the customer picks which pair they want.
+            giftLimit: 2,
+            // A mixed pool — catalog products plus custom gifts — so there is a real choice.
             gifts: [
               ...['aolion-al-ns2258-t-wireless-controller', 'rapoo-v600se-black-wireless-game-pad']
                 .map(seedProduct)
@@ -368,7 +422,7 @@ function buildDefaultDB(): BundleDB {
               ...seedTextGift('custom-4-tshirt', 'Free T-Shirt', TSHIRT_GIFT_IMAGE),
             ],
           },
-        ],
+        ]),
         createdAt: SEED_DATE,
         updatedAt: SEED_DATE,
       },

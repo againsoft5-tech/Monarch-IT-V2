@@ -3,6 +3,7 @@
 import GiftItemsEditor from '@/components/admin/bundles/GiftItemsEditor'
 import {
   BUNDLE_TIER_COUNTS,
+  clampGiftLimit,
   type BundleTier,
   type BundleTierCount,
 } from '@/data/bundleData'
@@ -29,6 +30,7 @@ export default function TierEditor({ tiers, onChange, hint, counts = BUNDLE_TIER
       discountType: 'fixed',
       discountValue: 0,
       gifts: [],
+      giftLimit: 1,
     }
 
   const patch = (count: BundleTierCount, next: Partial<BundleTier>) => {
@@ -81,7 +83,12 @@ export default function TierEditor({ tiers, onChange, hint, counts = BUNDLE_TIER
               <p className="m-0 mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-gray-400">
                 Free gift
               </p>
-              <GiftItemsEditor gifts={tier.gifts} onChange={(gifts) => patch(count, { gifts })} />
+              <GiftItemsEditor
+                gifts={tier.gifts}
+                limit={tier.giftLimit}
+                onChange={(gifts) => patch(count, { gifts })}
+                onLimitChange={(giftLimit) => patch(count, { giftLimit: clampGiftLimit(giftLimit) })}
+              />
             </div>
           )
         })}

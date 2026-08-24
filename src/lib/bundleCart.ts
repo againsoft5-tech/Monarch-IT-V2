@@ -1,5 +1,5 @@
 import type { CartItem } from '@/data/cart'
-import { computeBundlePricing, resolveGift, type BundleProduct, type BundleTier } from '@/data/bundleData'
+import { computeBundlePricing, resolveGifts, type BundleProduct, type BundleTier } from '@/data/bundleData'
 
 /**
  * Builds the single cart line that represents a whole bundle.
@@ -18,12 +18,12 @@ export function bundleToCartItem(input: {
   slug: string
   products: BundleProduct[]
   tiers: BundleTier[]
-  /** Which gift the customer picked, when the tier offers several. */
-  chosenGiftId?: string
+  /** Which gifts the customer picked, when the tier offers more than it grants. */
+  chosenGiftIds?: string[]
 }): CartItem {
-  const { cartId, name, image, slug, products, tiers, chosenGiftId } = input
+  const { cartId, name, image, slug, products, tiers, chosenGiftIds } = input
   const pricing = computeBundlePricing(products, tiers)
-  const gift = resolveGift(pricing.gifts, chosenGiftId)
+  const gifts = resolveGifts(pricing.gifts, chosenGiftIds, pricing.giftLimit)
 
   return {
     id: cartId,
@@ -43,7 +43,8 @@ export function bundleToCartItem(input: {
       image: p.image,
       price: p.priceNew,
     })),
-    giftLabel: gift?.name,
-    giftImage: gift?.image,
+    giftItems: gifts.length
+      ? gifts.map((g) => ({ name: g.name, image: g.image, slug: g.slug }))
+      : undefined,
   }
 }

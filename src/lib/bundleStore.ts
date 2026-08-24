@@ -48,7 +48,7 @@ function nowIso() {
  * seeds merged in once — stamping the version means a bundle the admin deleted stays
  * deleted instead of reappearing on every page load.
  */
-const SEED_VERSION = 5
+const SEED_VERSION = 6
 
 type StoredDB = BundleDB & { seedVersion?: number }
 
@@ -165,6 +165,18 @@ export function searchCatalog(query: string, limit = 12): CategoryProduct[] {
     }
   }
   return out
+}
+
+/**
+ * Finds a catalog product by its exact name.
+ *
+ * Cart lines written before gift slugs were stored carry only a name, so this
+ * recovers the product page link for them rather than leaving the badge dead.
+ */
+export function catalogProductByName(name: string): CategoryProduct | undefined {
+  const needle = name.trim().toLowerCase()
+  if (!needle) return undefined
+  return catalog().find((p) => p.name.trim().toLowerCase() === needle)
 }
 
 /** First page of the catalog, so a picker can be browsed before anything is typed. */

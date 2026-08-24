@@ -1,10 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import Image from 'next/image'
 import Link from 'next/link'
 import Breadcrumbs from '@/components/category/Breadcrumbs'
 import { useCart } from '@/context/CartContext'
+import BundleLineDetails from '@/components/cart/BundleLineDetails'
+import CartLineThumb from '@/components/cart/CartLineThumb'
 
 export default function CartPage() {
   const { items, subtotal, discount, total, couponMessage, applyCoupon, updateQty, removeItem } = useCart()
@@ -47,13 +48,7 @@ export default function CartPage() {
                     className="flex flex-wrap sm:flex-nowrap items-start gap-4 py-4 border-b border-gray-100 last:border-b-0 last:pb-1"
                   >
                     <div className="w-[78px] h-[78px] shrink-0 bg-[#f5f5f7] border border-gray-200 rounded-2xl flex items-center justify-center p-1.5">
-                      <Image
-                        src={item.image}
-                        alt={item.name}
-                        width={70}
-                        height={70}
-                        className="max-w-full max-h-full object-contain rounded-lg"
-                      />
+                      <CartLineThumb item={item} size={70} />
                     </div>
 
                     <div className="flex-1 min-w-0">
@@ -63,6 +58,8 @@ export default function CartPage() {
                       >
                         {item.name}
                       </Link>
+
+                      <BundleLineDetails item={item} />
 
                       <div className="flex items-center justify-between gap-3 flex-wrap mt-3">
                         <div className="flex items-center h-[38px] w-[116px] bg-[#f5f5f7] rounded-full overflow-hidden">
