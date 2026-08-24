@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -10,7 +10,7 @@ import type { OffersPageContent } from '@/lib/live-edit/offers-page'
 import { DEFAULT_OFFERS_PAGE, ensureOffersContent } from '@/lib/live-edit/offers-page'
 import BundlesPage from '@/components/bundles/BundlesPage'
 import { useCouponStore } from '@/lib/couponStore'
-import { bestCouponForProduct } from '@/data/couponData'
+import { bestCouponForProduct, effectivePrice } from '@/data/couponData'
 import { everyOffersProduct, productsForTab } from '@/lib/live-edit/offers-catalog'
 import { useAuth } from '@/context/AuthContext'
 import { useCart } from '@/context/CartContext'
@@ -123,6 +123,12 @@ export default function DealsPage({ content }: Props = {}) {
   const activePanel = (tabs.find((t) => t.id === activeDeal) ?? tabs[0])?.panel
   const showBundles = activePanel === 'bundles'
   const couponDb = useCouponStore()
+  const couponList = useMemo(() => Object.values(couponDb.coupons), [couponDb])
+  // Same price the card shows, so the slider and sort never disagree with it.
+  const priceOf = useCallback(
+    (p: { slug: string; priceNew: number }) => effectivePrice(couponList, p),
+    [couponList],
+  )
 
   // A tab the admin just hid/removed must not strand the grid on an empty selection.
   useEffect(() => {
@@ -147,8 +153,8 @@ export default function DealsPage({ content }: Props = {}) {
     if (!page.tabs.some((t) => t.panel === 'coupons')) return fromTabs
     return [...fromTabs, ...everyOffersProduct('')]
   }, [page.tabs])
-  const priceMinDefault = allProducts.length ? Math.min(...allProducts.map((p) => p.priceNew)) : 0
-  const priceMaxDefault = allProducts.length ? Math.max(...allProducts.map((p) => p.priceNew)) : 0
+  const priceMinDefault = allProducts.length ? Math.min(...allProducts.map(priceOf)) : 0
+  const priceMaxDefault = allProducts.length ? Math.max(...allProducts.map(priceOf)) : 0
 
   const chipRef = useRef<HTMLDivElement>(null)
   const [chipAtStart, setChipAtStart] = useState(true)
@@ -273,11 +279,10 @@ export default function DealsPage({ content }: Props = {}) {
   }
 
   const filtered = useMemo(() => {
-    let list = dealProducts.filter((p) => p.priceNew >= priceMin && p.priceNew <= priceMax)
+    let list = dealProducts.filter((p) => priceOf(p) >= priceMin && priceOf(p) <= priceMax)
     // A coupon tab is the same grid, narrowed to what actually carries an offer.
     if (activePanel === 'coupons') {
-      const coupons = Object.values(couponDb.coupons)
-      list = list.filter((p) => Boolean(bestCouponForProduct(coupons, p)))
+      list = list.filter((p) => Boolean(bestCouponForProduct(couponList, p)))
     }
     if (selectedBrands.length) {
       list = list.filter((p) => selectedBrands.includes(p.name.split(' ')[0]))
@@ -286,10 +291,10 @@ export default function DealsPage({ content }: Props = {}) {
       list = list.filter(() => selectedAvailability.includes('In Stock'))
     }
     if (sort === 'best-seller') list = [...list].sort((a, b) => b.reviews - a.reviews)
-    if (sort === 'price-asc') list = [...list].sort((a, b) => a.priceNew - b.priceNew)
-    if (sort === 'price-desc') list = [...list].sort((a, b) => b.priceNew - a.priceNew)
+    if (sort === 'price-asc') list = [...list].sort((a, b) => priceOf(a) - priceOf(b))
+    if (sort === 'price-desc') list = [...list].sort((a, b) => priceOf(b) - priceOf(a))
     return list
-  }, [dealProducts, priceMin, priceMax, selectedBrands, selectedAvailability, sort, activePanel, couponDb])
+  }, [dealProducts, priceMin, priceMax, selectedBrands, selectedAvailability, sort, activePanel, couponList, priceOf])
 
   const visibleCount = pagesShown * pageSize
   const paged = filtered.slice(0, visibleCount)

@@ -138,6 +138,29 @@ export function bestCouponForProduct(
   return best
 }
 
+/**
+ * The best coupon that is *certain* to apply to this product on its own.
+ *
+ * A `minOrder` coupon only bites once the cart subtotal reaches it, so it cannot be
+ * folded into a listed price — unless the product alone already clears the minimum,
+ * in which case any cart holding it qualifies. Anything conditional stays an advert
+ * (the badge) rather than a price, so the number shown is always the number charged.
+ */
+export function guaranteedCouponForProduct(
+  coupons: Coupon[],
+  product: CouponProduct,
+  now = Date.now(),
+): { coupon: Coupon; discount: number } | undefined {
+  const certain = coupons.filter((c) => !c.minOrder || product.priceNew >= c.minOrder)
+  return bestCouponForProduct(certain, product, now)
+}
+
+/** Listed price after any guaranteed coupon — the number filters and sorts must use. */
+export function effectivePrice(coupons: Coupon[], product: CouponProduct, now = Date.now()): number {
+  const hit = guaranteedCouponForProduct(coupons, product, now)
+  return hit ? Math.max(0, product.priceNew - hit.discount) : product.priceNew
+}
+
 export type CouponCartLine = { slug: string; price: number; qty: number }
 
 /**

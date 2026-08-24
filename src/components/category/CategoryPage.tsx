@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -13,6 +13,8 @@ import { categoryProductToCompare } from '@/lib/compareAdapter'
 import { useToast, Toast } from '@/components/ui/Toast'
 import ProductCard from '@/components/ui/ProductCard'
 import ChatWidget from '@/components/chat/ChatWidget'
+import { useCouponList } from '@/components/ui/CouponBadge'
+import { effectivePrice } from '@/data/couponData'
 
 type Props = {
   categoryName: string
@@ -41,6 +43,22 @@ export default function CategoryPage({
   hero,
   about,
 }: Props) {
+  const coupons = useCouponList()
+  // Filter, sort and the slider all read the price the card shows — otherwise a
+  // coupon product silently falls outside the range the customer just set.
+  const priceOf = useCallback(
+    (p: { slug: string; priceNew: number }) => effectivePrice(coupons, p),
+    [coupons],
+  )
+
+  /**
+   * Slider range, derived from the shown prices rather than the raw ones handed in.
+   * A coupon can push a product below the catalog minimum, and a floor above it would
+   * filter that product out before the customer touched anything.
+   */
+  const boundLow = products.length ? Math.min(...products.map(priceOf)) : priceMinDefault
+  const boundHigh = products.length ? Math.max(...products.map(priceOf)) : priceMaxDefault
+
   const router = useRouter()
   const { isLoggedIn } = useAuth()
   const { addItems } = useCart()
@@ -49,8 +67,8 @@ export default function CategoryPage({
   const [brandSectionOpen, setBrandSectionOpen] = useState(true)
   const [selectedBrands, setSelectedBrands] = useState<string[]>([])
   const [selectedAvailability, setSelectedAvailability] = useState<string[]>([])
-  const [priceMin, setPriceMin] = useState(priceMinDefault)
-  const [priceMax, setPriceMax] = useState(priceMaxDefault)
+  const [priceMin, setPriceMin] = useState(boundLow)
+  const [priceMax, setPriceMax] = useState(boundHigh)
   const [sort, setSort] = useState<'default' | 'best-seller' | 'price-asc' | 'price-desc'>('default')
   const [sortOpen, setSortOpen] = useState(false)
   const sortRef = useRef<HTMLDivElement>(null)
@@ -154,7 +172,7 @@ export default function CategoryPage({
   }
 
   const filtered = useMemo(() => {
-    let list = products.filter((p) => p.priceNew >= priceMin && p.priceNew <= priceMax)
+    let list = products.filter((p) => priceOf(p) >= priceMin && priceOf(p) <= priceMax)
     if (selectedBrands.length) {
       list = list.filter((p) => selectedBrands.includes(p.name.split(' ')[0]))
     }
@@ -162,8 +180,8 @@ export default function CategoryPage({
       list = list.filter(() => selectedAvailability.includes('In Stock'))
     }
     if (sort === 'best-seller') list = [...list].sort((a, b) => b.reviews - a.reviews)
-    if (sort === 'price-asc') list = [...list].sort((a, b) => a.priceNew - b.priceNew)
-    if (sort === 'price-desc') list = [...list].sort((a, b) => b.priceNew - a.priceNew)
+    if (sort === 'price-asc') list = [...list].sort((a, b) => priceOf(a) - priceOf(b))
+    if (sort === 'price-desc') list = [...list].sort((a, b) => priceOf(b) - priceOf(a))
     return list
   }, [products, priceMin, priceMax, selectedBrands, selectedAvailability, sort])
 
@@ -173,8 +191,8 @@ export default function CategoryPage({
 
   const inStockCount = products.length
   const bestPriceCount = products.filter((p) => p.discountPct > 0).length
-  const priceLow = products.length ? Math.min(...products.map((p) => p.priceNew)) : 0
-  const priceHigh = products.length ? Math.max(...products.map((p) => p.priceNew)) : 0
+  const priceLow = boundLow
+  const priceHigh = boundHigh
 
   const today = new Date()
   const updatedDate = `${String(today.getDate()).padStart(2, '0')}-${String(today.getMonth() + 1).padStart(2, '0')}-${today.getFullYear()}`
@@ -225,8 +243,8 @@ export default function CategoryPage({
               <button
                 type="button"
                 onClick={() => {
-                  setPriceMin(priceMinDefault)
-                  setPriceMax(priceMaxDefault)
+                  setPriceMin(boundLow)
+                  setPriceMax(boundHigh)
                   setSelectedBrands([])
                   setSelectedAvailability([])
                   setPagesShown(1)
@@ -260,21 +278,21 @@ export default function CategoryPage({
                   className="absolute h-1.5 rounded-full bg-[#c3272b]"
                   style={{
                     left: `${
-                      priceMaxDefault > priceMinDefault
-                        ? ((priceMin - priceMinDefault) / (priceMaxDefault - priceMinDefault)) * 100
+                      boundHigh > boundLow
+                        ? ((priceMin - boundLow) / (boundHigh - boundLow)) * 100
                         : 0
                     }%`,
                     right: `${
-                      priceMaxDefault > priceMinDefault
-                        ? 100 - ((priceMax - priceMinDefault) / (priceMaxDefault - priceMinDefault)) * 100
+                      boundHigh > boundLow
+                        ? 100 - ((priceMax - boundLow) / (boundHigh - boundLow)) * 100
                         : 0
                     }%`,
                   }}
                 />
                 <input
                   type="range"
-                  min={priceMinDefault}
-                  max={priceMaxDefault}
+                  min={boundLow}
+                  max={boundHigh}
                   value={priceMin}
                   onChange={(e) => {
                     setPriceMin(Math.min(Number(e.target.value), priceMax))
@@ -284,8 +302,8 @@ export default function CategoryPage({
                 />
                 <input
                   type="range"
-                  min={priceMinDefault}
-                  max={priceMaxDefault}
+                  min={boundLow}
+                  max={boundHigh}
                   value={priceMax}
                   onChange={(e) => {
                     setPriceMax(Math.max(Number(e.target.value), priceMin))

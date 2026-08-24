@@ -1,7 +1,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import type { CategoryProduct } from '@/data/categoryProducts'
-import CouponBadge from '@/components/ui/CouponBadge'
+import CouponBadge, { useEffectivePrice } from '@/components/ui/CouponBadge'
 
 /** Ribbon captions are capped by character count so every band truncates at the same point. */
 const RIBBON_LABEL_MAX = 10
@@ -27,6 +27,10 @@ export default function ProductCard({
   ribbonLabel?: string
   ribbonEyebrow?: string
 }) {
+  // Includes any coupon guaranteed to apply, so the card never quotes a price the
+  // cart will not honour.
+  const shownPrice = useEffectivePrice(p)
+
   return (
     <div className="flex flex-col">
       <Link
@@ -73,8 +77,8 @@ export default function ProductCard({
           </Link>
         </div>
         <div className="flex items-center gap-1.5 flex-wrap mb-3.5">
-          <span className="text-[13px] md:text-base font-bold text-[#c3272b]"><span className="font-medium">৳</span><span className="font-price">{p.priceNew.toLocaleString()}</span></span>
-          {p.priceOld > p.priceNew && (
+          <span className="text-[13px] md:text-base font-bold text-[#c3272b]"><span className="font-medium">৳</span><span className="font-price">{shownPrice.toLocaleString()}</span></span>
+          {p.priceOld > shownPrice && (
             <span className="text-[10px] md:text-[11px] text-gray-400 line-through">৳{p.priceOld.toLocaleString()}</span>
           )}
           {p.discountPct > 0 && (
