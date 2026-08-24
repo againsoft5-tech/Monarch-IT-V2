@@ -118,7 +118,7 @@ function BundleCard({
           list, price and CTA. flex-1 (not mt-auto) so the panel starts directly under the
           fixed-height image block and stretches to the bottom: every card in the row then
           shows the same tinted rectangle, however many products or gifts it carries. */}
-      <div className="flex min-w-0 flex-1 flex-col rounded-2xl bg-[#f5f6fa] p-4">
+      <div className="flex min-w-0 flex-1 flex-col rounded-t-2xl rounded-b-[35px] bg-[#f5f6fa] p-4">
       {/* Grows to absorb the height difference, keeping price and CTA on the bottom edge. */}
       <div className="flex min-w-0 flex-1 flex-col">
       <ul className="flex min-w-0 list-none flex-col gap-1.5 p-0">

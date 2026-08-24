@@ -67,13 +67,13 @@ export default function GiftChoiceModal({ open, gifts, limit, selectedIds, onCha
           </button>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
+        <div className="thin-scroll-gray min-h-0 flex-1 overflow-y-auto px-5 py-4">
           <div className="grid grid-cols-2 gap-3">
             {gifts.map((g) => {
               const on = selectedIds.includes(g.id)
-              // With the allowance used up, only the chosen ones stay clickable —
-              // picking a fourth from a "keep 3" offer has no sensible meaning.
-              const full = !on && selectedIds.length >= limit
+              // Only a multi-pick offer locks out extras once the allowance is spent:
+              // with a single pick, clicking another gift means "swap to this one".
+              const full = limit > 1 && !on && selectedIds.length >= limit
               return (
                 <button
                   key={g.id}
@@ -81,10 +81,13 @@ export default function GiftChoiceModal({ open, gifts, limit, selectedIds, onCha
                   aria-pressed={on}
                   disabled={full}
                   onClick={() => {
-                    const next = on ? selectedIds.filter((id) => id !== g.id) : [...selectedIds, g.id]
-                    onChange(next)
-                    // A single-pick offer has nothing left to decide.
-                    if (limit === 1 && !on) onClose()
+                    if (limit === 1) {
+                      // Replace rather than accumulate, then close: nothing left to decide.
+                      onChange([g.id])
+                      onClose()
+                      return
+                    }
+                    onChange(on ? selectedIds.filter((id) => id !== g.id) : [...selectedIds, g.id])
                   }}
                   className={`flex flex-col items-center justify-start gap-2 rounded-2xl border-2 bg-[#f5f6fa] px-3 py-3 text-center transition-colors disabled:opacity-40 ${
                     on ? 'border-[#0f7a43]' : 'border-transparent hover:border-[#0f7a43]/50'
