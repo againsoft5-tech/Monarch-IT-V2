@@ -348,7 +348,7 @@ export default function BuildYourOwnBundle({
 
       {/* Summary */}
       {pricing ? (
-        <div className="mx-auto max-w-[560px] overflow-hidden rounded-2xl bg-[#f5f6fa]">
+        <div className="mx-auto max-w-[560px] overflow-hidden rounded-t-[20px] rounded-b-[35px] bg-[#f5f6fa]">
           <ul className="m-0 flex list-none flex-col p-0">
             {selected.map((p, i) => (
               <li key={p.slug} className="flex items-center gap-3 border-b border-white px-4 py-2.5">
