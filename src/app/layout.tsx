@@ -37,7 +37,20 @@ const taka = localFont({
   declarations: [{ prop: "unicode-range", value: "U+09F3" }],
 });
 
+/**
+ * Absolute base for metadata URLs (canonicals, OG images).
+ *
+ * Without this Next resolves relative metadata URLs against localhost, so a shared
+ * link would advertise a preview image nobody else can load.
+ */
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL ||
+  (process.env.VERCEL_PROJECT_PRODUCTION_URL
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+    : 'http://localhost:3000')
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: "Monarchit | Top Tech Product Store in Bangladesh",
   description:
     "Monarchit is Bangladesh's top retailer for laptops, computers, gaming PCs, components, accessories, and gadgets, offering the latest tech at unbeatable prices.",
