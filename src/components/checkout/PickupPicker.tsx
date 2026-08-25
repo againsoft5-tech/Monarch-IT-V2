@@ -1,7 +1,5 @@
 'use client'
 
-import { useState } from 'react'
-
 const RED = '#d32f2f'
 
 export type PickupPoint = {
@@ -41,15 +39,15 @@ export const PICKUP_POINTS: PickupPoint[] = [
   {
     key: 'head-office',
     label: 'Head Office',
-    address: 'Shop-SGR-23, Ground Floor, BCS\nComputer City,\nIDB Bhaban, Agargaon, Dhaka-1207',
-    phone: '+880 1332 812 757',
+    address: 'Bs Bhaban, 2nd Floor, 75-76,\nNew Elephant Road, Dhaka-1205',
+    phone: '+880 1332 812 758',
     Icon: OfficeIcon,
   },
   {
     key: 'store',
     label: 'Store',
-    address: 'Bs Bhaban, 2nd Floor, 75-76,\nNew Elephant Road, Dhaka-1205',
-    phone: '+880 1332 812 758',
+    address: 'Shop-SGR-23, Ground Floor, BCS\nComputer City,\nIDB Bhaban, Agargaon, Dhaka-1207',
+    phone: '+880 1332 812 757',
     Icon: StoreIcon,
   },
 ]
@@ -64,9 +62,17 @@ function Caret() {
 /**
  * Where the customer will collect their order.
  *
- * Floats over the form rather than expanding it: the pickup counters are a detour off
- * the payment choice, and pushing the agree-and-order block down each time the method
- * changed made the form jump under the cursor.
+ * Floats over the form rather than expanding it, and only while the pointer is on it:
+ * a panel parked over the agree-and-order block permanently would cover the very
+ * buttons the customer needs next.
+ *
+ * Visibility is pure CSS (`group-hover`) rather than state — the popup sits inside the
+ * hovered element, so moving from the pill into the panel never counts as leaving. The
+ * gap between them is padding for the same reason; a margin would be a dead zone that
+ * closes the popup mid-reach.
+ *
+ * The keyboard fallback is `focus-visible`, not `focus-within`: a mouse click leaves
+ * focus on the pill, which would pin the panel open exactly as it should not be.
  */
 export default function PickupPicker({
   value,
@@ -75,26 +81,19 @@ export default function PickupPicker({
   value: string
   onChange: (key: string) => void
 }) {
-  const [openKey, setOpenKey] = useState<string | null>(value || PICKUP_POINTS[0].key)
-
   return (
     // Centred on the Pickup pill, and capped so it cannot run off a narrow screen.
-    <div className="absolute left-1/2 top-full z-30 mt-3 w-max max-w-[min(420px,calc(100vw-2rem))] -translate-x-1/2">
+    <div className="invisible absolute left-1/2 top-full z-30 w-max max-w-[min(420px,calc(100vw-2rem))] -translate-x-1/2 pt-3 opacity-0 transition-opacity group-hover/pickup:visible group-hover/pickup:opacity-100 group-focus-visible/pickup:visible group-focus-visible/pickup:opacity-100">
       <div className="relative rounded-full border border-gray-200 bg-white p-2 shadow-[0_8px_24px_rgba(0,0,0,0.08)]">
         <Caret />
         <div className="flex gap-2">
           {PICKUP_POINTS.map((point) => {
             const active = value === point.key
-            const open = active && openKey === point.key
             return (
-              <div key={point.key} className="relative flex-1">
+              <div key={point.key} className="group/point relative flex-1">
                 <button
                   type="button"
-                  onClick={() => {
-                    onChange(point.key)
-                    setOpenKey(open ? null : point.key)
-                  }}
-                  aria-expanded={open}
+                  onClick={() => onChange(point.key)}
                   className={`flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-full border px-3 py-2.5 text-[12px] font-semibold whitespace-nowrap transition-colors ${
                     active
                       ? 'border-[1.5px] border-[#d32f2f] text-[#d32f2f]'
@@ -110,16 +109,11 @@ export default function PickupPicker({
                   </span>
                   <point.Icon className="h-4 w-4 shrink-0" />
                   {point.label}
-                  <i
-                    className={`fa-solid fa-chevron-down text-[10px] transition-transform ${
-                      open ? 'rotate-180' : ''
-                    }`}
-                  />
+                  <i className="fa-solid fa-chevron-down text-[10px] transition-transform group-hover/point:rotate-180" />
                 </button>
 
-                {/* Each counter opens its own card, anchored under its own pill. */}
-                {open ? (
-                  <div className="absolute left-1/2 top-full z-40 mt-2.5 w-max max-w-[min(320px,calc(100vw-2.5rem))] -translate-x-1/2">
+                {/* Each counter has its own card, shown only while that pill is hovered. */}
+                <div className="invisible absolute left-1/2 top-full z-40 w-max max-w-[min(320px,calc(100vw-2.5rem))] -translate-x-1/2 pt-2.5 opacity-0 transition-opacity group-hover/point:visible group-hover/point:opacity-100 group-focus-visible/point:visible group-focus-visible/point:opacity-100">
                     <div className="relative rounded-2xl border border-gray-100 bg-white p-3.5 shadow-[0_10px_28px_rgba(0,0,0,0.12)]">
                       <Caret />
                       <p className="m-0 flex items-start gap-2 text-[12px] leading-relaxed text-gray-700">
@@ -144,8 +138,7 @@ export default function PickupPicker({
                         </a>
                       </div>
                     </div>
-                  </div>
-                ) : null}
+                </div>
               </div>
             )
           })}

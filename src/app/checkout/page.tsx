@@ -328,7 +328,7 @@ export default function CheckoutPage() {
                         { key: 'pickup', label: 'Pickup', Icon: PickupIcon, w: 'w-[14px]' },
                       ] as { key: Payment; label: string; Icon: typeof CashOnDeliveryIcon; w: string }[]
                     ).map((opt) => (
-                      <div key={opt.key} className="relative flex flex-1 min-w-[150px]">
+                      <div key={opt.key} className="group/pickup relative flex flex-1 min-w-[150px]">
                       <button
                         type="button"
                         onClick={() => setPayment(opt.key)}
@@ -349,8 +349,17 @@ export default function CheckoutPage() {
                         {opt.label}
                       </button>
 
-                      {opt.key === 'pickup' && isPickup ? (
-                        <PickupPicker value={pickupPoint} onChange={setPickupPoint} />
+                      {/* Rendered whether or not Pickup is chosen — hovering it is how a
+                          customer finds out the counters exist. Picking one commits to
+                          Pickup, so the choice is not silently discarded. */}
+                      {opt.key === 'pickup' ? (
+                        <PickupPicker
+                          value={isPickup ? pickupPoint : ''}
+                          onChange={(key) => {
+                            setPickupPoint(key)
+                            setPayment('pickup')
+                          }}
+                        />
                       ) : null}
                       </div>
                     ))}
