@@ -6,6 +6,8 @@ import Breadcrumbs from '@/components/category/Breadcrumbs'
 import { useCart } from '@/context/CartContext'
 import BundleLineDetails from '@/components/cart/BundleLineDetails'
 import CartLineThumb from '@/components/cart/CartLineThumb'
+import PromoHints from '@/components/cart/PromoHints'
+import AppliedCoupon from '@/components/cart/AppliedCoupon'
 
 export default function CartPage() {
   const {
@@ -19,6 +21,7 @@ export default function CartPage() {
     appliedCoupons,
     couponAuto,
     couponSavingFor,
+    couponKindFor,
     updateQty,
     removeItem,
   } = useCart()
@@ -81,7 +84,9 @@ export default function CartPage() {
 
                       {couponSavingFor(item) > 0 ? (
                         <span className="mt-1.5 inline-flex w-fit items-center rounded-full bg-[#d32f2f] px-2 py-0.5 text-[10.5px] font-bold text-white">
-                          ৳{couponSavingFor(item).toLocaleString()} OFF Coupon Applied
+                          {couponKindFor(item) === 'price-range'
+                              ? 'Coupon Applied'
+                              : `৳${couponSavingFor(item).toLocaleString()} OFF Coupon Applied`}
                         </span>
                       ) : null}
 
@@ -148,6 +153,9 @@ export default function CartPage() {
                     Apply Coupon
                   </button>
                 </div>
+                <AppliedCoupon onClear={() => setCoupon('')} />
+                  <PromoHints onPick={setCoupon} />
+
                 {couponMessage && (
                   <p
                     className={`text-[11px] mt-2 ${

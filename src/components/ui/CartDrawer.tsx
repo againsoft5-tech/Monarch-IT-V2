@@ -4,7 +4,9 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useCart } from '@/context/CartContext'
 import BundleLineDetails from '@/components/cart/BundleLineDetails'
+import PromoHints from '@/components/cart/PromoHints'
 import CartLineThumb from '@/components/cart/CartLineThumb'
+import AppliedCoupon from '@/components/cart/AppliedCoupon'
 
 export default function CartDrawer() {
   const { items, isOpen, closeCart, removeItem, subtotal, discount, total, couponMessage, applyCoupon } = useCart()
@@ -104,6 +106,9 @@ export default function CartDrawer() {
                 Apply
               </button>
             </div>
+
+            <AppliedCoupon onClear={() => setCoupon('')} />
+                  <PromoHints onPick={setCoupon} />
 
             {couponMessage && (
               <p

@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { categoryProductsMap } from '@/data/categoryProducts'
 import { brandList } from '@/data/brandIndex'
 import { searchCatalog } from '@/lib/bundleStore'
-import { couponOfferLabel, type Coupon } from '@/data/couponData'
+import { couponOfferLabel, type Coupon, type CouponKind } from '@/data/couponData'
 
 const RED = '#bd2026'
 
@@ -55,11 +55,49 @@ export default function CouponEditor({
   const results = query.trim() ? searchCatalog(query, 8) : []
   const scoped =
     coupon.categorySlugs.length > 0 || coupon.brandSlugs.length > 0 || coupon.productSlugs.length > 0
+  const coversNothing = coupon.kind === 'product' && !coupon.appliesToAll && !scoped
 
   const num = (v: string) => (v.trim() === '' ? undefined : Math.max(0, Number(v) || 0))
 
+  const KINDS: { key: CouponKind; label: string; blurb: string }[] = [
+    {
+      key: 'product',
+      label: 'Product coupon',
+      blurb: 'Pick the categories, brands or products it covers. Advertised on those products and applied automatically.',
+    },
+    {
+      key: 'price-range',
+      label: 'Price-range coupon',
+      blurb: 'No product list — it covers whatever the customer buys that has no other offer and reaches the spend below. Only applies once the customer enters the code.',
+    },
+  ]
+
   return (
     <div className="flex flex-col gap-5">
+      <div>
+        <p className="m-0 mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-gray-400">
+          Coupon type
+        </p>
+        <div className="grid gap-2 md:grid-cols-2">
+          {KINDS.map((k) => (
+            <button
+              key={k.key}
+              type="button"
+              onClick={() => patch({ kind: k.key })}
+              aria-pressed={coupon.kind === k.key}
+              className={`rounded-xl border p-3 text-left transition-colors ${
+                coupon.kind === k.key
+                  ? 'border-[#bd2026] bg-[#fdf2f3]'
+                  : 'border-gray-200 bg-white hover:border-gray-300'
+              }`}
+            >
+              <span className="block text-[13px] font-bold text-gray-900">{k.label}</span>
+              <span className="mt-0.5 block text-[11.5px] leading-snug text-gray-500">{k.blurb}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Code + discount */}
       <div className="grid gap-4 md:grid-cols-2">
         <label className="block">
@@ -184,17 +222,73 @@ export default function CouponEditor({
       </div>
 
       {/* Scope */}
+      {coupon.kind === 'price-range' ? (
+        <div>
+          <p className="m-0 mb-1 text-[11px] font-semibold uppercase tracking-wide text-gray-400">
+            Applies to
+          </p>
+          <p className="m-0 mb-2.5 text-[11.5px] text-gray-500">
+            Any cart line with no other offer, once its total (unit price × quantity) falls in
+            this range. Two ৳300 items count as ৳600.
+          </p>
+          <div className="grid gap-3 md:grid-cols-2">
+            <label className="block">
+              <span className="mb-1 block text-[12px] text-gray-600">Line total from (৳)</span>
+              <input
+                type="number"
+                min={0}
+                value={coupon.minLineTotal ?? ''}
+                onChange={(e) => patch({ minLineTotal: num(e.target.value) })}
+                placeholder="500"
+                className="h-10 w-full rounded-lg border border-gray-200 px-3 text-[13px] outline-none focus:border-gray-400"
+              />
+            </label>
+            <label className="block">
+              <span className="mb-1 block text-[12px] text-gray-600">Up to (৳, optional)</span>
+              <input
+                type="number"
+                min={0}
+                value={coupon.maxLineTotal ?? ''}
+                onChange={(e) => patch({ maxLineTotal: num(e.target.value) })}
+                placeholder="No upper limit"
+                className="h-10 w-full rounded-lg border border-gray-200 px-3 text-[13px] outline-none focus:border-gray-400"
+              />
+            </label>
+          </div>
+          <p className="m-0 mt-1.5 text-[11.5px] text-gray-500">
+            Not shown on product pages or cards — the customer applies it in the cart.
+          </p>
+        </div>
+      ) : (
       <div>
         <p className="m-0 mb-1 text-[11px] font-semibold uppercase tracking-wide text-gray-400">
           Applies to
         </p>
-        <p className="m-0 mb-2.5 text-[11.5px] text-gray-500">
-          {scoped
-            ? 'Any product matching one of the lists below.'
-            : 'Every product — add a category, brand or product to narrow it.'}
-        </p>
+        <label className="mb-2 flex items-center gap-2 text-[13px] text-gray-800">
+          <input
+            type="checkbox"
+            checked={coupon.appliesToAll === true}
+            onChange={(e) => patch({ appliesToAll: e.target.checked })}
+          />
+          Every product on the site
+        </label>
 
-        <div className="grid gap-4 md:grid-cols-3">
+        {coupon.appliesToAll ? (
+          <p className="m-0 mb-2.5 text-[11.5px] text-gray-500">
+            Covers the whole catalog. The lists below are ignored.
+          </p>
+        ) : coversNothing ? (
+          <p className="m-0 mb-2.5 text-[11.5px] font-semibold text-[#bd2026]">
+            Nothing selected — this coupon covers no products and will never apply. Pick a
+            category, brand or product below, or tick “Every product”.
+          </p>
+        ) : (
+          <p className="m-0 mb-2.5 text-[11.5px] text-gray-500">
+            Any product matching one of the lists below.
+          </p>
+        )}
+
+        <div className={`grid gap-4 md:grid-cols-3 ${coupon.appliesToAll ? 'pointer-events-none opacity-40' : ''}`}>
           <div>
             <span className="mb-1 block text-[12px] font-semibold text-gray-600">Categories</span>
             <Chips
@@ -280,6 +374,7 @@ export default function CouponEditor({
           </div>
         </div>
       </div>
+      )}
 
       <label className="flex items-center gap-2 text-[13px] text-gray-800">
         <input

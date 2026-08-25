@@ -121,12 +121,13 @@ export function getCoupon(id: string): Coupon | undefined {
   return readDB().coupons[id]
 }
 
-export function createCoupon(code = ''): Coupon {
+export function createCoupon(code = '', kind: Coupon['kind'] = 'product'): Coupon {
   const db = readDB()
   const id = `c-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`
   const coupon = ensureCoupon(
     {
       id,
+      kind,
       code: normalizeCode(code),
       type: 'flat',
       value: 0,

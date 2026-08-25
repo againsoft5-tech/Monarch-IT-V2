@@ -10,8 +10,20 @@ import { getBrandProducts, brandList } from '@/data/brandIndex'
  */
 export type CouponDiscountType = 'percent' | 'flat'
 
+/**
+ * Two ways a coupon decides what it covers.
+ *
+ * - `product`     — scoped to categories / brands / products. Applied automatically
+ *                   and advertised on the product itself.
+ * - `price-range` — a general promo code with no product list: it covers whatever the
+ *                   customer is buying that has no offer of its own and reaches a
+ *                   spend threshold. Never advertised, and only applies once entered.
+ */
+export type CouponKind = 'product' | 'price-range'
+
 export type Coupon = {
   id: string
+  kind: CouponKind
   /** What the customer types — stored uppercase, matched case-insensitively. */
   code: string
   /** Optional strapline shown beside the offer, e.g. "Limited Offer". */
@@ -30,12 +42,26 @@ export type Coupon = {
   used: number
   active: boolean
   /**
-   * Scope. All three empty means "every product" — otherwise the coupon applies to a
-   * product matching ANY of them, so a coupon can cover a category plus a few extras.
+   * Site-wide scope, stated outright.
+   *
+   * Deliberately explicit: an empty scope used to mean "everything", so a coupon saved
+   * before its products were picked quietly discounted the entire catalog. Blanket
+   * coverage now has to be asked for.
+   */
+  appliesToAll?: boolean
+  /**
+   * Scope. A product matching ANY of them is covered, so a coupon can span a category
+   * plus a few extras. All empty (and not `appliesToAll`) covers nothing.
    */
   categorySlugs: string[]
   brandSlugs: string[]
   productSlugs: string[]
+  /**
+   * `price-range` only: the line total (unit price × quantity) a product must reach
+   * before this code touches it. Quantity counts, so two ৳300 items qualify at ৳600.
+   */
+  minLineTotal?: number
+  maxLineTotal?: number
   createdAt: string
   updatedAt: string
 }
@@ -44,6 +70,9 @@ export type CouponDB = { coupons: Record<string, Coupon> }
 
 /** A product as the matcher needs to see it. */
 export type CouponProduct = { slug: string; priceNew: number }
+
+/** One cart row, for the rules that care about quantity. */
+export type CouponCartLine = { slug: string; price: number; qty: number }
 
 /* ------------------------------------------------------------------ lookups */
 
@@ -96,20 +125,40 @@ export function isCouponLive(coupon: Coupon, now = Date.now()): boolean {
   return true
 }
 
-/** Whether the coupon covers this product at all. */
+/** Whether a product-scoped coupon covers this product. Price-range codes never do. */
 export function couponCoversProduct(coupon: Coupon, slug: string): boolean {
-  const scoped =
-    coupon.categorySlugs.length > 0 || coupon.brandSlugs.length > 0 || coupon.productSlugs.length > 0
-  if (!scoped) return true
+  if (coupon.kind !== 'product') return false
+  if (coupon.appliesToAll) return true
+  // Nothing chosen means nothing covered — see `appliesToAll`.
   if (coupon.productSlugs.includes(slug)) return true
   if (coupon.categorySlugs.some((c) => categoryIndex().get(slug)?.includes(c))) return true
   return coupon.brandSlugs.some((b) => brandIndex().get(slug)?.includes(b))
 }
 
-/** Money off a given amount, respecting the percent ceiling. */
-export function couponDiscount(coupon: Coupon, amount: number): number {
+/**
+ * Whether a price-range code's pooled total falls in its range.
+ *
+ * The threshold is tested against the *combined* total of everything with no offer of
+ * its own, and the discount then applies once to that pool. Testing each line
+ * separately would hand out the coupon several times over in one cart.
+ */
+export function priceRangeQualifies(coupon: Coupon, pooledTotal: number): boolean {
+  if (coupon.kind !== 'price-range' || pooledTotal <= 0) return false
+  if (coupon.minLineTotal && pooledTotal < coupon.minLineTotal) return false
+  if (coupon.maxLineTotal && pooledTotal > coupon.maxLineTotal) return false
+  return true
+}
+
+/**
+ * Money off a set of covered items.
+ *
+ * A flat coupon is per unit, so buying two of something doubles the saving — that is
+ * how a "৳50 off" sticker on a product reads. A percent coupon scales by nature.
+ * `maxDiscount` then caps the coupon's whole contribution, once.
+ */
+export function couponDiscount(coupon: Coupon, amount: number, units = 1): number {
   if (amount <= 0) return 0
-  const raw = coupon.type === 'percent' ? (amount * coupon.value) / 100 : coupon.value
+  const raw = coupon.type === 'percent' ? (amount * coupon.value) / 100 : coupon.value * units
   const capped = coupon.maxDiscount ? Math.min(raw, coupon.maxDiscount) : raw
   return Math.max(0, Math.min(Math.round(capped), amount))
 }
@@ -129,6 +178,7 @@ export function bestCouponForProduct(
 ): { coupon: Coupon; discount: number } | undefined {
   let best: { coupon: Coupon; discount: number } | undefined
   for (const coupon of coupons) {
+    if (coupon.kind !== 'product') continue // price-range codes are never advertised
     if (!isCouponLive(coupon, now)) continue
     if (!couponCoversProduct(coupon, product.slug)) continue
     const discount = couponDiscount(coupon, product.priceNew)
@@ -161,8 +211,6 @@ export function effectivePrice(coupons: Coupon[], product: CouponProduct, now = 
   return hit ? Math.max(0, product.priceNew - hit.discount) : product.priceNew
 }
 
-export type CouponCartLine = { slug: string; price: number; qty: number }
-
 /**
  * What a coupon takes off a cart.
  *
@@ -178,10 +226,15 @@ export function couponDiscountForCart(
   if (!isCouponLive(coupon, now)) return 0
   const subtotal = lines.reduce((sum, l) => sum + l.price * l.qty, 0)
   if (coupon.minOrder && subtotal < coupon.minOrder) return 0
-  const eligible = lines
-    .filter((l) => couponCoversProduct(coupon, l.slug))
-    .reduce((sum, l) => sum + l.price * l.qty, 0)
-  return couponDiscount(coupon, eligible)
+  if (coupon.kind === 'price-range') {
+    // One pool, one discount — never per line, and never multiplied by quantity.
+    const pooled = lines.reduce((sum, l) => sum + l.price * l.qty, 0)
+    return priceRangeQualifies(coupon, pooled) ? couponDiscount(coupon, pooled, 1) : 0
+  }
+  const eligible = lines.filter((l) => couponCoversProduct(coupon, l.slug))
+  const amount = eligible.reduce((sum, l) => sum + l.price * l.qty, 0)
+  const units = eligible.reduce((sum, l) => sum + l.qty, 0)
+  return couponDiscount(coupon, amount, units)
 }
 
 /** The single best-value coupon for a cart — one coupon applies, never several. */
@@ -199,6 +252,25 @@ export function bestCouponForCart(
   return best
 }
 
+/**
+ * Plain-language condition for a price-range code, for the note beside the promo box.
+ *
+ * These never apply on their own, so the customer has to be told what unlocks them —
+ * otherwise the code is a secret.
+ */
+export function couponConditionText(coupon: Coupon): string {
+  const off = coupon.type === 'percent'
+    ? `${coupon.value}% off`
+    : `৳${coupon.value.toLocaleString()} off`
+  const range = coupon.minLineTotal
+    ? coupon.maxLineTotal
+      ? `৳${coupon.minLineTotal.toLocaleString()}–৳${coupon.maxLineTotal.toLocaleString()}`
+      : `৳${coupon.minLineTotal.toLocaleString()} or more`
+    : 'any amount'
+  const min = coupon.minOrder ? `, on orders over ৳${coupon.minOrder.toLocaleString()}` : ''
+  return `${off} when your items without an offer total ${range}${min}`
+}
+
 /** Short human label for the offer, e.g. "৳20 OFF" or "10% OFF". */
 export function couponOfferLabel(coupon: Coupon, discount?: number): string {
   if (typeof discount === 'number' && discount > 0) return `৳${discount.toLocaleString()} OFF`
@@ -210,6 +282,7 @@ export function ensureCoupon(raw: Partial<Coupon> | null | undefined, id: string
   const c = raw ?? {}
   return {
     id: c.id || id,
+    kind: c.kind === 'price-range' ? 'price-range' : 'product',
     code: normalizeCode(c.code ?? ''),
     label: c.label || undefined,
     type: c.type === 'percent' ? 'percent' : 'flat',
@@ -221,9 +294,12 @@ export function ensureCoupon(raw: Partial<Coupon> | null | undefined, id: string
     usageLimit: c.usageLimit ? Number(c.usageLimit) : undefined,
     used: Number(c.used) || 0,
     active: c.active !== false,
+    appliesToAll: c.appliesToAll === true,
     categorySlugs: Array.isArray(c.categorySlugs) ? c.categorySlugs : [],
     brandSlugs: Array.isArray(c.brandSlugs) ? c.brandSlugs : [],
     productSlugs: Array.isArray(c.productSlugs) ? c.productSlugs : [],
+    minLineTotal: c.minLineTotal ? Number(c.minLineTotal) : undefined,
+    maxLineTotal: c.maxLineTotal ? Number(c.maxLineTotal) : undefined,
     createdAt: c.createdAt || COUPON_SEED_DATE,
     updatedAt: c.updatedAt || COUPON_SEED_DATE,
   }
@@ -236,6 +312,8 @@ export const COUPON_SEED_DATE = '2026-01-01T00:00:00.000Z'
 
 function seed(input: Partial<Coupon> & Pick<Coupon, 'id' | 'code' | 'type' | 'value'>): Coupon {
   return {
+    kind: 'product',
+    appliesToAll: false,
     label: undefined,
     maxDiscount: undefined,
     minOrder: undefined,
@@ -294,6 +372,16 @@ export const DEFAULT_COUPON_DB: CouponDB = {
           'RK-L98-mechanical-cream-keyboard',
           'oscoo-on901-256gb-ssd',
         ],
+      }),
+      seed({
+        id: 'auto5',
+        kind: 'price-range',
+        code: 'SAVE5',
+        type: 'percent',
+        value: 5,
+        label: 'Spend ৳500+',
+        // Any item without an offer of its own, once that line reaches ৳500.
+        minLineTotal: 500,
       }),
       seed({
         id: 'save500',

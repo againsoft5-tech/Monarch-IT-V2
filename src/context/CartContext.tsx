@@ -4,15 +4,19 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 import { initialCartItems, type CartItem } from '@/data/cart'
 import { useCouponStore } from '@/lib/couponStore'
 import {
+  couponConditionText,
   couponCoversProduct,
   couponDiscount,
   couponDiscountForCart,
   isCouponLive,
   normalizeCode,
+  priceRangeQualifies,
   type Coupon,
 } from '@/data/couponData'
 
 const CART_STORAGE_KEY = 'monarchit_cart'
+/** The code the customer typed. Kept beside the cart so a reload does not undo it. */
+const COUPON_STORAGE_KEY = 'monarchit_cart_coupon'
 
 type CouponMessage = { type: 'success' | 'error'; text: string }
 
@@ -37,8 +41,17 @@ type CartContextType = {
   appliedCoupons: { code: string; discount: number }[]
   /** This line's share of the discount, for its "coupon applied" badge. */
   couponSavingFor: (item: CartItem) => number
+  /** Drops a code the customer entered, so an applied offer is never stuck. */
+  clearCoupon: () => void
   /** The coupon covering this line, if any. */
   couponCodeFor: (item: CartItem) => string | null
+  /** Which kind covers this line — a pooled code shows no per-row figure. */
+  couponKindFor: (item: CartItem) => 'product' | 'price-range' | null
+  /**
+   * Price-range codes the customer could still use, with what unlocks them. These
+   * never apply by themselves, so the cart has to advertise them.
+   */
+  promoHints: { code: string; text: string; usable: boolean }[]
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined)
@@ -55,6 +68,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
     try {
       const stored = localStorage.getItem(CART_STORAGE_KEY)
       if (stored) setItems(JSON.parse(stored))
+      const code = localStorage.getItem(COUPON_STORAGE_KEY)
+      if (code) setManualCoupon(code)
     } catch {
       // ignore malformed/unavailable storage
     }
@@ -67,6 +82,23 @@ export function CartProvider({ children }: { children: ReactNode }) {
       // ignore quota/unavailable storage errors
     }
   }, [items])
+
+  useEffect(() => {
+    try {
+      if (manualCoupon) localStorage.setItem(COUPON_STORAGE_KEY, manualCoupon)
+      else localStorage.removeItem(COUPON_STORAGE_KEY)
+    } catch {
+      // ignore quota/unavailable storage errors
+    }
+  }, [manualCoupon])
+
+  // An emptied cart ends the code with it: the next basket is a fresh decision.
+  useEffect(() => {
+    if (items.length === 0 && manualCoupon) {
+      setManualCoupon(null)
+      setCouponMessage(null)
+    }
+  }, [items.length, manualCoupon])
 
   const removeItem = (id: string) => {
     setItems((prev) => prev.filter((item) => item.id !== id))
@@ -121,16 +153,32 @@ export function CartProvider({ children }: { children: ReactNode }) {
       (c) => isCouponLive(c) && (!c.minOrder || subtotal >= c.minOrder),
     )
 
-    // 1. Assign: each line picks the coupon that would save it the most on its own.
+    // 1. Assign: each line picks the product coupon that would save it the most.
     const assignment = new Map<string, Coupon>()
     for (const line of lines) {
       let best: { coupon: Coupon; discount: number } | undefined
       for (const coupon of usable) {
         if (!couponCoversProduct(coupon, line.slug)) continue
-        const d = couponDiscount(coupon, line.price * line.qty)
+        const d = couponDiscount(coupon, line.price * line.qty, line.qty)
         if (d > 0 && (!best || d > best.discount)) best = { coupon, discount: d }
       }
       if (best) assignment.set(line.slug, best.coupon)
+    }
+
+    /*
+     * A price-range code fills the gaps. It is never automatic — the customer has to
+     * enter it — and it only reaches lines carrying no offer of their own, so it tops
+     * up the cart rather than competing with the coupons already on it.
+     */
+    const typed = manualCoupon
+      ? usable.find((c) => c.code === manualCoupon && c.kind === 'price-range')
+      : undefined
+    if (typed) {
+      const open = lines.filter((l) => !assignment.has(l.slug))
+      const pooled = open.reduce((sum, l) => sum + l.price * l.qty, 0)
+      if (priceRangeQualifies(typed, pooled)) {
+        for (const line of open) assignment.set(line.slug, typed)
+      }
     }
 
     // 2. Total each coupon over the lines it won, so caps apply once.
@@ -147,7 +195,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
 
     // 3. Share each coupon's total back across its lines, for the per-row badges.
-    const perLine = new Map<string, { code: string; amount: number }>()
+    const perLine = new Map<string, { code: string; amount: number; kind: Coupon['kind'] }>()
     for (const entry of byCoupon.values()) {
       const base = entry.lines.reduce((sum, l) => sum + l.price * l.qty, 0)
       let handed = 0
@@ -158,7 +206,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
           ? entry.total - handed
           : Math.round((entry.total * (line.price * line.qty)) / (base || 1))
         handed += share
-        perLine.set(line.slug, { code: entry.coupon.code, amount: share })
+        perLine.set(line.slug, { code: entry.coupon.code, amount: share, kind: entry.coupon.kind })
       })
     }
 
@@ -172,15 +220,45 @@ export function CartProvider({ children }: { children: ReactNode }) {
       coupons,
       total: coupons.reduce((sum, c) => sum + c.discount, 0),
     }
-  }, [couponList, lines, subtotal])
+  }, [couponList, lines, subtotal, manualCoupon])
 
   const appliedCoupons = applied.coupons
   const appliedCoupon = appliedCoupons[0]?.code ?? null
   const discount = Math.min(applied.total, subtotal)
   const total = subtotal - discount
 
+  /**
+   * `usable` marks the ones this cart already qualifies for, so the note can lead with
+   * "you can use this" rather than listing codes that would only be refused.
+   */
+  const promoHints = useMemo(
+    () =>
+      couponList
+        .filter((c) => c.kind === 'price-range' && isCouponLive(c) && c.code !== appliedCoupon)
+        .map((c) => ({
+          code: c.code,
+          text: couponConditionText(c),
+          usable:
+            (!c.minOrder || subtotal >= c.minOrder) &&
+            priceRangeQualifies(
+              c,
+              lines
+                .filter((l) => !applied.perLine.has(l.slug))
+                .reduce((sum, l) => sum + l.price * l.qty, 0),
+            ),
+        }))
+        .sort((a, b) => Number(b.usable) - Number(a.usable)),
+    [couponList, lines, subtotal, applied, appliedCoupon],
+  )
+
+  const clearCoupon = () => {
+    setManualCoupon(null)
+    setCouponMessage(null)
+  }
+
   const couponSavingFor = (item: CartItem) => applied.perLine.get(item.slug)?.amount ?? 0
   const couponCodeFor = (item: CartItem) => applied.perLine.get(item.slug)?.code ?? null
+  const couponKindFor = (item: CartItem) => applied.perLine.get(item.slug)?.kind ?? null
 
   const applyCoupon = (code: string) => {
     const normalized = normalizeCode(code)
@@ -197,25 +275,56 @@ export function CartProvider({ children }: { children: ReactNode }) {
       return
     }
 
+    if (!isCouponLive(coupon)) {
+      setManualCoupon(null)
+      setCouponMessage({ type: 'error', text: 'This promo code is no longer available.' })
+      return
+    }
+
+    if (coupon.minOrder && subtotal < coupon.minOrder) {
+      setManualCoupon(null)
+      setCouponMessage({
+        type: 'error',
+        text: `This code needs a minimum order of ৳${coupon.minOrder.toLocaleString()}.`,
+      })
+      return
+    }
+
+    if (coupon.kind === 'price-range') {
+      // Everything with no offer of its own, pooled — the threshold is on the total.
+      const open = lines.filter(
+        (l) => !applied.perLine.has(l.slug) || applied.perLine.get(l.slug)?.code === coupon.code,
+      )
+      const pooled = open.reduce((sum, l) => sum + l.price * l.qty, 0)
+      if (!priceRangeQualifies(coupon, pooled)) {
+        setManualCoupon(null)
+        setCouponMessage({
+          type: 'error',
+          text: coupon.minLineTotal
+            ? `Your items without an offer come to ৳${pooled.toLocaleString()} — this code needs ৳${coupon.minLineTotal.toLocaleString()}.`
+            : 'This code does not apply to anything in your cart.',
+        })
+        return
+      }
+      setManualCoupon(coupon.code)
+      setCouponMessage({ type: 'success', text: 'Promo code applied successfully!' })
+      return
+    }
+
+    // Product coupons apply on their own, so typing one is a confirmation at most.
     const worth = couponDiscountForCart(coupon, lines)
     if (worth <= 0) {
       setManualCoupon(null)
       setCouponMessage({
         type: 'error',
-        text: coupon.minOrder && subtotal < coupon.minOrder
-          ? `This code needs a minimum order of ৳${coupon.minOrder.toLocaleString()}.`
-          : 'This code does not apply to anything in your cart.',
+        text: 'This code does not apply to anything in your cart.',
       })
       return
     }
-
     setManualCoupon(coupon.code)
-    // Every live coupon is already applied where it fits, so a typed code is a
-    // confirmation rather than a change. Saying so beats a silent no-op.
-    const already = appliedCoupons.some((c) => c.code === coupon.code)
     setCouponMessage({
       type: 'success',
-      text: already
+      text: appliedCoupons.some((c) => c.code === coupon.code)
         ? `${coupon.code} is already applied to your cart.`
         : 'Promo code applied successfully!',
     })
@@ -242,6 +351,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
         appliedCoupons,
         couponSavingFor,
         couponCodeFor,
+        couponKindFor,
+        clearCoupon,
+        promoHints,
       }}
     >
       {children}

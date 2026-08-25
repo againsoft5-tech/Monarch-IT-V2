@@ -8,6 +8,8 @@ import { useCart } from '@/context/CartContext'
 import { DISTRICTS, UPAZILAS } from '@/data/bdLocations'
 import BundleLineDetails from '@/components/cart/BundleLineDetails'
 import CartLineThumb from '@/components/cart/CartLineThumb'
+import PromoHints from '@/components/cart/PromoHints'
+import AppliedCoupon from '@/components/cart/AppliedCoupon'
 
 function CashOnDeliveryIcon({ className = '' }: { className?: string }) {
   return (
@@ -108,6 +110,7 @@ export default function CheckoutPage() {
     appliedCoupons,
     couponAuto,
     couponSavingFor,
+    couponKindFor,
     updateQty,
     removeItem,
   } = useCart()
@@ -400,7 +403,9 @@ export default function CheckoutPage() {
 
                         {couponSavingFor(item) > 0 ? (
                           <span className="inline-flex w-fit items-center rounded-full bg-[#d32f2f] px-2 py-0.5 text-[10.5px] font-bold text-white">
-                            ৳{couponSavingFor(item).toLocaleString()} OFF Coupon Applied
+                            {couponKindFor(item) === 'price-range'
+                              ? 'Coupon Applied'
+                              : `৳${couponSavingFor(item).toLocaleString()} OFF Coupon Applied`}
                           </span>
                         ) : null}
 
@@ -508,6 +513,8 @@ export default function CheckoutPage() {
                       Apply
                     </button>
                   </div>
+                  <AppliedCoupon onClear={() => setCoupon('')} />
+                  <PromoHints onPick={setCoupon} />
                   {couponAuto && appliedCoupon && !couponMessage ? (
                     <p className="mt-2 text-[12px] font-semibold text-green-600">
                       {appliedCoupons.map((c) => c.code).join(', ')} applied automatically —

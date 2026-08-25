@@ -1,0 +1,89 @@
+{
+  "coupons": {
+    "bts22": {
+      "id": "bts22",
+      "kind": "product",
+      "code": "BTS22",
+      "label": "Limited Offer",
+      "type": "flat",
+      "value": 50,
+      "used": 0,
+      "active": true,
+      "appliesToAll": false,
+      "categorySlugs": [],
+      "brandSlugs": [],
+      "productSlugs": [
+        "onikuma-gt889-over-ear-gaming-headphone",
+        "T-wolf-s4-desktop-speaker",
+        "arctic-w1-3d-single-monitor-arm",
+        "onikuma-x37-wired-headphone",
+        "k600-80plus-600w-power-supply"
+      ],
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    "save10": {
+      "id": "save10",
+      "kind": "product",
+      "code": "SAVE10",
+      "type": "percent",
+      "value": 10,
+      "maxDiscount": 2000,
+      "minOrder": 5000,
+      "used": 0,
+      "active": true,
+      "appliesToAll": false,
+      "categorySlugs": [],
+      "brandSlugs": [],
+      "productSlugs": [
+        "onikuma-mt707-keyboard",
+        "onikuma-g83-keyboard",
+        "royalkludge-rk-mg5-wireless-mouse",
+        "RK-L98-mechanical-cream-keyboard",
+        "oscoo-on901-256gb-ssd"
+      ],
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    "auto5": {
+      "id": "auto5",
+      "kind": "price-range",
+      "code": "SAVE5",
+      "label": "Spend ৳500+",
+      "type": "flat",
+      "value": 200,
+      "used": 0,
+      "active": true,
+      "appliesToAll": false,
+      "categorySlugs": [],
+      "brandSlugs": [],
+      "productSlugs": [],
+      "minLineTotal": 500,
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-08-25T05:11:22.941Z"
+    },
+    "save500": {
+      "id": "save500",
+      "kind": "product",
+      "code": "SAVE500",
+      "type": "flat",
+      "value": 500,
+      "minOrder": 10000,
+      "used": 0,
+      "active": true,
+      "appliesToAll": false,
+      "categorySlugs": [],
+      "brandSlugs": [],
+      "productSlugs": [
+        "haier-1-6-ton-cleancool-ac",
+        "manli-polar-fox-geforce--rtx-5080-oc-graphics-card",
+        "sony-playstation-portal-remote-player",
+        "koorui-g2421v-24-inch-qhd-180hz-gaming-monitor",
+        "marsriva-mr-uf3000-3000va-smart-line-interactive-ups"
+      ],
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    }
+  },
+  "seedVersion": 3
+}
