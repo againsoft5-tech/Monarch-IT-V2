@@ -271,6 +271,38 @@ export function couponConditionText(coupon: Coupon): string {
   return `${off} when your items without an offer total ${range}${min}`
 }
 
+export type BandProblem = { kind: 'overlap' | 'gap'; a: string; b: string; from: number; to: number }
+
+/**
+ * Checks a set of price-range bands for overlaps and gaps.
+ *
+ * Bands are meant to be a ladder — one band per spend level. An overlap makes two
+ * codes compete for the same cart, and a gap leaves a spend level with no offer at
+ * all; both are easy to create by hand and invisible until a customer hits them.
+ */
+export function priceRangeBandProblems(coupons: Coupon[]): BandProblem[] {
+  const bands = coupons
+    .filter((c) => c.kind === 'price-range' && isCouponLive(c))
+    .map((c) => ({
+      code: c.code,
+      from: c.minLineTotal ?? 0,
+      to: c.maxLineTotal ?? Number.POSITIVE_INFINITY,
+    }))
+    .sort((a, b) => a.from - b.from)
+
+  const problems: BandProblem[] = []
+  for (let i = 1; i < bands.length; i++) {
+    const prev = bands[i - 1]
+    const next = bands[i]
+    if (next.from <= prev.to) {
+      problems.push({ kind: 'overlap', a: prev.code, b: next.code, from: next.from, to: Math.min(prev.to, next.to) })
+    } else if (next.from > prev.to + 1) {
+      problems.push({ kind: 'gap', a: prev.code, b: next.code, from: prev.to + 1, to: next.from - 1 })
+    }
+  }
+  return problems
+}
+
 /** Short human label for the offer, e.g. "৳20 OFF" or "10% OFF". */
 export function couponOfferLabel(coupon: Coupon, discount?: number): string {
   if (typeof discount === 'number' && discount > 0) return `৳${discount.toLocaleString()} OFF`
@@ -373,6 +405,8 @@ export const DEFAULT_COUPON_DB: CouponDB = {
           'oscoo-on901-256gb-ssd',
         ],
       }),
+      // A ladder of non-overlapping bands: exactly one can ever match a cart, so the
+      // checkout never has to choose between them.
       seed({
         id: 'auto5',
         kind: 'price-range',
@@ -380,8 +414,27 @@ export const DEFAULT_COUPON_DB: CouponDB = {
         type: 'percent',
         value: 5,
         label: 'Spend ৳500+',
-        // Any item without an offer of its own, once that line reaches ৳500.
         minLineTotal: 500,
+        maxLineTotal: 9999,
+      }),
+      seed({
+        id: 'auto100',
+        kind: 'price-range',
+        code: 'SAVE100',
+        type: 'flat',
+        value: 100,
+        label: 'Spend ৳10,000+',
+        minLineTotal: 10000,
+        maxLineTotal: 24999,
+      }),
+      seed({
+        id: 'auto200',
+        kind: 'price-range',
+        code: 'SAVE200',
+        type: 'flat',
+        value: 200,
+        label: 'Spend ৳25,000+',
+        minLineTotal: 25000,
       }),
       seed({
         id: 'save500',

@@ -3,38 +3,35 @@
 import { useCart } from '@/context/CartContext'
 
 /**
- * The code the customer entered, with a remove control.
+ * The code the customer entered, with a way to take it back off.
  *
- * Price-range codes only apply because someone typed them, so the cart has to show
- * which one is in force and let it be taken back off — otherwise an applied offer
- * looks permanent and indistinguishable from an automatic one.
+ * Only their own code appears here: automatic product coupons are not theirs to
+ * remove, so showing them beside a delete control would promise something false.
  */
 export default function AppliedCoupon({ onClear }: { onClear?: () => void }) {
-  const { appliedCoupons, couponAuto, clearCoupon } = useCart()
-  const manual = !couponAuto && appliedCoupons.length > 0
-  if (!manual) return null
+  const { appliedCoupons, manualCode, clearCoupon } = useCart()
+  const applied = manualCode ? appliedCoupons.find((c) => c.code === manualCode) : undefined
+  if (!applied) return null
 
   return (
-    <div className="mt-2 flex flex-wrap items-center gap-2">
-      {appliedCoupons.map((c) => (
-        <span
-          key={c.code}
-          className="inline-flex items-center gap-1.5 rounded-full bg-[#e8f6ee] px-2.5 py-1 text-[11.5px] font-bold text-[#0f7a43]"
+    <div className="mt-2 flex flex-wrap gap-2">
+      {/* Padded on the right so the corner button never sits over the text. */}
+      <span className="relative inline-flex items-center gap-1.5 rounded-full bg-[#e8f6ee] py-1 pl-2.5 pr-5 text-[11.5px] font-bold text-[#0f7a43]">
+        <span className="mi text-[14px] leading-none">sell</span>
+        {applied.code} · ৳{applied.discount.toLocaleString()} off
+        <button
+          type="button"
+          onClick={() => {
+            clearCoupon()
+            onClear?.()
+          }}
+          title={`Remove ${applied.code}`}
+          aria-label={`Remove ${applied.code}`}
+          className="absolute -right-1 -top-1 flex h-[18px] w-[18px] cursor-pointer items-center justify-center rounded-full bg-[#0f7a43] text-white transition-colors hover:bg-[#c3272b]"
         >
-          <span className="mi text-[14px] leading-none">sell</span>
-          {c.code} · ৳{c.discount.toLocaleString()} off
-        </span>
-      ))}
-      <button
-        type="button"
-        onClick={() => {
-          clearCoupon()
-          onClear?.()
-        }}
-        className="text-[11.5px] font-semibold text-gray-500 underline hover:text-[#c3272b]"
-      >
-        Remove
-      </button>
+          <span className="mi text-[12px] leading-none">close</span>
+        </button>
+      </span>
     </div>
   )
 }

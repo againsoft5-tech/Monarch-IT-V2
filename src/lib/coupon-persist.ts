@@ -16,7 +16,7 @@ import {
 const DATA_PATH = path.join(process.cwd(), 'src', 'data', 'coupons.json')
 
 /** Bump when the shipped seed set changes. */
-export const COUPON_SEED_VERSION = 3
+export const COUPON_SEED_VERSION = 4
 
 type StoredDB = CouponDB & { seedVersion?: number }
 

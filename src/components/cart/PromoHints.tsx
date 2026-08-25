@@ -3,38 +3,44 @@
 import { useCart } from '@/context/CartContext'
 
 /**
- * The note beside the promo box listing price-range codes.
+ * The promo note beside the coupon box.
  *
- * Those codes never apply on their own, so without this the customer would have to be
- * told about them out-of-band. Tapping one fills the box and applies it.
+ * Shows at most one applicable code — several buttons would let the customer pick a
+ * worse offer than the one they qualify for — plus the next band as an incentive.
  */
 export default function PromoHints({ onPick }: { onPick?: (code: string) => void }) {
-  const { promoHints, applyCoupon } = useCart()
-  if (promoHints.length === 0) return null
+  const { promoOffer, promoNext, applyCoupon } = useCart()
+  if (!promoOffer && !promoNext) return null
 
   return (
     <div className="mt-2 flex flex-col gap-1.5">
-      {promoHints.map((hint) => (
+      {promoOffer ? (
         <button
-          key={hint.code}
           type="button"
           onClick={() => {
-            onPick?.(hint.code)
-            applyCoupon(hint.code)
+            onPick?.(promoOffer.code)
+            applyCoupon(promoOffer.code)
           }}
-          className={`flex w-full items-start gap-1.5 rounded-lg border border-dashed px-2.5 py-1.5 text-left text-[11.5px] transition-colors ${
-            hint.usable
-              ? 'border-[#0f7a43]/40 bg-[#f2fbf6] text-[#0f7a43] hover:border-[#0f7a43]'
-              : 'border-gray-200 bg-gray-50 text-gray-500 hover:border-gray-300'
-          }`}
+          className="flex w-full cursor-pointer items-start gap-1.5 rounded-lg border border-dashed border-[#0f7a43]/40 bg-[#f2fbf6] px-2.5 py-1.5 text-left text-[11.5px] text-[#0f7a43] transition-colors hover:border-[#0f7a43]"
         >
           <span className="mi shrink-0 text-[15px] leading-none">sell</span>
           <span className="min-w-0">
-            <b className="font-bold">{hint.code}</b> — {hint.text}
-            {hint.usable ? <span className="font-semibold"> · tap to apply</span> : null}
+            <b className="font-bold">{promoOffer.code}</b> — ৳{promoOffer.discount.toLocaleString()} off
+            your items without an offer
+            <span className="font-semibold"> · tap to apply</span>
           </span>
         </button>
-      ))}
+      ) : null}
+
+      {promoNext ? (
+        <p className="m-0 flex items-start gap-1.5 rounded-lg border border-dashed border-gray-200 bg-gray-50 px-2.5 py-1.5 text-[11.5px] text-gray-500">
+          <span className="mi shrink-0 text-[15px] leading-none">lock</span>
+          <span className="min-w-0">
+            Add ৳{promoNext.needed.toLocaleString()} more to unlock{' '}
+            <b className="font-bold">{promoNext.code}</b> — {promoNext.text}
+          </span>
+        </p>
+      ) : null}
     </div>
   )
 }

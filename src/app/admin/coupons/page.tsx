@@ -12,7 +12,12 @@ import {
   setCouponActive,
   useCoupons,
 } from '@/lib/couponStore'
-import { couponOfferLabel, isCouponLive, type Coupon } from '@/data/couponData'
+import {
+  couponOfferLabel,
+  isCouponLive,
+  priceRangeBandProblems,
+  type Coupon,
+} from '@/data/couponData'
 
 const RED = '#bd2026'
 
@@ -62,6 +67,8 @@ export default function AdminCouponsPage() {
 
   const productCoupons = coupons.filter((c) => c.kind !== 'price-range')
   const priceRangeCoupons = coupons.filter((c) => c.kind === 'price-range')
+  // Bands should form a ladder; overlaps and gaps only surface when a customer hits one.
+  const bandProblems = priceRangeBandProblems(priceRangeCoupons)
 
   const open = (coupon: Coupon) => {
     setEditingId(coupon.id)
@@ -147,6 +154,32 @@ export default function AdminCouponsPage() {
               {group.title} ({group.rows.length})
             </h2>
             <p className="m-0 mb-4 mt-0.5 text-[12.5px] text-gray-500">{group.blurb}</p>
+
+            {group.kind === 'price-range' && bandProblems.length > 0 ? (
+              <div className="mb-4 rounded-xl border border-[#f3c9cb] bg-[#fdf2f3] px-3 py-2.5">
+                <p className="m-0 mb-1 text-[12px] font-bold text-[#bd2026]">
+                  Check these price bands
+                </p>
+                <ul className="m-0 flex list-none flex-col gap-0.5 p-0">
+                  {bandProblems.map((p, i) => (
+                    <li key={i} className="text-[11.5px] text-[#8a1e22]">
+                      {p.kind === 'overlap' ? (
+                        <>
+                          <b>{p.a}</b> and <b>{p.b}</b> both cover ৳{p.from.toLocaleString()}
+                          {Number.isFinite(p.to) ? `–৳${p.to.toLocaleString()}` : '+'} — the bigger
+                          discount wins, which may not be the one you intended.
+                        </>
+                      ) : (
+                        <>
+                          Nothing covers ৳{p.from.toLocaleString()}–৳{p.to.toLocaleString()}, between{' '}
+                          <b>{p.a}</b> and <b>{p.b}</b>.
+                        </>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
 
             {group.rows.length === 0 ? (
               <p className="m-0 text-[13px] text-gray-400">None yet.</p>

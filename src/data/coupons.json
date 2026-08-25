@@ -50,6 +50,42 @@
       "kind": "price-range",
       "code": "SAVE5",
       "label": "Spend ৳500+",
+      "type": "percent",
+      "value": 5,
+      "used": 0,
+      "active": true,
+      "appliesToAll": false,
+      "categorySlugs": [],
+      "brandSlugs": [],
+      "productSlugs": [],
+      "minLineTotal": 500,
+      "maxLineTotal": 9999,
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-08-25T05:51:52.844Z"
+    },
+    "auto100": {
+      "id": "auto100",
+      "kind": "price-range",
+      "code": "SAVE100",
+      "label": "Spend ৳10,000+",
+      "type": "flat",
+      "value": 100,
+      "used": 0,
+      "active": true,
+      "appliesToAll": false,
+      "categorySlugs": [],
+      "brandSlugs": [],
+      "productSlugs": [],
+      "minLineTotal": 10000,
+      "maxLineTotal": 24999,
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    "auto200": {
+      "id": "auto200",
+      "kind": "price-range",
+      "code": "SAVE200",
+      "label": "Spend ৳25,000+",
       "type": "flat",
       "value": 200,
       "used": 0,
@@ -58,9 +94,9 @@
       "categorySlugs": [],
       "brandSlugs": [],
       "productSlugs": [],
-      "minLineTotal": 500,
+      "minLineTotal": 25000,
       "createdAt": "2026-01-01T00:00:00.000Z",
-      "updatedAt": "2026-08-25T05:11:22.941Z"
+      "updatedAt": "2026-01-01T00:00:00.000Z"
     },
     "save500": {
       "id": "save500",
@@ -85,5 +121,5 @@
       "updatedAt": "2026-01-01T00:00:00.000Z"
     }
   },
-  "seedVersion": 3
+  "seedVersion": 4
 }

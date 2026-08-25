@@ -41,6 +41,8 @@ type CartContextType = {
   appliedCoupons: { code: string; discount: number }[]
   /** This line's share of the discount, for its "coupon applied" badge. */
   couponSavingFor: (item: CartItem) => number
+  /** The code the customer typed, if any — the only one they can take back off. */
+  manualCode: string | null
   /** Drops a code the customer entered, so an applied offer is never stuck. */
   clearCoupon: () => void
   /** The coupon covering this line, if any. */
@@ -48,10 +50,12 @@ type CartContextType = {
   /** Which kind covers this line — a pooled code shows no per-row figure. */
   couponKindFor: (item: CartItem) => 'product' | 'price-range' | null
   /**
-   * Price-range codes the customer could still use, with what unlocks them. These
-   * never apply by themselves, so the cart has to advertise them.
+   * The one price-range code this cart qualifies for. Only ever one: with several
+   * matching, offering the smaller of them would quietly short-change the customer.
    */
-  promoHints: { code: string; text: string; usable: boolean }[]
+  promoOffer: { code: string; text: string; discount: number } | null
+  /** The next band up, so the customer can see what a little more would unlock. */
+  promoNext: { code: string; text: string; needed: number } | null
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined)
@@ -228,28 +232,49 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const total = subtotal - discount
 
   /**
-   * `usable` marks the ones this cart already qualifies for, so the note can lead with
-   * "you can use this" rather than listing codes that would only be refused.
+   * Pool = everything with no offer of its own. Bands are matched against that total.
+   *
+   * If the admin's bands overlap, several can match at once; the biggest saving wins
+   * rather than the highest band, because showing a smaller discount when a larger one
+   * applies is a real loss to the customer, while band order is only a preference.
    */
-  const promoHints = useMemo(
-    () =>
-      couponList
-        .filter((c) => c.kind === 'price-range' && isCouponLive(c) && c.code !== appliedCoupon)
-        .map((c) => ({
-          code: c.code,
-          text: couponConditionText(c),
-          usable:
-            (!c.minOrder || subtotal >= c.minOrder) &&
-            priceRangeQualifies(
-              c,
-              lines
-                .filter((l) => !applied.perLine.has(l.slug))
-                .reduce((sum, l) => sum + l.price * l.qty, 0),
-            ),
-        }))
-        .sort((a, b) => Number(b.usable) - Number(a.usable)),
-    [couponList, lines, subtotal, applied, appliedCoupon],
-  )
+  const { promoOffer, promoNext } = useMemo(() => {
+    const live = couponList.filter(
+      (c) => c.kind === 'price-range' && isCouponLive(c) && (!c.minOrder || subtotal >= c.minOrder),
+    )
+    const pooled = lines
+      .filter((l) => !applied.perLine.has(l.slug) || applied.perLine.get(l.slug)?.code === manualCoupon)
+      .reduce((sum, l) => sum + l.price * l.qty, 0)
+
+    const matching = live
+      .filter((c) => priceRangeQualifies(c, pooled))
+      .map((c) => ({ coupon: c, discount: couponDiscount(c, pooled, 1) }))
+      .sort((a, b) => b.discount - a.discount)
+
+    const winner = matching[0]
+    const offer =
+      winner && winner.coupon.code !== manualCoupon
+        ? {
+            code: winner.coupon.code,
+            text: couponConditionText(winner.coupon),
+            discount: winner.discount,
+          }
+        : null
+
+    // The cheapest band the cart has not reached yet.
+    const upcoming = live
+      .filter((c) => (c.minLineTotal ?? 0) > pooled)
+      .sort((a, b) => (a.minLineTotal ?? 0) - (b.minLineTotal ?? 0))[0]
+    const next = upcoming
+      ? {
+          code: upcoming.code,
+          text: couponConditionText(upcoming),
+          needed: (upcoming.minLineTotal ?? 0) - pooled,
+        }
+      : null
+
+    return { promoOffer: offer, promoNext: next }
+  }, [couponList, lines, subtotal, applied, manualCoupon])
 
   const clearCoupon = () => {
     setManualCoupon(null)
@@ -352,8 +377,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
         couponSavingFor,
         couponCodeFor,
         couponKindFor,
+        promoOffer,
+        promoNext,
+        manualCode: manualCoupon,
         clearCoupon,
-        promoHints,
       }}
     >
       {children}
