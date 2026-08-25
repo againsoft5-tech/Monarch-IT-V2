@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useCart } from '@/context/CartContext'
 import BundleLineDetails from '@/components/cart/BundleLineDetails'
@@ -9,8 +9,25 @@ import CartLineThumb from '@/components/cart/CartLineThumb'
 import AppliedCoupon from '@/components/cart/AppliedCoupon'
 
 export default function CartDrawer() {
-  const { items, isOpen, closeCart, removeItem, subtotal, discount, total, couponMessage, applyCoupon } = useCart()
+  const {
+    items,
+    isOpen,
+    closeCart,
+    removeItem,
+    subtotal,
+    discount,
+    total,
+    couponMessage,
+    applyCoupon,
+    appliedCoupon,
+  } = useCart()
   const [coupon, setCoupon] = useState('')
+
+  // Mirrors the cart and checkout pages: the box shows whichever code is in force,
+  // including one applied from another page.
+  useEffect(() => {
+    if (appliedCoupon) setCoupon(appliedCoupon)
+  }, [appliedCoupon])
 
   return (
     <>
@@ -107,18 +124,20 @@ export default function CartDrawer() {
               </button>
             </div>
 
-            <AppliedCoupon onClear={() => setCoupon('')} />
-                  <PromoHints onPick={setCoupon} />
+            <div className="-mt-2 mb-3 flex flex-col gap-1">
+              <AppliedCoupon onClear={() => setCoupon('')} />
+              <PromoHints onPick={setCoupon} />
 
-            {couponMessage && (
-              <p
-                className={`text-[12px] -mt-2.5 mb-3 ${
-                  couponMessage.type === 'success' ? 'text-green-600' : 'text-[#c3272b]'
-                }`}
-              >
-                {couponMessage.text}
-              </p>
-            )}
+              {couponMessage && (
+                <p
+                  className={`m-0 text-[12px] ${
+                    couponMessage.type === 'success' ? 'text-green-600' : 'text-[#c3272b]'
+                  }`}
+                >
+                  {couponMessage.text}
+                </p>
+              )}
+            </div>
 
             <div className="flex items-center justify-between text-[14px] text-gray-600 mb-1">
               <span>Sub-Total</span>
