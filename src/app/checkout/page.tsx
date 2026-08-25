@@ -10,19 +10,12 @@ import BundleLineDetails from '@/components/cart/BundleLineDetails'
 import CartLineThumb from '@/components/cart/CartLineThumb'
 import PromoHints from '@/components/cart/PromoHints'
 import AppliedCoupon from '@/components/cart/AppliedCoupon'
+import PickupPicker, { PickupIcon, PICKUP_POINTS } from '@/components/checkout/PickupPicker'
 
 function CashOnDeliveryIcon({ className = '' }: { className?: string }) {
   return (
     <svg viewBox="0 0 470 453.21" className={className} fill="currentColor">
       <path d="M482.7,233.13a16.79,16.79,0,0,0-14.49-8.31,117.89,117.89,0,0,0-33.57,5.07V57c0-19.45-14.11-33.57-33.57-33.57h-235C146.62,23.4,132.5,37.52,132.5,57v179.5a158.69,158.69,0,0,0-71.34,60.08L17.52,367.06a16.78,16.78,0,1,0,28.54,17.67l43.43-70.18c22.94-35.16,60.35-56.16,100.08-56.16H280.7A50.45,50.45,0,0,1,233.21,292H199.64a16.79,16.79,0,0,0,0,33.57H367.5a16.79,16.79,0,0,0,13.42-6.7l20.26-27a81.7,81.7,0,0,1,34.74-27.05L408.1,314.22c-20.16,37.46-61.12,61.67-104.38,61.67a415.06,415.06,0,0,0-230.89,70,16.79,16.79,0,0,0,18.63,27.93,381.58,381.58,0,0,1,212.26-64.32c55.44,0,108-31.14,133.79-79.06l45.32-80.56A16.73,16.73,0,0,0,482.7,233.13ZM266.79,57h33.57V73.75H266.79ZM374.22,271.82,359.11,292H299.93a83.11,83.11,0,0,0,17.21-50.35,16.79,16.79,0,0,0-16.78-16.79H189.57a145.93,145.93,0,0,0-23.5,2.12V57h67.14V90.54A16.79,16.79,0,0,0,250,107.32h67.14a16.78,16.78,0,0,0,16.79-16.78V57h67.14V245.91A113.09,113.09,0,0,0,374.22,271.82Z" transform="translate(-15 -23.4)" />
-    </svg>
-  )
-}
-
-function MobileBankingIcon({ className = '' }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 255.1 452" className={className} fill="currentColor">
-      <path fillRule="evenodd" d="M250,423.47a20.09,20.09,0,1,1-20.09,20.09v0a20.05,20.05,0,0,1,20-20ZM328.74,24H171.15a48.74,48.74,0,0,0-48.7,48.78V427.15A48.85,48.85,0,0,0,171.3,476H328.85a48.78,48.78,0,0,0,48.7-48.85V72.74A48.77,48.77,0,0,0,328.74,24Zm34.39,384.17H136.84v-331H363.13Z" transform="translate(-122.45 -24)" />
     </svg>
   )
 }
@@ -96,7 +89,7 @@ function LocationDropdown({
 }
 
 type Mode = 'guest' | 'login' | 'register'
-type Payment = 'cod' | 'mobile' | 'online'
+type Payment = 'cod' | 'online' | 'pickup'
 
 export default function CheckoutPage() {
   const {
@@ -118,6 +111,7 @@ export default function CheckoutPage() {
   const [district, setDistrict] = useState('Dhaka')
   const [upazila, setUpazila] = useState(UPAZILAS['Dhaka'][0])
   const [payment, setPayment] = useState<Payment>('cod')
+  const [pickupPoint, setPickupPoint] = useState(PICKUP_POINTS[0].key)
   const [coupon, setCoupon] = useState('')
 
   // An auto-applied coupon fills the box on its own: the discount is already in the
@@ -134,7 +128,9 @@ export default function CheckoutPage() {
     setUpazila(UPAZILAS[value]?.[0] ?? '')
   }
 
-  const shipping = district === 'Dhaka' && upazila === 'Dhaka City' ? 0 : 120
+  const isPickup = payment === 'pickup'
+  // Nothing is delivered when the customer collects it, so no delivery fee applies.
+  const shipping = isPickup || (district === 'Dhaka' && upazila === 'Dhaka City') ? 0 : 120
   const total = cartTotal + shipping
 
   const handlePlaceOrder = (e: React.FormEvent<HTMLFormElement>) => {
@@ -322,19 +318,21 @@ export default function CheckoutPage() {
                     )}
                   </div>
 
-                  <div className="grid grid-cols-1 min-[480px]:grid-cols-3 gap-2.5 mt-1">
+                  {/* Wraps rather than a fixed column count: a fourth option would squeeze
+                      "Cash On Delivery" past its own width in a 3-up grid. */}
+                  <div className="flex flex-wrap gap-2.5 mt-1">
                     {(
                       [
                         { key: 'cod', label: 'Cash On Delivery', Icon: CashOnDeliveryIcon, w: 'w-[17px]' },
-                        { key: 'mobile', label: 'Mobile Banking', Icon: MobileBankingIcon, w: 'w-[9px]' },
                         { key: 'online', label: 'Online Banking', Icon: OnlineBankingIcon, w: 'w-[16px]' },
+                        { key: 'pickup', label: 'Pickup', Icon: PickupIcon, w: 'w-[14px]' },
                       ] as { key: Payment; label: string; Icon: typeof CashOnDeliveryIcon; w: string }[]
                     ).map((opt) => (
+                      <div key={opt.key} className="relative flex flex-1 min-w-[150px]">
                       <button
-                        key={opt.key}
                         type="button"
                         onClick={() => setPayment(opt.key)}
-                        className={`flex items-center gap-2 border rounded-full px-3 py-2.5 text-[12px] font-semibold whitespace-nowrap transition-colors cursor-pointer ${
+                        className={`flex w-full items-center gap-2 border rounded-full px-3 py-2.5 text-[12px] font-semibold whitespace-nowrap transition-colors cursor-pointer ${
                           payment === opt.key
                             ? 'border-[1.5px] border-[#d32f2f] text-[#d32f2f]'
                             : 'border-gray-200 text-gray-700 hover:border-gray-300'
@@ -350,6 +348,11 @@ export default function CheckoutPage() {
                         <opt.Icon className={`${opt.w} h-4 shrink-0`} />
                         {opt.label}
                       </button>
+
+                      {opt.key === 'pickup' && isPickup ? (
+                        <PickupPicker value={pickupPoint} onChange={setPickupPoint} />
+                      ) : null}
+                      </div>
                     ))}
                   </div>
 
@@ -473,7 +476,13 @@ export default function CheckoutPage() {
                     <span className="text-[#10b981] font-bold"><span className="font-medium">৳</span><span className="font-price">{subtotal.toLocaleString()}</span></span>
                   </div>
                   <div className="flex justify-between">
-                    <span>{shipping === 0 ? 'Inside Dhaka City' : `Delivery to ${upazila}, ${district}`}</span>
+                    <span>
+                      {isPickup
+                        ? `Pickup · ${PICKUP_POINTS.find((p) => p.key === pickupPoint)?.label ?? ''}`
+                        : shipping === 0
+                          ? 'Inside Dhaka City'
+                          : `Delivery to ${upazila}, ${district}`}
+                    </span>
                     <span className="text-[#10b981] font-bold">
                       <span className="font-medium">৳</span><span className="font-price">{shipping === 0 ? '0' : shipping.toLocaleString()}</span>
                     </span>
