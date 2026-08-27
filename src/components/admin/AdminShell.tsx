@@ -5,7 +5,6 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useAdminAuth } from '@/context/AdminAuthContext'
 import { useChatStore } from '@/lib/chatStore'
-import { useComboStore } from '@/lib/comboStore'
 
 const RED = '#bd2026'
 const RED_GRADIENT = 'linear-gradient(135deg, #ef4a23 0%, #bd2026 100%)'
@@ -13,7 +12,6 @@ const RED_GRADIENT = 'linear-gradient(135deg, #ef4a23 0%, #bd2026 100%)'
 const NAV_ITEMS = [
   { key: 'dashboard', label: 'Dashboard', href: '/admin', icon: 'dashboard' },
   { key: 'live-chat', label: 'Live Chat', href: '/admin/live-chat', icon: 'forum' },
-  { key: 'combo', label: 'Combo Campaign', href: '/admin/combo', icon: 'inventory_2' },
   { key: 'bundles', label: 'Bundles', href: '/admin/bundles', icon: 'category' },
   { key: 'coupons', label: 'Coupons', href: '/admin/coupons', icon: 'local_offer' },
   { key: 'hero-slider', label: 'Hero Slider', href: '/admin/hero-slider', icon: 'slideshow' },
@@ -25,7 +23,6 @@ export default function AdminShell({ children }: { children: ReactNode }) {
   const router = useRouter()
   const { logoutAdmin } = useAdminAuth()
   const chatDb = useChatStore()
-  const comboDb = useComboStore()
   const [collapsed, setCollapsed] = useState(false)
 
   const unread = useMemo(
@@ -36,7 +33,6 @@ export default function AdminShell({ children }: { children: ReactNode }) {
       ),
     [chatDb]
   )
-  const activeCombos = useMemo(() => Object.values(comboDb).filter((c) => c.active).length, [comboDb])
 
   if (pathname === '/admin/login') return <>{children}</>
 
@@ -83,7 +79,7 @@ export default function AdminShell({ children }: { children: ReactNode }) {
           <div className="flex flex-col gap-1.5">
             {NAV_ITEMS.map((item) => {
               const active = isActive(item.href)
-              const badge = item.key === 'live-chat' ? unread : item.key === 'combo' ? activeCombos : 0
+              const badge = item.key === 'live-chat' ? unread : 0
               return (
                 <Link
                   key={item.key}
@@ -184,7 +180,7 @@ export default function AdminShell({ children }: { children: ReactNode }) {
         <nav className="md:hidden shrink-0 flex bg-white border-b border-gray-100">
           {NAV_ITEMS.map((item) => {
             const active = isActive(item.href)
-            const badge = item.key === 'live-chat' ? unread : item.key === 'combo' ? activeCombos : 0
+            const badge = item.key === 'live-chat' ? unread : 0
             return (
               <Link
                 key={item.key}

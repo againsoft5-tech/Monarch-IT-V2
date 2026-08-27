@@ -5,8 +5,9 @@ import { computeBundlePricing, resolveGifts, type BundleProduct, type BundleTier
  * Builds the single cart line that represents a whole bundle.
  *
  * One line (not one per product) so the bundle price, its contents and its gift stay
- * together in the cart. Kept as one shared helper — the older combo module duplicates
- * this logic in two components, which is exactly what we're avoiding here.
+ * together in the cart. Kept as one shared helper so every surface that adds a bundle —
+ * the bundles grid, a bundle's own page, the builder, the product page panel — produces
+ * an identical cart line.
  */
 export function bundleToCartItem(input: {
   /** Unique per bundle so two different bundles don't merge in the cart. */

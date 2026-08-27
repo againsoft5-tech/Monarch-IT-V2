@@ -1,10 +1,8 @@
 /**
  * Bundles module — data contract.
  *
- * Deliberately separate from the older Combo module (`comboData.ts`): combo tiers key off
- * how many *groups* a customer picked, whereas bundles key off how many *products* were
- * picked (2/3/4) and can carry a free gift per tier. Keeping them apart avoids breaking
- * the live combo campaigns.
+ * Tiers key off how many *products* the customer picked (2/3/4), and each tier can
+ * carry its own discount and free-gift list.
  */
 
 import { categoryProductsMap } from './categoryProducts'

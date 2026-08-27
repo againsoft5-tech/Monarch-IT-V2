@@ -240,7 +240,6 @@ export const drawerCategories = [
     name: 'Computer Items', icon: 'memory', href: '/computer-accessories',
     sub: [
       { name: 'Router',    href: '/router' },
-      { name: 'Combo',     href: '/combo' },
       { name: 'Keyboard',  href: '/keyboard' },
       { name: 'Mouse',     href: '/computer-mouse' },
       { name: 'Pendrives', href: '/pendrives' },

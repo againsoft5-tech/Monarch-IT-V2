@@ -7,7 +7,7 @@ import ProductMeta from './ProductMeta'
 import ProductTabs, { type ProductTab } from './ProductTabs'
 import ProductSidebar from './ProductSidebar'
 import MoreToLove from './MoreToLove'
-import ProductComboSection from './ProductComboSection'
+import ProductBundlePanel, { useProductBundles } from './ProductBundlePanel'
 import type { ProductDetail, RelatedProduct } from '@/data/productDetail'
 import { applySelection, defaultSelection, findCombo, resolveGalleryImages } from '@/lib/productVariants'
 
@@ -16,6 +16,10 @@ export default function ProductDetailPage({ product }: { product: ProductDetail 
   const variantGroups = useMemo(() => product.variantGroups ?? [], [product.variantGroups])
   const variantCombos = useMemo(() => product.variantCombos ?? [], [product.variantCombos])
   const [selection, setSelection] = useState(() => defaultSelection(variantGroups, variantCombos))
+  /* Asked here rather than inside the panel: the third grid column only exists when
+     there is a bundle to put in it, so a product in none keeps the original two-column
+     layout instead of leaving 310px of empty rail. */
+  const hasBundle = useProductBundles(product.slug).length > 0
 
   const pairedProducts = useMemo(() => {
     const candidates = [product.mostViewed, ...(product.moreToLove ?? [])].filter(
@@ -37,7 +41,26 @@ export default function ProductDetailPage({ product }: { product: ProductDetail 
     <div className="bg-[#f6f7f9]">
       <div className="bg-white">
         <div className="container mx-auto px-4 min-[992px]:px-14 py-6">
-          <div className="grid grid-cols-1 md:grid-cols-[40%_60%] gap-5 items-start">
+          {/*
+            The rail starts at 1200px and stays deliberately narrow there — the panel
+            is built on container queries, so it re-lays itself out for whatever width
+            it gets instead of demanding a fixed one. It widens twice as the screen
+            does, and the gallery (not the info column) pays for it, since info carries
+            the title, price, key features and the buy row.
+
+            Below 1200px — tablets and small laptops — the panel drops under the info
+            block, where it has the whole width to itself.
+
+            All three steps are in rem: Tailwind v4 emits px-based media queries BEFORE
+            rem-based ones, so a `min-[1200px]` rule would lose to `md:`.
+          */}
+          <div
+            className={`grid grid-cols-1 md:grid-cols-[40%_60%] gap-5 items-start ${
+              hasBundle
+                ? 'min-[75rem]:grid-cols-[28%_1fr_200px] min-[85rem]:grid-cols-[29%_1fr_230px] min-[100rem]:grid-cols-[32%_1fr_280px]'
+                : ''
+            }`}
+          >
             {/*
               Meta and Info used to sit in separate grid rows beside a
               row-spanning gallery. CSS Grid sizes a row-spanning item's
@@ -70,11 +93,17 @@ export default function ProductDetailPage({ product }: { product: ProductDetail 
             <div className="order-2 md:order-none md:col-start-1 md:row-start-1">
               <ProductGallery images={galleryImages} name={product.name} videoId={product.videoId} />
             </div>
+            {/* Spans both columns at md so it reads as a full-width block under the
+                fold, then becomes the rail at xl. Left out entirely when there is no
+                bundle — an empty cell would still add a row and its gap. */}
+            {hasBundle ? (
+              <div className="order-4 md:order-none md:col-span-2 md:mx-auto md:w-full md:max-w-[560px] min-[75rem]:col-span-1 min-[75rem]:col-start-3 min-[75rem]:row-start-1 min-[75rem]:max-w-none">
+                <ProductBundlePanel slug={product.slug} />
+              </div>
+            ) : null}
           </div>
         </div>
       </div>
-
-      <ProductComboSection slug={product.slug} />
 
       <div className="container mx-auto px-4 min-[992px]:px-14 pt-6 pb-2.5">
         <div className="flex flex-col lg:flex-row gap-5 items-stretch">

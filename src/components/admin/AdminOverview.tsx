@@ -3,7 +3,7 @@
 import { useMemo } from 'react'
 import { productsByCategory } from '@/data/pcBuilderData'
 import { useChatStore } from '@/lib/chatStore'
-import { useComboStore } from '@/lib/comboStore'
+import { useBundleStore } from '@/lib/bundleStore'
 import { formatCurrency } from '@/lib/currency'
 import StatCard from '@/components/admin/dashboard/StatCard'
 import RevenueAreaChart from '@/components/admin/dashboard/RevenueAreaChart'
@@ -36,7 +36,7 @@ const WEEKLY_ORDERS = [
 
 export default function AdminOverview() {
   const chatDb = useChatStore()
-  const comboDb = useComboStore()
+  const bundleDb = useBundleStore()
 
   const unreadChats = useMemo(
     () =>
@@ -47,8 +47,13 @@ export default function AdminOverview() {
     [chatDb]
   )
 
-  const activeCombos = useMemo(() => Object.values(comboDb).filter((c) => c.active).length, [comboDb])
-  const totalCombos = useMemo(() => Object.values(comboDb).length, [comboDb])
+  // Ready and custom bundles are managed on the same admin screen, so the dashboard
+  // counts them together rather than splitting one small card in two.
+  const allBundles = useMemo(
+    () => [...Object.values(bundleDb.ready), ...Object.values(bundleDb.custom)],
+    [bundleDb],
+  )
+  const activeBundles = useMemo(() => allBundles.filter((b) => b.active).length, [allBundles])
 
   const totalProducts = useMemo(
     () => Object.values(productsByCategory).reduce((sum, list) => sum + list.length, 0),
@@ -83,10 +88,10 @@ export default function AdminOverview() {
             delta={{ text: '4.35%', up: true }}
           />
           <StatCard
-            icon="inventory_2"
-            value={`${activeCombos}/${totalCombos}`}
-            label="Active combo campaigns"
-            href="/admin/combo"
+            icon="category"
+            value={`${activeBundles}/${allBundles.length}`}
+            label="Active bundles"
+            href="/admin/bundles"
           />
           <StatCard
             icon="forum"
@@ -122,8 +127,8 @@ export default function AdminOverview() {
             <p className="text-xl font-bold text-gray-900 m-0">{totalProducts.toLocaleString()}</p>
           </div>
           <div className="bg-white rounded-[24px] border border-gray-100 shadow-[0_8px_30px_rgba(0,0,0,0.03)] p-5">
-            <p className="text-[13px] text-gray-500 m-0 mb-1">Combo Campaigns</p>
-            <p className="text-xl font-bold text-gray-900 m-0">{totalCombos.toLocaleString()}</p>
+            <p className="text-[13px] text-gray-500 m-0 mb-1">Bundles</p>
+            <p className="text-xl font-bold text-gray-900 m-0">{allBundles.length.toLocaleString()}</p>
           </div>
           <div className="bg-white rounded-[24px] border border-gray-100 shadow-[0_8px_30px_rgba(0,0,0,0.03)] p-5">
             <p className="text-[13px] text-gray-500 m-0 mb-1">Conversations</p>
