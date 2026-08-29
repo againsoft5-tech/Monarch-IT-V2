@@ -18,7 +18,7 @@ type Props = {
  * the customer has to guess at.
  */
 export default function DreamPcBanner({
-  image = '/images/banners/pc-builder-home-page-banner-final.jpg',
+  image = '/images/banners/pc-builder-home-page-banner.png',
   href = '/pc-builder',
   title = 'Build Your Own PC',
   subtitle = 'Pick your parts',
@@ -42,7 +42,7 @@ export default function DreamPcBanner({
           src={image}
           alt={title || 'Build your own PC'}
           width={1920}
-          height={843}
+          height={1023}
           /* Intrinsic size drives the aspect ratio, so the banner scales without
              reserving the wrong height while it loads. */
           className="mx-auto block h-auto w-full max-w-[1920px]"

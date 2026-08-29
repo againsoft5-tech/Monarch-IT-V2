@@ -27,7 +27,7 @@ export default function DreamPcDrawer({ open, value, onChange, onClose, onBack }
           </p>
           {/* Wide, like the banner itself — a square frame made the artwork look
               cropped in the drawer when it is not. */}
-          <div className="relative flex aspect-[1920/843] items-center justify-center overflow-hidden rounded-none border border-[#e5e5e5] bg-[#f5f5f7]">
+          <div className="relative flex aspect-[1920/1023] items-center justify-center overflow-hidden rounded-none border border-[#e5e5e5] bg-[#f5f5f7]">
             {value.image ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
@@ -114,7 +114,7 @@ export default function DreamPcDrawer({ open, value, onChange, onClose, onBack }
               // eslint-disable-next-line @next/next/no-img-element
               <img src={value.image} alt="" className="mt-2 block h-auto w-full" />
             ) : (
-              <div className="mt-2 aspect-[1920/843] bg-[#f0f0f0]" />
+              <div className="mt-2 aspect-[1920/1023] bg-[#f0f0f0]" />
             )}
             {value.buttonLabel ? (
               <span className="mt-2 inline-block rounded-full bg-[#bd2026] px-4 py-1.5 text-[10px] font-bold uppercase tracking-wide text-white">
