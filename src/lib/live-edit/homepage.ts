@@ -94,8 +94,9 @@ export type FeaturedSection = {
 export type DreamPcSection = {
   image: string
   href: string
-  line1: string
-  line2: string
+  title: string
+  subtitle: string
+  buttonLabel: string
 }
 
 export type BrandItem = {
@@ -247,7 +248,7 @@ export const SECTION_LABELS: Record<HomepageSectionType, string> = {
   categories: 'Category carousel',
   promo: 'Promo banners',
   featured: 'Most Wanted',
-  dream_pc: 'Dream PC',
+  dream_pc: 'Build Your Own PC',
   brands: 'Brands',
   about: 'About',
   support: 'Support',

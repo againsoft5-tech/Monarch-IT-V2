@@ -502,8 +502,9 @@ export default function LiveEditShell({ initial }: Props) {
           value={{
             image: draft.dreamPc.image,
             href: draft.dreamPc.href,
-            line1: draft.dreamPc.line1,
-            line2: draft.dreamPc.line2,
+            title: draft.dreamPc.title,
+            subtitle: draft.dreamPc.subtitle,
+            buttonLabel: draft.dreamPc.buttonLabel,
           }}
           onChange={(dreamPc) => {
             setDraft((prev) => setPrimarySection(prev, 'dream_pc', dreamPc))

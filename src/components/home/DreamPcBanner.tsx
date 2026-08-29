@@ -1,47 +1,66 @@
 import Image from 'next/image'
+import Link from 'next/link'
 
 type Props = {
   image?: string
   href?: string
-  line1?: string
-  line2?: string
+  title?: string
+  subtitle?: string
+  buttonLabel?: string
 }
 
+/**
+ * "Build your own PC" banner on the homepage.
+ *
+ * The artwork is a plain wide image, so the heading and the call to action are
+ * rendered around it rather than baked in: the same banner then reads correctly at
+ * any width, stays translatable, and the button is a real link rather than a hotspot
+ * the customer has to guess at.
+ */
 export default function DreamPcBanner({
-  image = '/images/image/cache/catalog/website/dream-pc/pc-builder-280x280.png',
+  image = '/images/banners/pc-builder-home-page-banner.jpg',
   href = '/pc-builder',
-  line1 = 'Build Your',
-  line2 = 'Dream PC',
+  title = 'Build Your Own PC',
+  subtitle = 'Pick your parts',
+  buttonLabel = 'Build Now',
 }: Props) {
   return (
-    <div className="container mx-auto px-4 min-[992px]:px-14 mt-10 overflow-hidden">
-      <div className="flex items-center justify-center">
-        <div className="relative z-[2]">
-          <Image
-            src={image}
-            alt="Gaming PC"
-            width={280}
-            height={280}
-            className="block w-[230px] h-auto min-[769px]:w-[300px] min-[993px]:w-[400px]"
-          />
+    <div className="container mx-auto px-4 min-[992px]:px-14 py-10">
+      {title || subtitle ? (
+        <div className="mb-[15px] text-center">
+          {title ? (
+            <h2 className="m-0 mb-1 text-2xl font-bold uppercase text-[#333] md:text-[28px]">
+              {title}
+            </h2>
+          ) : null}
+          {subtitle ? <p className="m-0 text-[15px] text-[#777]">{subtitle}</p> : null}
         </div>
+      ) : null}
 
-        <div className="relative z-[1] flex items-center -ml-10 min-[769px]:-ml-[60px] min-[993px]:-ml-[150px]">
-          <div className="h-[150px] w-[72px] rounded-r-[10px] border border-red-600 border-l-0 min-[481px]:border-[1.5px] min-[769px]:h-[200px] min-[769px]:w-[200px] min-[769px]:rounded-r-[20px] min-[769px]:border-2 min-[993px]:h-[280px] min-[993px]:w-[280px] min-[993px]:rounded-r-[30px]" />
+      <Link href={href} className="block" aria-label={title || buttonLabel}>
+        <Image
+          src={image}
+          alt={title || 'Build your own PC'}
+          width={1366}
+          height={600}
+          /* Intrinsic size drives the aspect ratio, so the banner scales without
+             reserving the wrong height while it loads. */
+          className="mx-auto block h-auto w-full max-w-[1366px]"
+          sizes="(max-width: 1366px) 100vw, 1366px"
+          priority={false}
+        />
+      </Link>
 
-          <a
+      {buttonLabel ? (
+        <div className="mt-4 flex justify-center md:mt-6">
+          <Link
             href={href}
-            className="absolute -right-10 z-[3] block whitespace-nowrap rounded-full border border-red-600 bg-white px-[13px] py-[3px] text-center text-red-600 no-underline transition-colors hover:bg-red-600 hover:text-white min-[481px]:-right-[50px] min-[481px]:border-[1.5px] min-[481px]:px-5 min-[481px]:py-[10px] min-[769px]:-right-[70px] min-[769px]:px-[30px] min-[769px]:py-[15px] min-[993px]:-right-[100px] min-[993px]:border-2 min-[993px]:px-10 min-[993px]:py-5"
+            className="inline-flex items-center justify-center rounded-full bg-[#bd2026] px-9 py-3 text-[13px] font-bold uppercase tracking-wide text-white no-underline transition-colors hover:bg-[#a5121c] md:px-11 md:text-[14px]"
           >
-            <span className="block text-[10px] font-light leading-tight min-[481px]:text-sm min-[769px]:text-lg min-[993px]:text-2xl">
-              {line1}
-            </span>
-            <span className="block text-xs font-bold leading-tight min-[481px]:text-lg min-[769px]:text-2xl min-[993px]:text-[32px]">
-              {line2}
-            </span>
-          </a>
+            {buttonLabel}
+          </Link>
         </div>
-      </div>
+      ) : null}
     </div>
   )
 }

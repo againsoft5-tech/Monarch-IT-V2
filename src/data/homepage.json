@@ -340,10 +340,11 @@
     ]
   },
   "dreamPc": {
-    "image": "/images/image/cache/catalog/website/dream-pc/pc-builder-280x280.png",
+    "image": "/images/banners/pc-builder-home-page-banner.jpg",
     "href": "/pc-builder",
-    "line1": "Build Your",
-    "line2": "Dream PC"
+    "title": "Build Your Own PC",
+    "subtitle": "Pick your parts",
+    "buttonLabel": "Build Now"
   },
   "brands": {
     "title": "Brands We Distribute",

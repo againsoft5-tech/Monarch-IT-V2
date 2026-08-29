@@ -74,8 +74,9 @@ function renderBlock(
         <DreamPcBanner
           image={dream.image}
           href={dream.href}
-          line1={dream.line1}
-          line2={dream.line2}
+          title={dream.title}
+          subtitle={dream.subtitle}
+          buttonLabel={dream.buttonLabel}
         />
       )
     }
