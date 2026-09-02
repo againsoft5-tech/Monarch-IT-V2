@@ -171,7 +171,7 @@ export default function ProductInfo({
         ) : null}
 
         <div className="order-5 w-full flex items-center gap-1.5 md:gap-2 md:contents md:w-auto">
-          <div className="shrink-0 inline-flex items-center gap-1 bg-[#f3f4f6] rounded-full h-9 px-2 md:order-8">
+          <div className="shrink-0 inline-flex items-center gap-1 bg-[#f3f4f6] rounded-full h-10 px-2 md:order-8">
             <button
               type="button"
               onClick={() => changeQty(-1)}
@@ -192,7 +192,7 @@ export default function ProductInfo({
           <button
             type="button"
             onClick={handleBuyNow}
-            className="flex-1 md:flex-none md:order-9 bg-[#d32f2f] text-white font-bold text-[13px] h-9 px-4 md:px-5 rounded-full hover:bg-[#b71c1c] transition-colors whitespace-nowrap cursor-pointer"
+            className="flex-1 md:flex-none md:order-9 bg-[#d32f2f] text-white font-bold text-[13px] h-10 px-4 md:px-5 rounded-full hover:bg-[#b71c1c] transition-colors whitespace-nowrap cursor-pointer"
           >
             Buy Now
           </button>
@@ -201,7 +201,7 @@ export default function ProductInfo({
             type="button"
             onClick={handleChatClick}
             title="Chat Now"
-            className="shrink-0 md:order-10 group flex items-center justify-center gap-1.5 bg-[#f3f4f6] text-gray-800 font-semibold text-[13px] w-9 md:w-auto h-9 px-0 md:px-3.5 rounded-full hover:bg-[#c3272b] hover:text-white transition-colors cursor-pointer"
+            className="shrink-0 md:order-10 group flex items-center justify-center gap-1.5 bg-[#f3f4f6] text-gray-800 font-semibold text-[13px] w-10 md:w-auto h-10 px-0 md:px-3.5 rounded-full hover:bg-[#c3272b] hover:text-white transition-colors cursor-pointer"
           >
             <Image
               src="/images/catalog/view/theme/default/image/message-icon.svg"
@@ -217,7 +217,7 @@ export default function ProductInfo({
             type="button"
             title="Compare"
             onClick={handleCompare}
-            className="shrink-0 md:order-11 group w-9 h-9 bg-[#f3f4f6] rounded-full flex items-center justify-center hover:bg-[#c3272b] transition-colors cursor-pointer"
+            className="shrink-0 md:order-11 group w-10 h-10 bg-[#f3f4f6] rounded-full flex items-center justify-center hover:bg-[#c3272b] transition-colors cursor-pointer"
           >
             <Image
               src="/images/catalog/view/theme/default/image/compare-icon-svg.svg"

@@ -160,10 +160,10 @@ export default function CheckoutPage() {
         ) : (
           <form
             onSubmit={handlePlaceOrder}
-            className="bg-[#f5f5f7] rounded-[24px] md:rounded-[36px] p-3.5 md:p-7 max-w-[1320px] mx-auto grid grid-cols-1 lg:grid-cols-[1.9fr_1fr] gap-4 md:gap-6"
+            className="bg-[#f5f5f7] rounded-[60px] p-3.5 md:p-7 max-w-[1320px] mx-auto grid grid-cols-1 lg:grid-cols-[1.9fr_1fr] gap-4 md:gap-6"
           >
             {/* LEFT: FORM */}
-            <div className="order-2 lg:order-1 bg-white rounded-[20px] md:rounded-[26px] p-5 md:p-8 flex flex-col gap-4">
+            <div className="order-2 lg:order-1 bg-white rounded-[60px] p-5 md:p-8 flex flex-col gap-4">
               <div className="inline-flex self-start bg-[#f5f5f7] rounded-full p-1">
                 {(['guest', 'login', 'register'] as Mode[]).map((m) => (
                   <button
@@ -394,7 +394,7 @@ export default function CheckoutPage() {
             </div>
 
             {/* RIGHT: SUMMARY */}
-            <div className="order-1 lg:order-2 bg-white rounded-[20px] md:rounded-[26px] p-5 md:p-8 flex flex-col justify-between">
+            <div className="order-1 lg:order-2 bg-white rounded-[60px] p-5 md:p-8 flex flex-col justify-between">
               <div>
                 <div className="flex flex-col gap-4">
                   {items.map((item) => (

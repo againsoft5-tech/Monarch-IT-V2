@@ -67,7 +67,7 @@ export default function VariantSelector({
                     aria-pressed={state === 'selected'}
                     disabled={disabled}
                     onClick={() => onSelect(group.key, option.id)}
-                    className={`px-4 py-2 rounded-full border-[1.5px] text-[12.5px] font-semibold whitespace-nowrap transition-colors ${
+                    className={`inline-flex items-center justify-center h-10 px-4 rounded-full border-[1.5px] text-[12.5px] font-semibold whitespace-nowrap transition-colors ${
                       state === 'selected'
                         ? 'border-[#d32f2f] text-[#d32f2f]'
                         : disabled

@@ -8,7 +8,7 @@ const REPEATS = 3
 
 function SlideContent({ slide, linkWholeCard = false }: { slide: PromoSlide; linkWholeCard?: boolean }) {
   const wrapperClassName =
-    'h-full w-full flex flex-col items-center justify-center px-4 py-6 min-[1200px]:py-10 max-[640px]:px-3 max-[640px]:py-4 max-[480px]:py-3'
+    'h-full w-full flex flex-col items-center justify-center px-4 py-6 min-[1200px]:py-10 min-[1367px]:py-14 max-[640px]:px-3 max-[640px]:py-4 max-[480px]:py-3'
 
   const inner = (
     <>
@@ -57,7 +57,7 @@ function PromoColumn({ slides, trackRef }: { slides: PromoSlide[]; trackRef: Rea
   const loop = useMemo(() => (slides.length > 0 ? Array.from({ length: REPEATS }, () => slides).flat() : []), [slides])
 
   return (
-    <div className="flex-1 w-1/2 relative overflow-hidden rounded-[35px] bg-[#f4f5f7] h-[380px] min-[1200px]:h-[420px]">
+    <div className="flex-1 w-1/2 relative overflow-hidden rounded-[35px] bg-[#f4f5f7] h-[380px] min-[1200px]:h-[420px] min-[1367px]:h-[470px]">
       {slides.length === 0 ? (
         <div className="absolute inset-0 flex items-center justify-center text-[13px] text-gray-400">No product set</div>
       ) : (
@@ -102,7 +102,7 @@ function MobileCarousel({
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/images/promo-banner/fire-icon-with-bg-mobile.svg" alt="" className="w-[130px]" />
           <Link
-            href="/offers"
+            href="/hot-products"
             aria-label="Hot products"
             className="absolute left-1/2 top-1/2 w-[46%] aspect-square -translate-x-1/2 -translate-y-1/2 rounded-full cursor-pointer"
           />
@@ -266,7 +266,7 @@ export default function PromoBanner({ data }: Props) {
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/images/promo-banner/fire-icon-with-bg.svg" alt="" className="w-[130px]" />
               <Link
-                href="/offers"
+                href="/hot-products"
                 aria-label="Hot products"
                 className="absolute left-1/2 top-1/2 w-[64%] aspect-square -translate-x-1/2 -translate-y-1/2 rounded-full cursor-pointer"
               />

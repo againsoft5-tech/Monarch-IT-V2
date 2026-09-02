@@ -25,9 +25,9 @@ export default function DreamPcBanner({
   buttonLabel = 'Build Now',
 }: Props) {
   return (
-    <div className="container mx-auto px-4 min-[992px]:px-14 py-10">
+    <div className="container mx-auto px-4 min-[992px]:px-14 py-6 md:py-8">
       {title || subtitle ? (
-        <div className="mb-[15px] text-center">
+        <div className="mb-2 text-center">
           {title ? (
             <h2 className="m-0 mb-1 text-2xl font-bold uppercase text-[#333] md:text-[28px]">
               {title}
@@ -44,15 +44,18 @@ export default function DreamPcBanner({
           width={1920}
           height={1023}
           /* Intrinsic size drives the aspect ratio, so the banner scales without
-             reserving the wrong height while it loads. */
-          className="mx-auto block h-auto w-full max-w-[1920px]"
+             reserving the wrong height while it loads. The viewport-height cap keeps
+             the heading, the artwork and the Build Now button on screen together on
+             wide displays, where a full-width 1920x1023 banner would otherwise be
+             tall enough to push the button below the fold. */
+          className="mx-auto block h-auto w-full max-w-[1920px] max-h-[calc(100svh-270px)] object-contain"
           sizes="(max-width: 1920px) 100vw, 1920px"
           priority={false}
         />
       </Link>
 
       {buttonLabel ? (
-        <div className="mt-4 flex justify-center md:mt-6">
+        <div className="mt-3 flex justify-center">
           <Link
             href={href}
             className="inline-flex items-center justify-center rounded-full bg-[#bd2026] px-9 py-3 text-[13px] font-bold uppercase tracking-wide text-white no-underline transition-colors hover:bg-[#a5121c] md:px-11 md:text-[14px]"

@@ -75,13 +75,13 @@ function MonarchDealsBadge({ title }: { title: string }) {
     <div className="flex justify-center mb-4">
       <div
         ref={boxRef}
-        className="relative inline-flex flex-col items-center border border-[#3d3d3d] px-10 md:px-16 py-4"
+        className="relative inline-flex flex-col items-center border border-[#3d3d3d] p-4 md:p-5"
         style={{
           borderRadius: `${BADGE_RADII.tl}px ${BADGE_RADII.tr}px ${BADGE_RADII.br}px ${BADGE_RADII.bl}px`,
           borderWidth: BADGE_BORDER_WIDTH,
         }}
       >
-        <h1 className="text-2xl md:text-4xl font-extrabold tracking-wide text-[#3d3d3d] uppercase">{title}</h1>
+        <h1 className="text-2xl md:text-4xl leading-none font-extrabold tracking-wide text-[#3d3d3d] uppercase">{title}</h1>
         {orbitPath && (
           <>
             <span

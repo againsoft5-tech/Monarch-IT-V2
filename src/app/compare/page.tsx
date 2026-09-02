@@ -1,6 +1,6 @@
 'use client'
 
-import { Suspense, useEffect, useMemo, useState } from 'react'
+import { Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import Image from 'next/image'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import Breadcrumbs from '@/components/category/Breadcrumbs'
@@ -11,17 +11,20 @@ import { useCart } from '@/context/CartContext'
 /**
  * One table at every width: a frozen feature column plus product columns wide
  * enough to overflow, so phones scroll the products sideways instead of
- * getting a different layout. `minW` must equal the sum of the track minimums
- * — the row boxes have to be as wide as their tracks, or their backgrounds and
- * borders stop short once you scroll.
+ * getting a different layout. Every track — the frozen feature column
+ * included — is one equal share, so the column boundaries sit at the same
+ * fractions of the table no matter how many products are being compared.
+ * `minW` must equal the sum of the track minimums — the row boxes have to be
+ * as wide as their tracks, or their backgrounds and borders stop short once
+ * you scroll.
  */
 const GRID_COLS_3 = {
-  grid: 'grid-cols-[170px_repeat(3,minmax(200px,1fr))] md:grid-cols-[minmax(120px,160px)_repeat(3,minmax(180px,1fr))]',
-  minW: 'min-w-[770px] md:min-w-[760px]',
+  grid: 'grid-cols-[repeat(4,minmax(190px,1fr))] md:grid-cols-[repeat(4,minmax(180px,1fr))]',
+  minW: 'min-w-[760px] md:min-w-[720px]',
 }
 const GRID_COLS_2 = {
-  grid: 'grid-cols-[170px_repeat(2,minmax(224px,1fr))] md:grid-cols-[minmax(120px,160px)_repeat(2,minmax(220px,1fr))]',
-  minW: 'min-w-[618px] md:min-w-[760px]',
+  grid: 'grid-cols-[repeat(3,minmax(206px,1fr))] md:grid-cols-[repeat(3,minmax(240px,1fr))]',
+  minW: 'min-w-[618px] md:min-w-[720px]',
 }
 
 /**
@@ -36,6 +39,63 @@ const GRID_COLS_2 = {
  * the line down the left edge of every value cell.
  */
 const STICKY_LABEL = 'sticky left-0 z-10 border-r border-gray-100'
+
+const COLLAPSE_MS = 280
+
+/**
+ * Height-animated disclosure for a spec section.
+ *
+ * The height is measured rather than transitioned from `auto`, which no engine
+ * animates yet. Clipping while it moves uses `overflow-y: clip` and not
+ * `hidden` on purpose: `hidden` would make this a scroll container, and the
+ * frozen feature column inside sticks to the nearest scroll container — it
+ * would stop tracking the table's own horizontal scroll and drift away with
+ * the rows. `clip` cuts the overflow without becoming one. Once the section
+ * has settled open, the height goes back to `auto` so rows can reflow.
+ */
+function CollapsibleRows({ open, children }: { open: boolean; children: ReactNode }) {
+  const innerRef = useRef<HTMLDivElement>(null)
+  const [height, setHeight] = useState<string>(open ? 'auto' : '0px')
+  // Skips the entrance animation on first paint: sections that start open
+  // should just be open, not slide down as the page loads.
+  const firstRun = useRef(true)
+
+  useEffect(() => {
+    const el = innerRef.current
+    if (!el) return
+
+    if (firstRun.current) {
+      firstRun.current = false
+      setHeight(open ? 'auto' : '0px')
+      return
+    }
+
+    if (open) {
+      setHeight(`${el.offsetHeight}px`)
+      const done = setTimeout(() => setHeight('auto'), COLLAPSE_MS)
+      return () => clearTimeout(done)
+    }
+
+    // Collapsing needs a concrete starting height, so pin the measured one and
+    // only drop to zero on the next frame — otherwise the browser sees a single
+    // auto-to-zero change and skips straight to the end.
+    setHeight(`${el.offsetHeight}px`)
+    const raf = requestAnimationFrame(() => setHeight('0px'))
+    return () => cancelAnimationFrame(raf)
+  }, [open])
+
+  const settledOpen = height === 'auto'
+
+  return (
+    <div
+      aria-hidden={!open}
+      style={{ height, overflowY: settledOpen ? 'visible' : 'clip', transitionDuration: `${COLLAPSE_MS}ms` }}
+      className="transition-[height] ease-out motion-reduce:transition-none"
+    >
+      <div ref={innerRef}>{children}</div>
+    </div>
+  )
+}
 
 /** Product columns divide from each other; the frozen column draws its own. */
 const DIVIDER = (i: number) => (i === 0 ? '' : 'border-l border-gray-50')
@@ -361,7 +421,7 @@ function ComparePageInner() {
     return (
       <div className="relative px-3 py-3">
         <div className="flex items-center gap-2">
-          <div className="flex-1 min-w-0 flex items-center bg-white border border-gray-200 focus-within:border-gray-400 transition-colors rounded-full px-3 py-1.5">
+          <div className="flex-1 min-w-0 h-10 md:h-11 flex items-center bg-white border border-gray-200 focus-within:border-gray-400 transition-colors rounded-full px-3">
             <Image src="/images/compare-icons/search-icon.svg" alt="" width={20} height={20} className="w-5 h-5 mr-1.5 shrink-0" />
             <input
               type="text"
@@ -448,7 +508,7 @@ function ComparePageInner() {
             </button>
           </div>
         ) : (
-          <div className="bg-white border border-gray-100 rounded-2xl shadow-[0_2px_16px_rgba(0,0,0,0.05)] overflow-x-auto no-scrollbar">
+          <div className="bg-white border border-gray-100 rounded-[35px] shadow-[0_2px_16px_rgba(0,0,0,0.05)] overflow-x-auto no-scrollbar">
             <div className={cols.minW}>
               {/* Search row */}
               <div className={`grid ${cols.grid} items-center border-b bg-gray-100 border-gray-100`}>
@@ -516,26 +576,32 @@ function ComparePageInner() {
                 return (
                   <div key={section.title}>
                     {/* A grid row, not a full-width bar, so the section name
-                        rides along in the frozen column. */}
-                    <div className={`group grid ${cols.grid} bg-gray-50 border-b border-gray-100`}>
-                      <button
-                        type="button"
-                        onClick={() => toggleSection(section.title)}
-                        aria-expanded={isOpen}
-                        className={`${STICKY_LABEL} bg-gray-50 group-hover:bg-gray-100 transition-colors cursor-pointer flex items-center justify-between gap-1.5 px-3 md:px-4 py-3 text-left`}
-                      >
+                        rides along in the frozen column. The whole row is the
+                        toggle, which is why the button itself carries the grid:
+                        the title can stay frozen on the left while the chevron
+                        sits at the far right edge of the table. */}
+                    <button
+                      type="button"
+                      onClick={() => toggleSection(section.title)}
+                      aria-expanded={isOpen}
+                      className={`group grid ${cols.grid} w-full bg-gray-50 hover:bg-gray-100 border-b border-gray-100 text-left cursor-pointer transition-colors`}
+                    >
+                      <span className={`${STICKY_LABEL} bg-gray-50 group-hover:bg-gray-100 transition-colors flex items-center px-3 md:px-4 py-3`}>
                         <span className="text-[12.5px] md:text-[14px] font-bold text-[#d32f2f] leading-tight">{section.title}</span>
-                        <span className={`mi shrink-0 text-[18px] md:text-[20px] text-[#d32f2f] transition-transform ${!isOpen ? 'rotate-180' : ''}`}>
-                          expand_more
+                      </span>
+                      {visibleIndexes.map((i, n) => (
+                        <span key={i} className={`${DIVIDER(i)} flex items-center justify-end px-3 md:px-4`}>
+                          {n === visibleIndexes.length - 1 && (
+                            <span className={`mi shrink-0 text-[18px] md:text-[20px] text-[#d32f2f] transition-transform ${!isOpen ? 'rotate-180' : ''}`}>
+                              expand_more
+                            </span>
+                          )}
                         </span>
-                      </button>
-                      {visibleIndexes.map((i) => (
-                        <div key={i} className={`${DIVIDER(i)} transition-colors group-hover:bg-gray-100`} />
                       ))}
-                    </div>
+                    </button>
 
-                    {isOpen &&
-                      section.rows.map(([label], ri) => (
+                    <CollapsibleRows open={Boolean(isOpen)}>
+                      {section.rows.map(([label], ri) => (
                         <div key={label} className={`grid ${cols.grid} border-b border-gray-100`}>
                           <div className={`${STICKY_LABEL} bg-white px-3 md:px-4 py-3 text-[12px] md:text-[13px] text-gray-700 flex items-center`}>
                             {label}
@@ -550,6 +616,7 @@ function ComparePageInner() {
                           ))}
                         </div>
                       ))}
+                    </CollapsibleRows>
                   </div>
                 )
               })}
@@ -582,7 +649,7 @@ function ComparePageInner() {
                         type="button"
                         disabled={!product}
                         onClick={() => product && handleBuyNow(product)}
-                        className="bg-white text-[#c3272b] border-2 border-[#c3272b] rounded-full py-2 px-6 text-[13px] font-bold hover:bg-[#c3272b] hover:text-white transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:text-[#c3272b]"
+                        className="bg-white text-[#c3272b] border border-[#c3272b] rounded-full py-2 px-6 text-[13px] font-bold hover:bg-[#c3272b] hover:text-white transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:text-[#c3272b]"
                       >
                         Buy now
                       </button>

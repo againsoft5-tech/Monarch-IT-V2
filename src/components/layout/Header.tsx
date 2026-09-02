@@ -227,7 +227,7 @@ export default function Header({ data }: Props) {
 
               <Link
                 href={cfg.pcBuilderHref || "/pc-builder"}
-                className="border-[1.8px] border-[#d32f2f] text-[#d32f2f] bg-transparent px-5 py-[9px] rounded-[30px] font-bold text-[13px] hover:bg-[#d32f2f] hover:text-white transition-all whitespace-nowrap"
+                className="inline-flex items-center justify-center h-10 border-[1.8px] border-[#d32f2f] text-[#d32f2f] bg-transparent px-5 rounded-[30px] font-bold text-[13px] hover:bg-[#d32f2f] hover:text-white transition-all whitespace-nowrap"
               >
                 {cfg.pcBuilderLabel}
               </Link>

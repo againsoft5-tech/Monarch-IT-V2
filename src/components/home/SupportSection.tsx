@@ -81,13 +81,13 @@ export default function SupportSection({
           />
           <div>
             <a href={`tel:${phoneTel}`} className="block no-underline">
-              <strong className="block text-lg max-[400px]:text-[13px] font-bold text-[#444] leading-[1.4]">
+              <strong className="block text-[15px] md:text-lg max-[400px]:text-[13px] font-bold text-[#444] leading-[1.4]">
                 {phone}
               </strong>
             </a>
             <a href={`https://wa.me/${wa}`} target="_blank" rel="noopener noreferrer" className="block no-underline">
-              <strong className="block text-lg max-[400px]:text-[13px] font-bold text-[#444] leading-[1.4]">
-                {whatsapp} <span className="italic font-normal text-[#666]">(WhatsApp)</span>
+              <strong className="block whitespace-nowrap text-[15px] md:text-lg max-[400px]:text-[13px] font-bold text-[#444] leading-[1.4]">
+                {whatsapp} <span className="italic font-normal text-[#666] text-[12px] md:text-[inherit] max-[400px]:text-[11px]">(WhatsApp)</span>
               </strong>
             </a>
             <p className="m-0 text-[#666] max-[400px]:text-[12px]">{hours}</p>
