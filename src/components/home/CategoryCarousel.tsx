@@ -52,7 +52,10 @@ export default function CategoryCarousel({ items }: Props = {}) {
               <Link
                 key={cat.name}
                 href={cat.href}
-                className="flex-none w-[calc((100%-30px)/4)] md:w-[calc((100%-60px)/5)] min-[1400px]:w-[calc((100%-75px)/6)] flex flex-col items-center p-3 md:p-5 rounded-[20px] md:rounded-[35px] border border-[#f0f0f0] bg-white no-underline"
+                /* 85.375rem is 1366px. It has to be written in rem: Tailwind emits every
+                   px-based media query before the rem-based defaults, so a min-[1366px]
+                   rule would be overridden by the md: five-up rule instead of beating it. */
+                className="flex-none w-[calc((100%-30px)/4)] md:w-[calc((100%-60px)/5)] min-[85.375rem]:w-[calc((100%-75px)/6)] flex flex-col items-center p-3 md:p-5 rounded-[20px] md:rounded-[35px] border border-[#f0f0f0] bg-white no-underline"
               >
                 <Image src={cat.img} alt={cat.name} width={200} height={160} className="object-contain w-full h-auto" />
                 <span className="text-[10px] md:text-xl font-semibold text-[#4d4d4d] mt-0 md:mt-2 text-center">{cat.name}</span>
