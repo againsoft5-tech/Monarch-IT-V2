@@ -45,6 +45,48 @@ function socialIconClass(icon: string) {
   return `fab ${icon}`
 }
 
+/**
+ * Brand artwork for the socials, matched off whatever Font Awesome class the
+ * live-edit config holds. Each file is a filled white disc with the glyph knocked
+ * out, so it supplies its own circle — anything unmatched falls back to the icon font.
+ */
+const SOCIAL_ART: Array<{ match: RegExp; file: string; label: string }> = [
+  { match: /facebook/i, file: 'facebook', label: 'Facebook' },
+  { match: /instagram/i, file: 'instagram', label: 'Instagram' },
+  { match: /whatsapp/i, file: 'whatsapp', label: 'WhatsApp' },
+  { match: /youtube/i, file: 'youtube', label: 'YouTube' },
+  { match: /tiktok/i, file: 'ticktok', label: 'TikTok' },
+  { match: /linkedin/i, file: 'linkdin', label: 'LinkedIn' },
+  { match: /envelope|mail/i, file: 'email', label: 'Email' },
+]
+
+function SocialLink({ href, icon }: { href: string; icon: string }) {
+  const art = SOCIAL_ART.find((a) => a.match.test(icon))
+
+  if (!art) {
+    return (
+      <a
+        href={href}
+        className="w-[38px] h-[38px] border border-white/15 rounded-full flex items-center justify-center text-white no-underline transition-all hover:bg-[#e53935] hover:border-[#e53935] hover:-translate-y-[3px]"
+      >
+        <i className={`${socialIconClass(icon)} text-base`} />
+      </a>
+    )
+  }
+
+  return (
+    <a
+      href={href}
+      aria-label={art.label}
+      className="block w-[20px] h-[20px] rounded-full no-underline transition-all hover:opacity-75 hover:-translate-y-[3px]"
+    >
+      {/* eslint-disable-next-line @next/next/no-img-element -- local SVG; next/image
+          cannot optimise SVG without `dangerouslyAllowSVG`. */}
+      <img src={`/images/social/${art.file}.svg`} alt="" className="w-full h-full" />
+    </a>
+  )
+}
+
 export default function Footer({ data }: Props) {
   const cfg = { ...DEFAULT_FOOTER, ...data }
   const social = (cfg.social ?? []).filter((s) => !s.hidden)
@@ -67,13 +109,7 @@ export default function Footer({ data }: Props) {
           <p className="text-[#d0d0d0] leading-[1.7] text-[15px] my-5">{cfg.aboutText}</p>
           <div className="flex flex-wrap gap-3 justify-center md:justify-start">
             {social.map((s) => (
-              <a
-                key={s.id}
-                href={s.href}
-                className="w-[38px] h-[38px] border border-white/15 rounded-full flex items-center justify-center text-white no-underline transition-all hover:bg-[#e53935] hover:border-[#e53935] hover:-translate-y-[3px]"
-              >
-                <i className={`${socialIconClass(s.icon)} text-base`} />
-              </a>
+              <SocialLink key={s.id} href={s.href} icon={s.icon} />
             ))}
           </div>
         </div>
@@ -171,13 +207,7 @@ export default function Footer({ data }: Props) {
 
         <div className="flex flex-wrap gap-3 justify-center py-6 border-b border-white/15">
           {socialMobile.map((s) => (
-            <a
-              key={s.id}
-              href={s.href}
-              className="w-[38px] h-[38px] border border-white/15 rounded-full flex items-center justify-center text-white no-underline transition-all hover:bg-[#e53935] hover:border-[#e53935] hover:-translate-y-[3px]"
-            >
-              <i className={`${socialIconClass(s.icon)} text-base`} />
-            </a>
+            <SocialLink key={s.id} href={s.href} icon={s.icon} />
           ))}
         </div>
       </div>
@@ -185,7 +215,7 @@ export default function Footer({ data }: Props) {
       <div className="md:border-t border-white/10 text-center px-5 desk:px-28 py-[25px] container mx-auto">
         <p className="mb-[15px] text-[#d0d0d0]">
           {cfg.copyrightBefore}
-          <span className="text-[#ff3d3d]">{cfg.copyrightBrand}</span>
+          <span className="text-[#d32f2e]">{cfg.copyrightBrand}</span>
           {cfg.copyrightAfter}
         </p>
         <div className="hidden md:flex justify-center">

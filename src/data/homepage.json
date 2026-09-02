@@ -511,6 +511,24 @@
         "icon": "fa-youtube",
         "href": "#",
         "hidden": false
+      },
+      {
+        "id": "soc-tt",
+        "icon": "fa-tiktok",
+        "href": "#",
+        "hidden": false
+      },
+      {
+        "id": "soc-li",
+        "icon": "fa-linkedin-in",
+        "href": "#",
+        "hidden": false
+      },
+      {
+        "id": "soc-mail",
+        "icon": "fas fa-envelope",
+        "href": "#",
+        "hidden": false
       }
     ],
     "socialMobile": [
@@ -562,7 +580,7 @@
       {
         "id": "fl-about",
         "name": "About Us",
-        "href": "#",
+        "href": "/about-us",
         "hidden": false
       },
       {

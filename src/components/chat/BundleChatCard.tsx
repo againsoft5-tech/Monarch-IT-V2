@@ -1,6 +1,7 @@
 'use client'
 
 import Image from 'next/image'
+import ProductImage from '@/components/ui/ProductImage'
 import Link from 'next/link'
 import type { BundleSnapshot } from '@/lib/chatStore'
 
@@ -46,7 +47,7 @@ export default function BundleChatCard({
               className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-xl border border-gray-100 bg-[#f5f6fa]"
             >
               {p.image ? (
-                <Image src={p.image} alt="" width={44} height={44} className="max-h-[42px] max-w-[42px] object-contain" />
+                <ProductImage src={p.image} alt="" width={44} height={44} className="max-h-[42px] max-w-[42px] object-contain" />
               ) : (
                 <span className="mi text-[18px] text-gray-300">inventory_2</span>
               )}

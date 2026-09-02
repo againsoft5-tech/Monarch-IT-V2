@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
+import ProductImage from '@/components/ui/ProductImage'
 import Link from 'next/link'
 import { useCart } from '@/context/CartContext'
 import BundleAddedModal from '@/components/bundles/BundleAddedModal'
@@ -70,7 +71,7 @@ export default function BundleDetail({ bundle }: { bundle: ReadyBundle }) {
                 style={cell}
                 className="flex h-full items-center justify-center rounded-2xl bg-[#f5f6fa] p-4 transition-colors hover:bg-[#eceff5]"
               >
-                <Image
+                <ProductImage
                   src={p.image}
                   alt={p.name}
                   width={320}
@@ -131,7 +132,7 @@ export default function BundleDetail({ bundle }: { bundle: ReadyBundle }) {
                     className="inline-flex min-w-0 items-center gap-1.5 rounded-full bg-[#e8f6ee] px-3 py-1.5 text-[12px] font-bold text-[#0f7a43]"
                   >
                     {g.image ? (
-                      <Image src={g.image} alt="" width={20} height={20} className="h-4 w-4 shrink-0 object-contain" />
+                      <ProductImage src={g.image} alt="" width={20} height={20} className="h-4 w-4 shrink-0 object-contain" />
                     ) : null}
                     <span className="min-w-0 truncate">{g.name}</span>
                   </span>

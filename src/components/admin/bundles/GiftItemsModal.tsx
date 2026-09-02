@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import Image from 'next/image'
+import ProductImage from '@/components/ui/ProductImage'
 import { catalogSample, searchCatalog } from '@/lib/bundleStore'
 import { newGiftId, type BundleGiftItem } from '@/data/bundleData'
 
@@ -168,7 +168,7 @@ export default function GiftItemsModal({ editing, usedSlugs, onAdd, onClose }: P
                         >
                           {on ? <span className="mi text-[13px] leading-none">check</span> : null}
                         </span>
-                        <Image src={p.image} alt="" width={28} height={28} className="h-7 w-7 object-contain" />
+                        <ProductImage src={p.image} alt="" width={28} height={28} className="h-7 w-7 object-contain" />
                         <span className="min-w-0 flex-1 truncate text-[12.5px] text-gray-700">{p.name}</span>
                         <span className="shrink-0 text-[12px] text-gray-400">
                           ৳{p.priceNew.toLocaleString()}
@@ -197,7 +197,7 @@ export default function GiftItemsModal({ editing, usedSlugs, onAdd, onClose }: P
               <div className="flex items-center gap-3">
                 <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-lg bg-gray-50">
                   {image ? (
-                    <Image src={image} alt="" width={56} height={56} className="max-h-14 max-w-14 object-contain" />
+                    <ProductImage src={image} alt="" width={56} height={56} className="max-h-14 max-w-14 object-contain" />
                   ) : (
                     <span className="mi text-[22px] text-gray-300">redeem</span>
                   )}

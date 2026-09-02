@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import Image from 'next/image'
+import ProductImage from '@/components/ui/ProductImage'
 import { useRouter } from 'next/navigation'
 import { useCart } from '@/context/CartContext'
 import { useAuth } from '@/context/AuthContext'
@@ -65,7 +66,7 @@ function Slot({
         title="Change product"
       >
         {product.image ? (
-          <Image
+          <ProductImage
             src={product.image}
             alt={product.name}
             width={150}

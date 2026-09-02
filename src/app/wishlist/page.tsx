@@ -1,6 +1,6 @@
 'use client'
 
-import Image from 'next/image'
+import ProductImage from '@/components/ui/ProductImage'
 import Link from 'next/link'
 import Breadcrumbs from '@/components/category/Breadcrumbs'
 import { useCart } from '@/context/CartContext'
@@ -32,7 +32,7 @@ function WishlistCard({
 
       <Link href={`/${item.slug}`} className="block bg-[#fafbfc]">
         <div className="relative aspect-square w-full">
-          <Image
+          <ProductImage
             src={item.image}
             alt={item.name}
             fill

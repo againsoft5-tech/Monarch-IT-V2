@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import Image from 'next/image'
+import ProductImage from '@/components/ui/ProductImage'
 import Link from 'next/link'
 import { productsByCategory } from '@/data/pcBuilderData'
 import { useToast, Toast } from '@/components/ui/Toast'
@@ -321,7 +322,7 @@ export default function ChatWidget({ open, onClose, product, bundle }: Props) {
                           const cardInner = (
                             <>
                               <div className="w-16 h-16 shrink-0 rounded-xl bg-white border border-gray-100 overflow-hidden relative">
-                                {product.image && <Image src={product.image} alt="" fill className="object-contain p-1" />}
+                                <ProductImage src={product.image} alt="" fill className="object-contain p-1" />
                               </div>
                               <div className="min-w-0 flex flex-col justify-center">
                                 <p className="text-[13px] font-semibold text-gray-800 truncate m-0 mb-1">{product.name}</p>
@@ -535,7 +536,7 @@ export default function ChatWidget({ open, onClose, product, bundle }: Props) {
                       className="flex gap-3 items-start bg-white border border-gray-100 rounded-2xl p-3 shadow-[0_2px_10px_rgba(0,0,0,0.04)]"
                     >
                       <div className="w-[54px] h-[54px] shrink-0 rounded-xl bg-white border border-gray-200 overflow-hidden relative">
-                        {p.image && <Image src={p.image} alt="" fill className="object-contain p-1" />}
+                        <ProductImage src={p.image} alt="" fill className="object-contain p-1" />
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="text-[12px] font-semibold text-gray-800 leading-[1.4] m-0 mb-1 line-clamp-2">

@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react'
 import { formatCurrency } from '@/lib/currency'
+import { NO_IMAGE, isMissingImage } from '@/components/ui/ProductImage'
 import type { AccountOrderDetail } from '@/data/accountData'
 import { StatusBadge, TableAction } from './account-table'
 
@@ -125,17 +126,18 @@ export default function AccountOrderDetailDrawer({ open, detail, onClose, onPay 
                     </p>
                     <div className="flex gap-3">
                       <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-gray-100 bg-[#fafbfc]">
-                        {product.imageUrl ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            src={product.imageUrl}
-                            alt=""
-                            referrerPolicy="no-referrer"
-                            className="h-full w-full object-cover"
-                          />
-                        ) : (
-                          <span className="mi text-[28px] text-gray-300">shopping_bag</span>
-                        )}
+                        {/* Order art is a remote URL, so this stays a plain img rather than
+                            ProductImage — but it falls back to the same placeholder. */}
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={isMissingImage(product.imageUrl) ? NO_IMAGE : (product.imageUrl as string)}
+                          alt=""
+                          referrerPolicy="no-referrer"
+                          onError={(e) => {
+                            e.currentTarget.src = NO_IMAGE
+                          }}
+                          className="h-full w-full object-cover"
+                        />
                       </div>
                       <p className="m-0 text-[12.5px] font-semibold leading-snug text-gray-800">
                         {product.name}

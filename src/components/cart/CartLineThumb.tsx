@@ -1,4 +1,4 @@
-import Image from 'next/image'
+import ProductImage from '@/components/ui/ProductImage'
 import type { CartItem } from '@/data/cart'
 
 /**
@@ -14,7 +14,7 @@ export default function CartLineThumb({ item, size }: { item: CartItem; size: nu
 
   if (children.length < 2) {
     return (
-      <Image
+      <ProductImage
         src={item.image}
         alt={item.name}
         width={size}
@@ -41,7 +41,7 @@ export default function CartLineThumb({ item, size }: { item: CartItem; size: nu
             children.length === 3 && i === 2 ? 'col-span-2 mx-auto w-1/2' : ''
           }`}
         >
-          <Image
+          <ProductImage
             src={child.image}
             alt={child.name}
             width={size}

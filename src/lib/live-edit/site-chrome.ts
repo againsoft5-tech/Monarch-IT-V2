@@ -22,6 +22,9 @@ export const DEFAULT_FOOTER: FooterSection = {
     { id: 'soc-ig', icon: 'fa-instagram', href: '#', hidden: false },
     { id: 'soc-wa', icon: 'fa-whatsapp', href: '#', hidden: false },
     { id: 'soc-yt', icon: 'fa-youtube', href: '#', hidden: false },
+    { id: 'soc-tt', icon: 'fa-tiktok', href: '#', hidden: false },
+    { id: 'soc-li', icon: 'fa-linkedin-in', href: '#', hidden: false },
+    { id: 'soc-mail', icon: 'fas fa-envelope', href: '#', hidden: false },
   ],
   socialMobile: [
     { id: 'socm-fb', icon: 'fab fa-facebook-f', href: '#', hidden: false },
@@ -34,7 +37,7 @@ export const DEFAULT_FOOTER: FooterSection = {
   ],
   linksTitle: 'Important Links',
   linksCol1: [
-    { id: 'fl-about', name: 'About Us', href: '#', hidden: false },
+    { id: 'fl-about', name: 'About Us', href: '/about-us', hidden: false },
     { id: 'fl-brands', name: 'Brands', href: '/brands', hidden: false },
     { id: 'fl-blog', name: 'Blog', href: '#', hidden: false },
     { id: 'fl-contact', name: 'Contact Us', href: '#', hidden: false },

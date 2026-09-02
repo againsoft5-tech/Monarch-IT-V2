@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Image from 'next/image'
+import ProductImage from '@/components/ui/ProductImage'
 import { productsByCategory } from '@/data/pcBuilderData'
 import { useToast, Toast } from '@/components/ui/Toast'
 import ReadReceipt from '@/components/chat/ReadReceipt'
@@ -416,7 +417,7 @@ export default function AdminDashboard() {
                           {msg.text && <p className="text-[14px] font-medium text-gray-800 mb-2.5">{msg.text}</p>}
                           <div className="bg-white border border-gray-200 rounded-[22px] p-4 flex gap-3.5 w-[280px] shadow-[0_2px_8px_rgba(0,0,0,0.03)]">
                             <div className="w-16 h-16 shrink-0 rounded-xl bg-white border border-gray-100 overflow-hidden relative">
-                              {product.image && <Image src={product.image} alt="" fill className="object-contain p-1" />}
+                              <ProductImage src={product.image} alt="" fill className="object-contain p-1" />
                             </div>
                             <div className="min-w-0 flex flex-col justify-center">
                               <p className="text-[13px] font-semibold text-gray-800 truncate m-0 mb-1">{product.name}</p>
@@ -599,7 +600,7 @@ export default function AdminDashboard() {
                   {product && (
                     <div className="flex items-center gap-2.5 bg-[#f8fafc] rounded-xl p-2 mb-2.5">
                       <div className="w-10 h-10 shrink-0 rounded-lg bg-white border border-gray-200 overflow-hidden relative">
-                        {product.image && <Image src={product.image} alt="" fill className="object-contain p-1" />}
+                        <ProductImage src={product.image} alt="" fill className="object-contain p-1" />
                       </div>
                       <div className="min-w-0">
                         <p className="text-[11.5px] font-semibold text-gray-800 truncate m-0">{product.name}</p>
@@ -658,7 +659,7 @@ export default function AdminDashboard() {
               {productResults.map((p) => (
                 <div key={p.id} className="flex gap-3 items-start bg-white border border-gray-100 rounded-2xl p-3 shadow-[0_2px_10px_rgba(0,0,0,0.04)]">
                   <div className="w-[54px] h-[54px] shrink-0 rounded-xl bg-white border border-gray-200 overflow-hidden relative">
-                    {p.image && <Image src={p.image} alt="" fill className="object-contain p-1" />}
+                    <ProductImage src={p.image} alt="" fill className="object-contain p-1" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="text-[12px] font-semibold text-gray-800 leading-[1.4] m-0 mb-1 line-clamp-2">{p.name}</p>

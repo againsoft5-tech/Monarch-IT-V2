@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import Image from 'next/image'
+import ProductImage from '@/components/ui/ProductImage'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useAdminAuth } from '@/context/AdminAuthContext'
@@ -285,7 +285,7 @@ export default function CustomBundleEditor({ bundleId }: { bundleId: string }) {
                             }}
                             className="flex w-full items-center gap-3 border-b border-gray-50 px-3 py-2 text-left last:border-b-0 hover:bg-gray-50 disabled:opacity-40"
                           >
-                            <Image src={p.image} alt="" width={32} height={32} className="h-8 w-8 object-contain" />
+                            <ProductImage src={p.image} alt="" width={32} height={32} className="h-8 w-8 object-contain" />
                             <span className="min-w-0 flex-1 truncate text-[13px] text-gray-700">{p.name}</span>
                             <span className="text-[12.5px] text-gray-500">৳{p.priceNew.toLocaleString()}</span>
                           </button>
@@ -298,7 +298,7 @@ export default function CustomBundleEditor({ bundleId }: { bundleId: string }) {
                     <ul className="mt-4 flex max-h-[320px] list-none flex-col gap-2 overflow-y-auto p-0">
                       {activeTab.products.map((p) => (
                         <li key={p.id} className="flex items-center gap-3 rounded-xl bg-gray-50 px-3 py-2">
-                          <Image src={p.image} alt="" width={36} height={36} className="h-9 w-9 object-contain" />
+                          <ProductImage src={p.image} alt="" width={36} height={36} className="h-9 w-9 object-contain" />
                           <span className="min-w-0 flex-1 truncate text-[13px] text-gray-800">{p.name}</span>
                           <span className="text-[13px] font-bold text-[#c3272b]">
                             ৳{p.priceNew.toLocaleString()}

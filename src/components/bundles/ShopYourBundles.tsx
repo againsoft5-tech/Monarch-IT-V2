@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import Image from 'next/image'
+import ProductImage from '@/components/ui/ProductImage'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
@@ -110,7 +111,7 @@ function BundleCard({
               style={cell}
               className="flex h-full items-center justify-center rounded-2xl bg-[#f5f6fa] p-3 transition-colors hover:bg-[#eceff5]"
             >
-              <Image
+              <ProductImage
                 src={p.image}
                 alt={p.name}
                 width={150}
@@ -161,7 +162,7 @@ function BundleCard({
             >
               {/* Gifts with artwork show it; the glyph is the fallback. */}
               {g.image ? (
-                <Image src={g.image} alt="" width={20} height={20} className="h-4 w-4 shrink-0 object-contain" />
+                <ProductImage src={g.image} alt="" width={20} height={20} className="h-4 w-4 shrink-0 object-contain" />
               ) : (
                 <span className="mi shrink-0 text-[14px] leading-none">redeem</span>
               )}
@@ -180,7 +181,7 @@ function BundleCard({
             className="mt-2 flex min-w-0 items-center gap-1.5 rounded-xl bg-[#e8f6ee] px-2.5 py-1.5 text-left transition-colors hover:bg-[#d8efe2]"
           >
             {activeGifts[0]?.image ? (
-              <Image
+              <ProductImage
                 src={activeGifts[0].image}
                 alt=""
                 width={22}

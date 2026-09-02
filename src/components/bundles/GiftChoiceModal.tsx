@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react'
 import Image from 'next/image'
+import ProductImage from '@/components/ui/ProductImage'
 import type { BundleGiftItem } from '@/data/bundleData'
 
 type Props = {
@@ -95,7 +96,7 @@ export default function GiftChoiceModal({ open, gifts, limit, selectedIds, onCha
                 >
                   <span className="flex h-[86px] w-full items-center justify-center">
                     {g.image ? (
-                      <Image
+                      <ProductImage
                         src={g.image}
                         alt={g.name}
                         width={110}

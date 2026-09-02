@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import Image from 'next/image'
+import ProductImage from '@/components/ui/ProductImage'
 import HotProductTabs, { type HotTab } from '@/components/hot/HotProductTabs'
 import type { BundleProduct, CustomBundleTab } from '@/data/bundleData'
 
@@ -180,7 +181,7 @@ export default function ProductPickerModal({
                 return (
                   <div key={p.slug} className="flex flex-col">
                     <div className="flex aspect-square items-center justify-center rounded-2xl bg-[#f5f6fa] p-3">
-                      <Image
+                      <ProductImage
                         src={p.image}
                         alt={p.name}
                         width={200}

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import Image from 'next/image'
+import ProductImage from '@/components/ui/ProductImage'
 import GiftItemsModal from '@/components/admin/bundles/GiftItemsModal'
 import { MAX_GIFT_PICKS, giftPickLimit, type BundleGiftItem } from '@/data/bundleData'
 
@@ -90,7 +90,7 @@ export default function GiftItemsEditor({ gifts, limit = 1, onChange, onLimitCha
               <li key={g.id} className="flex items-center gap-2 rounded-lg bg-gray-50 px-2 py-1.5">
                 <span className="flex h-7 w-7 shrink-0 items-center justify-center">
                   {g.image ? (
-                    <Image src={g.image} alt="" width={28} height={28} className="h-7 w-7 object-contain" />
+                    <ProductImage src={g.image} alt="" width={28} height={28} className="h-7 w-7 object-contain" />
                   ) : (
                     <span className="mi text-[18px] text-gray-300">redeem</span>
                   )}

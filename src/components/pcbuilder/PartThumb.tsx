@@ -1,4 +1,5 @@
 import Image from 'next/image'
+import ProductImage from '@/components/ui/ProductImage'
 
 type Props = {
   icon: string
@@ -17,7 +18,7 @@ export default function PartThumb({ icon, iconSvg, image, accent, size = 'lg' }:
   if (image) {
     return (
       <div className={`${box} bg-[#f4f5f7] flex items-center justify-center relative overflow-hidden`}>
-        <Image src={image} alt="" fill sizes="200px" className="object-contain p-1.5" />
+        <ProductImage src={image} alt="" fill sizes="200px" className="object-contain p-1.5" />
       </div>
     )
   }

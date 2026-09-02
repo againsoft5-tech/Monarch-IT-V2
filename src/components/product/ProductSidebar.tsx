@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react'
 import Image from 'next/image'
+import ProductImage from '@/components/ui/ProductImage'
 import Link from 'next/link'
 import type { RelatedProduct } from '@/data/productDetail'
 
@@ -9,7 +10,7 @@ function PairedCard({ product, className = '' }: { product: RelatedProduct; clas
   return (
     <div className={`flex flex-col bg-white rounded-2xl overflow-hidden shadow-[0_2px_10px_rgba(0,0,0,0.07)] text-left ${className}`}>
       <Link href={`/${product.slug}`} className="aspect-square shrink-0 flex items-center justify-center">
-        <Image src={product.image} alt={product.name} width={200} height={200} className="w-[78%] h-[78%] object-contain" />
+        <ProductImage src={product.image} alt={product.name} width={200} height={200} className="w-[78%] h-[78%] object-contain" />
       </Link>
       <div className="flex-1 p-3">
         <div className="flex items-center gap-1 mb-1 flex-wrap">

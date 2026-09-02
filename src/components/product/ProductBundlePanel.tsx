@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import Image from 'next/image'
+import ProductImage from '@/components/ui/ProductImage'
 import Link from 'next/link'
 import { useCart } from '@/context/CartContext'
 import BundleAddedModal from '@/components/bundles/BundleAddedModal'
@@ -84,7 +85,7 @@ function Panel({
                 title={p.name}
                 className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#f5f6fa] p-1 transition-colors hover:bg-[#eceff5] @[230px]:h-12 @[230px]:w-12 @[230px]:rounded-xl @[270px]:h-[58px] @[270px]:w-[58px] @[270px]:p-1.5"
               >
-                <Image
+                <ProductImage
                   src={p.image}
                   alt={p.name}
                   width={52}
@@ -142,7 +143,7 @@ function Panel({
               className="flex min-w-0 cursor-pointer items-center gap-1.5 rounded-xl bg-[#e8f6ee] px-2 py-1.5 text-left transition-colors hover:bg-[#d8efe2] @[270px]:gap-2 @[270px]:px-2.5 @[270px]:py-2"
             >
               {activeGifts[0]?.image ? (
-                <Image
+                <ProductImage
                   src={activeGifts[0].image}
                   alt=""
                   width={22}
@@ -169,7 +170,7 @@ function Panel({
                 className="inline-flex min-w-0 items-center gap-1.5 rounded-full bg-[#e8f6ee] px-2 py-1 text-[10.5px] font-bold text-[#0f7a43] @[270px]:px-2.5 @[270px]:text-[11px]"
               >
                 {g.image ? (
-                  <Image
+                  <ProductImage
                     src={g.image}
                     alt=""
                     width={20}

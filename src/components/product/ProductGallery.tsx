@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type MouseEvent } from 'react'
 import Image from 'next/image'
+import ProductArt from '@/components/ui/ProductImage'
 import type { ProductImage } from '@/data/productDetail'
 
 const ZOOM_SCALE = 2
@@ -141,7 +142,7 @@ export default function ProductGallery({
             className="w-full h-full"
           />
         ) : (
-          <Image
+          <ProductArt
             src={activeImage.large}
             alt={name}
             width={500}
@@ -197,7 +198,7 @@ export default function ProductGallery({
                     slideIndex === active ? 'border-[#d92128]' : 'border-gray-200 hover:border-[#d92128]'
                   }`}
                 >
-                  <Image src={img.thumb} alt={name} width={64} height={64} className="w-full h-full object-contain p-1" />
+                  <ProductArt src={img.thumb} alt={name} width={64} height={64} className="w-full h-full object-contain p-1" />
                 </button>
               )
             })}

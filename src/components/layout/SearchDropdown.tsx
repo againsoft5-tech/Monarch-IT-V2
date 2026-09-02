@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import Image from 'next/image'
+import ProductImage from '@/components/ui/ProductImage'
 import Link from 'next/link'
 import { searchCategories, searchProducts } from '@/data/searchIndex'
 
@@ -65,7 +65,7 @@ export default function SearchDropdown({
                 onClick={onNavigate}
                 className="flex items-center gap-3 px-4 py-2.5 border-b border-gray-100 last:border-b-0 no-underline hover:bg-gray-50 transition-colors"
               >
-                <Image
+                <ProductImage
                   src={p.image}
                   alt=""
                   width={44}

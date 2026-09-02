@@ -1,4 +1,5 @@
 import Image from 'next/image'
+import ProductImage from '@/components/ui/ProductImage'
 import Link from 'next/link'
 import type { CategoryProduct } from '@/data/categoryProducts'
 import CouponBadge, { useEffectivePrice } from '@/components/ui/CouponBadge'
@@ -37,7 +38,7 @@ export default function ProductCard({
         href={`/${p.slug}`}
         className="relative overflow-hidden aspect-square bg-[#f5f6fa] rounded-2xl md:rounded-[35px] flex items-center justify-center"
       >
-        <Image src={p.image} alt={p.name} width={228} height={228} className="w-[78%] h-[78%] object-contain" />
+        <ProductImage src={p.image} alt={p.name} width={228} height={228} className="w-[78%] h-[78%] object-contain" />
         {ribbonLabel ? (
           // Clip box is half the card; the band is rotated across its diagonal (classic corner ribbon).
           <span className="pointer-events-none absolute top-0 right-0 h-1/2 w-1/2 overflow-hidden">
