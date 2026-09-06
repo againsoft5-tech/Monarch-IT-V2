@@ -598,7 +598,7 @@
       {
         "id": "fl-contact",
         "name": "Contact Us",
-        "href": "#",
+        "href": "/contact-us",
         "hidden": false
       }
     ],
@@ -606,25 +606,25 @@
       {
         "id": "fl-privacy",
         "name": "Privacy Policy",
-        "href": "#",
+        "href": "/privacy",
         "hidden": false
       },
       {
-        "id": "fl-terms",
-        "name": "Terms & Conditions",
-        "href": "#",
+        "id": "fl-warranty",
+        "name": "Warranty Policy",
+        "href": "/warranty-policy",
         "hidden": false
       },
       {
         "id": "fl-delivery",
         "name": "Online Delivery",
-        "href": "#",
+        "href": "/online-delivery",
         "hidden": false
       },
       {
         "id": "fl-refund",
         "name": "Refund & Return Policy",
-        "href": "#",
+        "href": "/refund-and-return-policy",
         "hidden": false
       }
     ],
@@ -646,7 +646,7 @@
         "id": "sm-phone",
         "label": "Contact Us",
         "icon": "/images/catalog/view/theme/default/image/svg/phone-black-icon.svg",
-        "href": "#",
+        "href": "/contact-us",
         "action": "link",
         "active": false,
         "hidden": false,
