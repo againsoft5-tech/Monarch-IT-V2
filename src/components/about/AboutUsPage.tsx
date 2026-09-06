@@ -401,7 +401,7 @@ export default function AboutUsPage() {
 
           <div className="mt-12 md:mt-16 flex justify-center">
             <Link
-              href="#"
+              href="/contact-us"
               className="inline-flex items-center gap-3 h-[56px] md:h-[64px] px-8 md:px-11 rounded-full border-2 border-[#d32f2f] text-[#d32f2f] text-[20px] md:text-[25px] no-underline transition-colors hover:bg-[#d32f2f] hover:text-white"
             >
               <span className="mi text-[26px] md:text-[30px]">call</span>

@@ -70,6 +70,19 @@ body {
   }
 }
 
+/* Filled variant of the Material Symbols glyphs. */
+.mi-fill {
+  font-variation-settings: 'FILL' 1;
+}
+
+/* Kalpurush across a whole block, for the Bengali policy pages. The body font
+   only borrows it for the taka sign, so Bengali would otherwise fall through to
+   a system face; Kalpurush also carries the Latin forms the artwork uses, which
+   keeps mixed Bengali/English sentences in one typeface. */
+.font-bn {
+  font-family: var(--font-kalpurush), var(--font-poppins), Arial, Helvetica, sans-serif;
+}
+
 /* Hide scrollbar utility */
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
