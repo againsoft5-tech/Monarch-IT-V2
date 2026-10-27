@@ -39,7 +39,7 @@ export const DEFAULT_FOOTER: FooterSection = {
   linksCol1: [
     { id: 'fl-about', name: 'About Us', href: '/about-us', hidden: false },
     { id: 'fl-brands', name: 'Brands', href: '/brands', hidden: false },
-    { id: 'fl-blog', name: 'Blog', href: '#', hidden: false },
+    { id: 'fl-blog', name: 'Blog', href: '/blog', hidden: false },
     { id: 'fl-contact', name: 'Contact Us', href: '/contact-us', hidden: false },
   ],
   linksCol2: [
